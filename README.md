@@ -24,7 +24,6 @@ o palletero guarda as cores do projeto num painel que você acopla em qualquer l
 - [ajustes](#-ajustes)
 - [teclado e atalhos](#-teclado-e-atalhos)
 - [desenvolvimento](#-desenvolvimento)
-- [script clássico](#-script-clássico)
 
 <br>
 
@@ -36,17 +35,25 @@ o palletero guarda as cores do projeto num painel que você acopla em qualquer l
 
 requer After Effects **2022 (22.0)** ou mais novo, no Windows ou no macOS.
 
-1. copie a pasta `cep/com.jmbillard.elpalletero` para a pasta de extensões:
-   - **Windows:** `%APPDATA%\Adobe\CEP\extensions\` (só o seu usuário) ou `C:\Program Files (x86)\Common Files\Adobe\CEP\extensions\` (todos)
-   - **macOS:** `~/Library/Application Support/Adobe/CEP/extensions/` ou `/Library/Application Support/Adobe/CEP/extensions/`
-2. libere extensões sem assinatura (uma vez só):
-   - **Windows:** `reg add HKCU\Software\Adobe\CSXS.11 /v PlayerDebugMode /t REG_SZ /d 1 /f` (repita com `CSXS.12` para o AE 2025 ou mais novo)
-   - **macOS:** `defaults write com.adobe.CSXS.11 PlayerDebugMode 1` (repita com `com.adobe.CSXS.12`)
-3. **reinicie** o After Effects.
-4. abra o painel em `Window` > `Extensions` > `El PALLETERO` e acople onde preferir.
+> <img src="docs/img/banner.png" alt="El PALLETERO · instalador" width="360">
+
+> 📂 **arquivos:**\
+> • **INSTALAR El PALLETERO.jsx** → instalador (roda dentro do After Effects).\
+> • **cep/com.jmbillard.elpalletero/** → a extensão (painel CEP).\
+> • **instalar_windows.bat** / **instalar_mac.command** → instaladores alternativos, sem abrir o After Effects.
+
+1. no After Effects, abra `File` > `Scripts` > `Run Script File...` e escolha o **INSTALAR El PALLETERO.jsx** direto da pasta do El PALLETERO (a que tem a pasta `cep` dentro). o instalador abre com as boas-vindas: clique em **começar**.
+2. o instalador confere o que é necessário. bolinha 🟢 = ok, 🔴 = precisa resolver. se a escrita de arquivos estiver bloqueada, use o link **› abrir preferências de scripts e expressões**, marque *Allow Scripts to Write Files and Access Network* e clique em **› verificar de novo**.
+3. escolha **instalar** (ou **atualizar** / **reinstalar**, se já houver uma versão no computador; **remover** desinstala). a tela mostra de onde a extensão vai ser copiada e para onde.
+4. pronto! **reinicie o After Effects** e abra o painel em `Window` > `Extensions` > `El PALLETERO`. acople onde preferir.
 
 > 🚩 *obs:*\
-> • no macOS, se o painel não aparecer, rode `killall cfprefsd` no Terminal (o sistema guarda as preferências em cache) e abra o After Effects de novo.\
+> • a instalação é **sempre local**: a extensão inteira é copiada para a pasta de extensões do usuário. depois disso o El PALLETERO não depende mais da pasta de origem (rede, pendrive ou download). para atualizar, rode o instalador da versão nova.\
+> • a extensão não é assinada, por isso o instalador habilita o `PlayerDebugMode` do CEP (versões 9 a 13).\
+> • se a versão com o nome antigo (**O PALETTERO**) estiver instalada, o instalador troca pela nova. paletas, presets e preferências são mantidos.\
+> • **remover** apaga só a extensão: as paletas salvas nos projetos e os presets continuam onde estão.\
+> • **sem o After Effects:** dê dois cliques em `instalar_windows.bat` (Windows) ou `instalar_mac.command` (macOS). fazem o mesmo: copiam a extensão, trocam a versão antiga e habilitam o `PlayerDebugMode`.\
+> • **macOS:** se o painel não aparecer depois de reiniciar o After Effects, reinicie o computador.\
 > • as preferências e os presets ficam em `%APPDATA%\El PALLETERO\` (Windows) ou `~/Library/Application Support/El PALLETERO/` (macOS).
 
 <br>
@@ -67,9 +74,10 @@ o painel se chamava **O PALETTERO** até a v1.1. na primeira vez que o El PALLET
 | paleta de cada projeto | metadados do O PALETTERO | metadados do El PALLETERO, no primeiro salvamento |
 
 > 🚩 *obs:*\
-> • a pasta antiga **não é apagada**: o [script clássico](docs/script-classico.md) continua usando ela.\
+> • a pasta antiga **não é apagada**: ela ainda é a pasta do antigo script O PALETTERO, caso alguém use.\
 > • só abrir um projeto antigo não altera nada nele. a paleta passa para o formato novo na primeira mudança na paleta.\
-> • se a versão anterior da extensão estiver instalada, apague a pasta `com.jmbillard.opalettero` da pasta de extensões, para não ficarem dois painéis no menu.
+> • a extensão com o nome antigo (`com.jmbillard.opalettero`) é removida pelo [instalador](#-instalação), para não ficarem dois painéis no menu.\
+> • paletas salvas pelo antigo script O PALETTERO (`xmp:Label`) também são lidas e migram no primeiro salvamento.
 
 <br>
 
@@ -291,26 +299,16 @@ cep/com.jmbillard.elpalletero/
 ├── js/panel.js         → estado, interações e animações
 └── jsx/host.jsx        → lado After Effects: metadados, presets, rede, aplicar, capturar, frames
 mockup/                 → página de demonstração com um "After Effects de mentira"
-tools/                  → scripts que geram o mockup e os GIFs desta documentação
+tools/                  → scripts que geram o mockup, os GIFs, o banner e testam o instalador
+INSTALAR El PALLETERO.jsx, instalar_mac.command, instalar_windows.bat → instaladores
 ```
 
 - **depurar:** com o painel aberto, acesse `http://localhost:8099` no Chrome.
 - **mockup:** depois de mudar o painel, rode `node tools/build-mockup.js`.
 - **GIFs:** `node tools/gifs/record.js` grava todos de novo a partir do mockup (ou `node tools/gifs/record.js editor presets` para alguns). precisa do Playwright e do `ffmpeg`.
+- **instalador:** `node tools/installer/test-installer.js` executa o `INSTALAR El PALLETERO.jsx` em Node, com File/Folder/ScriptUI simulados (instalação nova, troca do nome antigo, reinstalar, remover, macOS e AE antigo). `node tools/installer/make-banner.js` gera o banner e grava no instalador.
+- os instaladores seguem o modelo do [ABRIDOR](https://github.com/jmbillard/ABRIDOR).
 
 > 🚩 *obs:*\
 > • o painel usa o Node.js do CEP (`--enable-nodejs`) só para ler o PNG do frame.\
 > • o frame é gerado com `saveFrameToPng`, um método que existe no After Effects mas não está na documentação oficial.
-
-<br>
-
----
-
-<br>
-
-## 📍 script clássico
-
-a versão original em ScriptUI, com o nome antigo **O PALETTERO** (`O PALETEIRO beta.jsx`), continua no repositório → [documentação do script clássico](docs/script-classico.md).
-
-> 🚩 *obs:*\
-> • a extensão lê as paletas salvas pelo script e migra para o formato novo. o script não lê as paletas salvas pela extensão.

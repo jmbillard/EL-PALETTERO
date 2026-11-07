@@ -113,5 +113,5 @@ a paleta do projeto fica no `.aep`, num grupo de metadados XMP próprio:
 | `version` · `updated` | versão do formato e data do último salvamento |
 
 > 🚩 *obs:*\
-> • projetos com paleta do [script clássico](script-classico.md) (`xmp:Label`) ou da extensão com o nome antigo (namespace `…/O-PALETTERO/ns/1.0/`) são lidos normalmente e migram para o grupo novo no primeiro salvamento.\
+> • projetos com paleta do antigo script O PALETTERO (`xmp:Label`) ou da extensão com o nome antigo (namespace `…/O-PALETTERO/ns/1.0/`) são lidos normalmente e migram para o grupo novo no primeiro salvamento.\
 > • nomes automáticos ficam marcados com `auto: true`: por isso continuam acompanhando a cor quando você a edita.
