@@ -17,7 +17,9 @@ const js = [
 	path.join(ext, 'js', 'panel.js')
 ].map(read).join('\n');
 
+const logo = 'data:image/svg+xml;base64,' + fs.readFileSync(path.join(root, 'docs', 'img', 'logo.svg')).toString('base64');
 const out = read(path.join(root, 'mockup', 'showcase.html'))
+	.split('{{LOGO_URI}}').join(logo)
 	.replace('{{PANEL_CSS}}', () => css)
 	.replace('{{PANEL_JS}}', () => js.replace(/<\/script/gi, '<\\/script'));
 

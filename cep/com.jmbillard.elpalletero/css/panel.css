@@ -223,9 +223,11 @@
 	color: var(--mute); text-align: center; padding: 6px;
 	animation: pal-fade .4s var(--ease);
 }
-.empty-dots { display: flex; gap: 3px; }
-.empty-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--raise-2); animation: pal-bob 1.6s ease-in-out infinite; }
-.empty-dots i:nth-child(2) { animation-delay: .15s; } .empty-dots i:nth-child(3) { animation-delay: .3s; }
+/* picolé em cinza que balança devagar; no hover ganha cor e dá uma inclinadinha */
+.empty-logo { width: 40px; height: 40px; flex: none; filter: grayscale(1); opacity: .5; animation: pal-sway 2.8s ease-in-out infinite; transform-origin: 50% 90%; transition: filter .5s var(--ease), opacity .3s; }
+.empty:hover .empty-logo { filter: none; opacity: 1; animation-duration: 1.2s; }
+.pal[data-thin='1'] .empty-logo { width: 28px; height: 28px; }
+@keyframes pal-sway { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg) translateY(-1px); } }
 .empty .row-btn { color: var(--fg); }
 
 /* ------------------------------------------------------------ folhas (editor / ajustes) */

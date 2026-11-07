@@ -1,4 +1,4 @@
-# 🎨 El PALLETERO · v1.2 beta
+# <img src="docs/img/logo.svg" alt="" height="44"> El PALLETERO · v1.2 beta
 
 🗨️ **pt-BR** ⚡ a paleta de cores do projeto, como painel do After Effects ⚡
 
@@ -306,6 +306,7 @@ INSTALAR El PALLETERO.jsx, instalar_mac.command, instalar_windows.bat → instal
 - **depurar:** com o painel aberto, acesse `http://localhost:8099` no Chrome.
 - **mockup:** depois de mudar o painel, rode `node tools/build-mockup.js`.
 - **GIFs:** `node tools/gifs/record.js` grava todos de novo a partir do mockup (ou `node tools/gifs/record.js editor presets` para alguns). precisa do Playwright e do `ffmpeg`.
+- **logo:** `docs/img/logo.svg` é a fonte. depois de mudar o logo, rode `node tools/installer/make-banner.js` (banner do instalador) e `node tools/installer/make-icons.js` (ícones do painel); o mockup e o estado de paleta vazia usam o mesmo desenho.
 - **instalador:** `node tools/installer/test-installer.js` executa o `INSTALAR El PALLETERO.jsx` em Node, com File/Folder/ScriptUI simulados (instalação nova, troca do nome antigo, reinstalar, remover, macOS e AE antigo). `node tools/installer/make-banner.js` gera o banner e grava no instalador.
 - os instaladores seguem o modelo do [ABRIDOR](https://github.com/jmbillard/ABRIDOR).
 

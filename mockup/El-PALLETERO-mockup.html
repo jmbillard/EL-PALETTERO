@@ -1,4 +1,5 @@
 <title>El PALLETERO</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjkuMTIgOS4xMiAxMDEuNzYgMTAxLjc2Ij48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNGRjRENEQiLz48c3RvcCBvZmZzZXQ9Ii4yNSIgc3RvcC1jb2xvcj0iI0ZGOEY0RCIvPjxzdG9wIG9mZnNldD0iLjUiIHN0b3AtY29sb3I9IiNGRkM0NEUiLz48c3RvcCBvZmZzZXQ9Ii43NSIgc3RvcC1jb2xvcj0iIzVERTZBMiIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzgwQzBGRSIvPjwvbGluZWFyR3JhZGllbnQ+PG1hc2sgaWQ9Im0iPjxyZWN0IHg9Ii0yMCIgeT0iLTIwIiB3aWR0aD0iMTYwIiBoZWlnaHQ9IjE2MCIgZmlsbD0iI2ZmZiIvPjxnIGZpbGw9IiMwMDAiPjxjaXJjbGUgY3g9IjkwLjUiIGN5PSIzMiIgcj0iMTMiLz48L2c+PC9tYXNrPjwvZGVmcz48cmVjdCB4PSI1My4wIiB5PSI4MCIgd2lkdGg9IjE0IiBoZWlnaHQ9IjI4IiByeD0iNy4wIiBmaWxsPSIjRTlDRkEwIi8+PGcgbWFzaz0idXJsKCNtKSI+PHBhdGggZD0iTTMzLjAsNzcgTDM3LjAsMjEgUTM3LjAsMTIgNDYuMCwxMiBMNzQuMCwxMiBRODMuMCwxMiA4My4wLDIxIEw4Ny4wLDc3IFE4Ny4wLDg2IDc4LjAsODYgTDQyLjAsODYgUTMzLjAsODYgMzMuMCw3NyBaIiBmaWxsPSJ1cmwoI2cpIi8+PHBhdGggZD0iTTQyLjAsMjYgTDQxLjAsNTgiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9Ii4zNSIvPjwvZz48L3N2Zz4=">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=JetBrains+Mono:wght@500;600&display=swap">
@@ -31,10 +32,13 @@ body {
 .hero { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 32px; }
 .eyebrow { margin: 0 0 6px; font: 600 11px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
 h1 { margin: 0; font: 800 clamp(34px, 6vw, 58px)/.95 var(--display); letter-spacing: -.02em; }
-h1 .el { font-weight: 500; font-size: .5em; letter-spacing: 0; margin-right: .18em; vertical-align: .55em; color: var(--dim); }
-h1 .o { display: inline-block; width: .78em; height: .78em; border-radius: 50%; vertical-align: -.04em; margin-right: .06em;
-	background: conic-gradient(#FF4D4D, #FFC44E, #5DE6A2, #80C0FE, #B5ADFF, #FF8CCD, #FF4D4D); animation: spin 12s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+/* mesma composição do banner do instalador (360 × 84), em escala: tudo medido pelo tamanho do picolé (--s) */
+h1 { --s: 120px; position: relative; height: var(--s); width: calc(var(--s) * 4.35); margin-top: 8px; font-size: calc(var(--s) * .347); line-height: 1; }
+h1 .logo { position: absolute; left: calc(var(--s) * -.08); top: 0; width: var(--s); height: var(--s); transform-origin: 50% 85%; transition: transform .5s cubic-bezier(.34,1.56,.64,1); }
+h1:hover .logo { transform: rotate(-8deg); }
+h1 .el { position: absolute; left: calc(var(--s) * .837); top: calc(var(--s) * .111); font-size: calc(var(--s) * .18); font-weight: 800; letter-spacing: .03em; color: var(--dim); }
+h1 .word { position: absolute; left: calc(var(--s) * 1.1); top: calc(var(--s) * .069); }
+@media (max-width: 720px) { h1 { --s: 76px; } }
 .lede { margin: 0; max-width: 42ch; color: var(--dim); text-wrap: pretty; }
 
 /* ---------- janela falsa */
@@ -90,7 +94,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 .frame { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; border-radius: 6px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255,255,255,.07); resize: both; max-width: 100%; }
 .ws[data-layout="strip"] .frame { height: 102px; resize: vertical; min-height: 64px; }
 .tab { display: flex; align-items: center; gap: 8px; height: 24px; padding: 0 10px; background: var(--chrome-2); font: 600 10px var(--mono); letter-spacing: .08em; color: var(--dim); flex: none; }
-.tab::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-dot, #FFC44E); transition: background .4s; }
+.tab::before { content: ''; width: 14px; height: 14px; background: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjkuMTIgOS4xMiAxMDEuNzYgMTAxLjc2Ij48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNGRjRENEQiLz48c3RvcCBvZmZzZXQ9Ii4yNSIgc3RvcC1jb2xvcj0iI0ZGOEY0RCIvPjxzdG9wIG9mZnNldD0iLjUiIHN0b3AtY29sb3I9IiNGRkM0NEUiLz48c3RvcCBvZmZzZXQ9Ii43NSIgc3RvcC1jb2xvcj0iIzVERTZBMiIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzgwQzBGRSIvPjwvbGluZWFyR3JhZGllbnQ+PG1hc2sgaWQ9Im0iPjxyZWN0IHg9Ii0yMCIgeT0iLTIwIiB3aWR0aD0iMTYwIiBoZWlnaHQ9IjE2MCIgZmlsbD0iI2ZmZiIvPjxnIGZpbGw9IiMwMDAiPjxjaXJjbGUgY3g9IjkwLjUiIGN5PSIzMiIgcj0iMTMiLz48L2c+PC9tYXNrPjwvZGVmcz48cmVjdCB4PSI1My4wIiB5PSI4MCIgd2lkdGg9IjE0IiBoZWlnaHQ9IjI4IiByeD0iNy4wIiBmaWxsPSIjRTlDRkEwIi8+PGcgbWFzaz0idXJsKCNtKSI+PHBhdGggZD0iTTMzLjAsNzcgTDM3LjAsMjEgUTM3LjAsMTIgNDYuMCwxMiBMNzQuMCwxMiBRODMuMCwxMiA4My4wLDIxIEw4Ny4wLDc3IFE4Ny4wLDg2IDc4LjAsODYgTDQyLjAsODYgUTMzLjAsODYgMzMuMCw3NyBaIiBmaWxsPSJ1cmwoI2cpIi8+PHBhdGggZD0iTTQyLjAsMjYgTDQxLjAsNTgiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9Ii4zNSIvPjwvZz48L3N2Zz4=") center / contain no-repeat; }
 .tab span { margin-left: auto; opacity: .7; }
 #pal { flex: 1; min-height: 0; }
 
@@ -110,8 +114,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	.pane-title, .hint { display: none; }
 	.layouts { margin-left: 0; }
 }
-@media (prefers-reduced-motion: reduce) { h1 .el { font-weight: 500; font-size: .5em; letter-spacing: 0; margin-right: .18em; vertical-align: .55em; color: var(--dim); }
-h1 .o { animation: none; } }
+@media (prefers-reduced-motion: reduce) { h1 .logo { transition: none; } }
 /* El PALLETERO · painel
    layout: docas de ferramentas nas pontas + faixa de amostras que se adapta (faixa / lista / grade) */
 .pal {
@@ -337,9 +340,11 @@ h1 .o { animation: none; } }
 	color: var(--mute); text-align: center; padding: 6px;
 	animation: pal-fade .4s var(--ease);
 }
-.empty-dots { display: flex; gap: 3px; }
-.empty-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--raise-2); animation: pal-bob 1.6s ease-in-out infinite; }
-.empty-dots i:nth-child(2) { animation-delay: .15s; } .empty-dots i:nth-child(3) { animation-delay: .3s; }
+/* picolé em cinza que balança devagar; no hover ganha cor e dá uma inclinadinha */
+.empty-logo { width: 40px; height: 40px; flex: none; filter: grayscale(1); opacity: .5; animation: pal-sway 2.8s ease-in-out infinite; transform-origin: 50% 90%; transition: filter .5s var(--ease), opacity .3s; }
+.empty:hover .empty-logo { filter: none; opacity: 1; animation-duration: 1.2s; }
+.pal[data-thin='1'] .empty-logo { width: 28px; height: 28px; }
+@keyframes pal-sway { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg) translateY(-1px); } }
 .empty .row-btn { color: var(--fg); }
 
 /* ------------------------------------------------------------ folhas (editor / ajustes) */
@@ -803,7 +808,7 @@ h1 .o { animation: none; } }
 	<header class="hero">
 		<div>
 			<p class="eyebrow">extensão CEP para After Effects · mockup interativo</p>
-			<h1><span class="o" aria-hidden="true"></span><span class="el">El</span>PALLETERO</h1>
+			<h1 aria-label="El PALLETERO"><img class="logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjkuMTIgOS4xMiAxMDEuNzYgMTAxLjc2Ij48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNGRjRENEQiLz48c3RvcCBvZmZzZXQ9Ii4yNSIgc3RvcC1jb2xvcj0iI0ZGOEY0RCIvPjxzdG9wIG9mZnNldD0iLjUiIHN0b3AtY29sb3I9IiNGRkM0NEUiLz48c3RvcCBvZmZzZXQ9Ii43NSIgc3RvcC1jb2xvcj0iIzVERTZBMiIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzgwQzBGRSIvPjwvbGluZWFyR3JhZGllbnQ+PG1hc2sgaWQ9Im0iPjxyZWN0IHg9Ii0yMCIgeT0iLTIwIiB3aWR0aD0iMTYwIiBoZWlnaHQ9IjE2MCIgZmlsbD0iI2ZmZiIvPjxnIGZpbGw9IiMwMDAiPjxjaXJjbGUgY3g9IjkwLjUiIGN5PSIzMiIgcj0iMTMiLz48L2c+PC9tYXNrPjwvZGVmcz48cmVjdCB4PSI1My4wIiB5PSI4MCIgd2lkdGg9IjE0IiBoZWlnaHQ9IjI4IiByeD0iNy4wIiBmaWxsPSIjRTlDRkEwIi8+PGcgbWFzaz0idXJsKCNtKSI+PHBhdGggZD0iTTMzLjAsNzcgTDM3LjAsMjEgUTM3LjAsMTIgNDYuMCwxMiBMNzQuMCwxMiBRODMuMCwxMiA4My4wLDIxIEw4Ny4wLDc3IFE4Ny4wLDg2IDc4LjAsODYgTDQyLjAsODYgUTMzLjAsODYgMzMuMCw3NyBaIiBmaWxsPSJ1cmwoI2cpIi8+PHBhdGggZD0iTTQyLjAsMjYgTDQxLjAsNTgiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9Ii4zNSIvPjwvZz48L3N2Zz4=" alt=""><span class="el">EL</span><span class="word">PALLETERO</span></h1>
 		</div>
 		<p class="lede">O painel abaixo é o mesmo código da extensão, ligado a uma composição de mentira. Selecione um layer e clique numa cor.</p>
 	</header>
@@ -1569,6 +1574,9 @@ h1 .o { animation: none; } }
 		file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>'
 	};
 
+	// logo (picolé com mordida) para o estado de paleta vazia · mesmo desenho de docs/img/logo.svg
+	var LOGO = '<svg class="empty-logo" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="9.12 9.12 101.76 101.76"><defs><linearGradient id="pal-lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF4D4D"/><stop offset=".25" stop-color="#FF8F4D"/><stop offset=".5" stop-color="#FFC44E"/><stop offset=".75" stop-color="#5DE6A2"/><stop offset="1" stop-color="#80C0FE"/></linearGradient><mask id="pal-lm"><rect x="-20" y="-20" width="160" height="160" fill="#fff"/><g fill="#000"><circle cx="90.5" cy="32" r="13"/></g></mask></defs><rect x="53.0" y="80" width="14" height="28" rx="7.0" fill="#E9CFA0"/><g mask="url(#pal-lm)"><path d="M33.0,77 L37.0,21 Q37.0,12 46.0,12 L74.0,12 Q83.0,12 83.0,21 L87.0,77 Q87.0,86 78.0,86 L42.0,86 Q33.0,86 33.0,77 Z" fill="url(#pal-lg)"/><path d="M42.0,26 L41.0,58" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".35"/></g></svg>';
+
 	function ic(name, cls) {
 		return '<svg class="ic ' + (cls || '') + '" viewBox="0 0 24 24" aria-hidden="true">' + ICONS[name] + '</svg>';
 	}
@@ -1612,7 +1620,7 @@ h1 .o { animation: none; } }
 			'  <button class="tool" data-act="capture" aria-label="Capturar cores"><span class="swap">' + ic('pipette') + ic('image') + ic('layers') + '</span></button>',
 			'</div>',
 			'<div class="strip" role="list" aria-label="Paleta"></div>',
-			'<div class="empty" hidden><span class="empty-dots"><i></i><i></i><i></i></span><span>Paleta vazia</span>',
+			'<div class="empty" hidden>' + LOGO + '<span>Paleta vazia</span>',
 			'  <button class="row-btn" data-act="capture">' + ic('pipette') + '<span class="lbl">Capturar</span></button>',
 			'  <button class="row-btn" data-act="add">' + ic('plus') + '<span class="lbl">Nova cor</span></button>',
 			'</div>',
@@ -3131,10 +3139,5 @@ h1 .o { animation: none; } }
 	var pal = document.getElementById('pal');
 	draw();
 	window.PalApp.mount(pal);
-	// o pontinho da aba acompanha a última cor aplicada
-	new MutationObserver(function () {
-		var a = pal.style.getPropertyValue('--accent');
-		if (a) document.querySelector('.tab').style.setProperty('--accent-dot', a);
-	}).observe(pal, { attributes: true, attributeFilter: ['style'] });
 })();
 </script>
