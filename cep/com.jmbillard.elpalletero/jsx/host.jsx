@@ -323,17 +323,17 @@ function PAL_fromNet(net) {
 }
 
 // caminho guardado (de qualquer sistema) → caminho desta máquina
-function PAL_localPath(native, net) {
+function PAL_localPath(stored, net) {
 	if (net) return PAL_fromNet(net);
-	native = String(native || '');
-	if (PAL_splitUNC(native)) return PAL_fromNet(native);
+	stored = String(stored || '');
+	if (PAL_splitUNC(stored)) return PAL_fromNet(stored);
 	if (PAL_OS == 'Mac') {
-		if (/^[A-Z]:[\\\/]/i.test(native)) return '';                     // unidade do Windows sem forma de rede: impossível resolver
-		if (/^\/Volumes\//.test(native)) return PAL_resolveVolume(native);
-	} else if (/^\/Volumes\//.test(native)) {
+		if (/^[A-Z]:[\\\/]/i.test(stored)) return '';                     // unidade do Windows sem forma de rede: impossível resolver
+		if (/^\/Volumes\//.test(stored)) return PAL_resolveVolume(stored);
+	} else if (/^\/Volumes\//.test(stored)) {
 		return '';                                                         // volume do Mac sem forma de rede
 	}
-	return native;
+	return stored;
 }
 
 // raiz do volume/unidade (para saber se está montado)
@@ -350,13 +350,13 @@ function PAL_defaultPresetPath() { return PAL_PREFS_FOLDER + '/presets'; }
 // { folder: Folder|null, path, offline, volume, net }
 function PAL_presetLocation() {
 	var p = PAL_readPrefs();
-	var native = p.presetFolder || PAL_defaultPresetPath();
+	var stored = p.presetFolder || PAL_defaultPresetPath();
 	var net = p.presetFolderNet || '';
-	var path = PAL_localPath(native, net);
-	var u = PAL_splitUNC(net || native);
-	var volume = u ? u.share : (PAL_volumeRoot(native).replace(/^\/Volumes\//, '') || native);
+	var path = PAL_localPath(stored, net);
+	var u = PAL_splitUNC(net || stored);
+	var volume = u ? u.share : (PAL_volumeRoot(stored).replace(/^\/Volumes\//, '') || stored);
 
-	if (!path) return { folder: null, path: native, offline: true, volume: volume, net: net };
+	if (!path) return { folder: null, path: stored, offline: true, volume: volume, net: net };
 	var f = new Folder(path);
 	if (f.exists) return { folder: f, path: f.fsName, offline: false, volume: volume, net: net };
 
