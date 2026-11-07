@@ -259,6 +259,7 @@ o **⋯** (doca da direita) abre os ajustes no lugar das cores.
 
 > 🚩 *obs:*\
 > • com o painel em foco, ele pede essas teclas ao After Effects, para `Ctrl+Z` / `⌘Z` desfazer a paleta, e não o projeto, e `Delete` não apagar layers.\
+> • os ícones mostram o que vão fazer: a lixeira abre a tampa no hover (e abre mais enquanto você segura *limpar*), as setas de ordenar trocam de lugar, o ✓ se desenha, o × gira, o conta-gotas "suga" enquanto captura e as camadas se abrem com `Shift`.\
 > • as dicas do painel aparecem quando o mouse pode fazer alguma coisa e mudam ao vivo quando você segura `Ctrl`, `Alt` ou `Shift`. as dicas das amostras somem depois que você já as viu algumas vezes.
 
 <br>
