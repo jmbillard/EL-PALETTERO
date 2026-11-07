@@ -97,7 +97,7 @@
 	min-width: 0; min-height: 0;
 	display: flex;
 	gap: var(--gap);
-	transition: opacity .25s, filter .25s;
+	transition: opacity .22s, transform .3s var(--ease);
 }
 .pal[data-orient='col'] .strip { flex-direction: column; overflow-y: auto; overflow-x: hidden; }
 .pal[data-orient='grid'] .strip {
@@ -109,7 +109,7 @@
 }
 .strip::-webkit-scrollbar { width: 6px; }
 .strip::-webkit-scrollbar-thumb { background: var(--raise-2); border-radius: 3px; }
-.pal.sheet-open .strip { opacity: .25; filter: blur(2px); pointer-events: none; }
+.pal.sheet-open .strip { opacity: 0; transform: scale(.98); pointer-events: none; } /* some de vez: esmaecida e desfocada, vazava pelos cantos das folhas */
 
 .sw {
 	--ink: #fff;
@@ -125,8 +125,11 @@
 	touch-action: none;
 }
 .pal[data-orient='col'] .sw { min-height: 18px; }
-.pal:not(.dragging) .strip .sw:hover { flex-grow: 2.6; border-radius: 9px; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .9), 0 6px 18px -6px var(--c); z-index: 2; }
-.pal[data-orient='grid']:not(.dragging) .strip .sw:hover { transform: scale(1.06); }
+/* a amostra em destaque é "presa" por JS (.hot): o vão entre amostras não desfaz o destaque,
+   então o layout não fica pulando quando o mouse para entre duas */
+.pal:not(.dragging) .strip .sw.hot { flex-grow: 2.6; border-radius: 9px; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .9); z-index: 2; }
+.pal[data-roomy='1']:not(.dragging) .strip .sw.hot { flex-grow: 1.5; }
+.pal[data-orient='grid']:not(.dragging) .strip .sw.hot { transform: scale(1.06); }
 .sw:active { transform: scale(.96); }
 .sw.drag { z-index: 10; transition: none; box-shadow: 0 0 0 2px #fff, 0 14px 30px -8px rgba(0, 0, 0, .7); cursor: grabbing; }
 .pal.dragging .sw:not(.drag) { transition: flex-grow .2s, transform .2s; }
@@ -144,14 +147,14 @@
 	transition: top .3s var(--ease);
 }
 .sw-glyph .ic { position: absolute; inset: 3px; opacity: 0; transform: scale(.5); transition: opacity .2s, transform .3s var(--spring); }
-.sw:hover .g-fill { opacity: .9; transform: none; }
-.pal.ctrl .sw:hover .g-fill, .pal.alt .sw:hover .g-fill, .sw.ok .g-fill { opacity: 0; transform: scale(.5); }
-.pal.ctrl .sw:hover .g-copy { opacity: .9; transform: none; }
+.sw.hot .g-fill { opacity: .9; transform: none; }
+.pal.ctrl .sw.hot .g-fill, .pal.alt .sw.hot .g-fill, .sw.ok .g-fill { opacity: 0; transform: scale(.5); }
+.pal.ctrl .sw.hot .g-copy { opacity: .9; transform: none; }
 .pal.alt .sw .g-del { opacity: .95; transform: none; }
 .sw.ok .g-ok { opacity: 1; transform: scale(1.25); stroke-width: 3; }
 /* lista e faixa baixa: rótulos · balde · lápis, lado a lado */
 .pal[data-orient='col'] .sw-glyph, .pal[data-tight='1'] .sw-glyph { top: 50%; left: auto; right: 28px; margin: -11px 0 0 0; }
-.pal[data-tight='1'] .sw:hover .sw-meta { right: 54px; }
+.pal[data-tight='1'] .sw.hot .sw-meta { right: 54px; }
 
 /* rótulos */
 .sw-meta {
@@ -165,7 +168,7 @@
 .sw-name { font-weight: 600; font-size: 11px; overflow: hidden; text-overflow: ellipsis; }
 .sw-val { font: 10px/1.2 var(--mono); opacity: .78; letter-spacing: .02em; overflow: hidden; text-overflow: ellipsis; }
 .pal:not(.show-names) .sw-name { display: none; }
-.sw:hover .sw-meta, .pal[data-roomy='1'].show-info .sw-meta { opacity: 1; transform: none; }
+.sw.hot .sw-meta, .pal[data-roomy='1'].show-info .sw-meta { opacity: 1; transform: none; }
 .pal[data-orient='col'] .sw-meta { top: 0; bottom: 0; right: 8px; flex-direction: row; align-items: center; gap: 8px; }
 .pal[data-orient='col'] .sw-name { flex: 0 1 auto; }
 .pal[data-orient='col'] .sw-val { flex: 1 1 auto; }
@@ -190,7 +193,7 @@
 	transition: opacity .2s, transform .3s var(--spring);
 }
 .sw-edit .ic { width: 12px; height: 12px; opacity: 0; transform: scale(.3) rotate(-60deg); transition: opacity .18s, transform .35s var(--spring); }
-.sw:hover .sw-edit::before { opacity: .55; transform: none; }
+.sw.hot .sw-edit::before { opacity: .55; transform: none; }
 .sw-edit:hover { background: rgba(0, 0, 0, .28); }
 .sw-edit:hover::before { opacity: 0; transform: scale(2.6); }
 .sw-edit:hover .ic { opacity: 1; transform: none; }
@@ -198,7 +201,7 @@
 .sw-edit:hover ~ .sw-glyph .ic { opacity: 0 !important; transform: scale(.5) !important; }
 .sw.drag .sw-edit, .pal.alt .sw-edit, .pal.ctrl .sw-edit { display: none; }
 .pal[data-orient='col'] .sw-edit, .pal[data-tight='1'] .sw-edit { top: 50%; margin-top: -12px; right: 3px; }
-.pal[data-orient='col'] .sw:hover .sw-meta { right: 54px; }
+.pal[data-orient='col'] .sw.hot .sw-meta { right: 54px; }
 
 /* marca da última cor aplicada */
 .sw-dot { position: absolute; top: 5px; left: 5px; width: 5px; height: 5px; border-radius: 50%; background: var(--ink); transform: scale(0); transition: transform .35s var(--spring); }
@@ -208,7 +211,7 @@
 /* modo excluir (alt) */
 .pal.alt .sw { animation: pal-jiggle .32s ease-in-out infinite alternate; cursor: not-allowed; }
 .pal.alt .sw:nth-child(2n) { animation-delay: -.16s; }
-.pal.alt .sw:hover { box-shadow: 0 0 0 2px var(--danger) !important; }
+.pal.alt .sw.hot { box-shadow: 0 0 0 2px var(--danger) !important; }
 .pal.ctrl .sw { cursor: copy; }
 
 /* feedback */

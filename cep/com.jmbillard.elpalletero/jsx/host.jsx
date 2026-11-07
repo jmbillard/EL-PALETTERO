@@ -419,16 +419,52 @@ function PAL_defaultPreset() {
 	return { name: '', swatches: PAL_builtinSwatches() };
 }
 
+// paletas de exemplo: criadas uma vez na pasta padrão (pastas de equipe não são tocadas).
+// Subir PAL_EXAMPLES_VERSION traz exemplos novos sem recriar os que a pessoa apagou antes.
+var PAL_EXAMPLES_VERSION = 2;
+var PAL_EXAMPLES = [
+	['exemplo-por-do-sol', 'Pôr do sol', ['#2B1B4A', '#6A2C70', '#C2456B', '#F08A4B', '#FFD27A', '#FFF1C9']],
+	['exemplo-sorveteria', 'Sorveteria', ['#F7C6D9', '#FDE2B8', '#F6EAC2', '#B8E0D2', '#A7C7E7', '#D9C2F0']],
+	['exemplo-neon', 'Neon', ['#0D0221', '#FF2A6D', '#F706CF', '#05D9E8', '#01FFC3', '#FFF338']],
+	['exemplo-oceano', 'Oceano', ['#03045E', '#0077B6', '#00B4D8', '#48CAE4', '#90E0EF', '#CAF0F8']],
+	['exemplo-floresta', 'Floresta', ['#0B2B1C', '#1F4D2B', '#3A7D44', '#7FB069', '#C9D99E', '#F2E8CF']],
+	['exemplo-terroso', 'Terroso', ['#3D2B1F', '#7A4E2D', '#B5703F', '#D9A273', '#E8D2B0', '#6B7F4F']],
+	['exemplo-tropical', 'Tropical', ['#FF5E5B', '#FFAA4C', '#FFED66', '#00CECB', '#0B7A75', '#2E294E']],
+	['exemplo-retro-70', 'Retrô 70', ['#8C3B19', '#D9622B', '#F2A541', '#F2D16B', '#6B8F71', '#2E4A3F']],
+	['exemplo-noite-urbana', 'Noite urbana', ['#0F1020', '#2A2D5E', '#4F5BD5', '#E03E7E', '#FFB86B', '#F7F7FF']],
+	['exemplo-brasil', 'Brasil', ['#009C3B', '#FFDF00', '#002776', '#FFFFFF']],
+	['exemplo-pastel', 'Pastel', ['#FFD6E0', '#FFEFCF', '#D4F4DD', '#CDE7FF', '#E5D9FF', '#FCE1F5']],
+	['exemplo-monocromatico', 'Monocromático', ['#111111', '#333333', '#555555', '#888888', '#BBBBBB', '#EEEEEE']]
+];
+
+function PAL_seedExamples(loc) {
+	var prefs = PAL_readPrefs();
+	if ((Number(prefs.presetsSeeded) || (prefs.presetsSeeded === true ? 1 : 0)) >= PAL_EXAMPLES_VERSION) return;
+	var isDefault = PAL_slash(loc.folder.fsName).toLowerCase() == PAL_slash(new Folder(PAL_defaultPresetPath()).fsName).toLowerCase();
+	if (!isDefault) return; // pasta de equipe: não mexe, e tenta de novo quando voltar para a pasta padrão
+	{
+		for (var i = 0; i < PAL_EXAMPLES.length; i++) {
+			var e = PAL_EXAMPLES[i];
+			if (new File(loc.folder.fsName + '/' + e[0] + '.json').exists) continue;
+			var sw = [];
+			for (var c = 0; c < e[2].length; c++) sw.push({ color: e[2][c], label: '', auto: true });
+			PAL_savePreset(PAL_json({ id: e[0], name: e[1], swatches: sw }));
+		}
+	}
+	PAL_savePrefs(PAL_json({ presetsSeeded: PAL_EXAMPLES_VERSION }));
+}
+
 function PAL_listPresets() {
 	var loc = PAL_presetLocation();
 	if (!loc.folder) return PAL_json({ folder: loc.path, offline: true, volume: loc.volume, canMount: PAL_OS == 'Mac' && !!loc.net, presets: [] });
 	// cria um primeiro preset para a biblioteca nunca começar vazia (só na pasta padrão)
 	var list = PAL_readPresets();
 	if (!list.length && !PAL_readPrefs().presetsSeeded) {
-		PAL_savePreset(PAL_json({ name: 'El PALLETERO', swatches: PAL_builtinSwatches() }));
-		PAL_savePrefs(PAL_json({ presetsSeeded: true }));
-		list = PAL_readPresets();
+		PAL_savePreset(PAL_json({ id: 'el-palletero', name: 'El PALLETERO', swatches: PAL_builtinSwatches() }));
+		PAL_savePrefs(PAL_json({ presetsSeeded: 1 }));
 	}
+	PAL_seedExamples(loc);
+	list = PAL_readPresets();
 	return PAL_json({ folder: loc.path, offline: false, presets: list });
 }
 

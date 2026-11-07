@@ -35,8 +35,20 @@
 		'/Users/voce/Library/Application Support/El PALLETERO/presets': [
 			{ id: 'el-palletero', name: 'El PALLETERO', swatches: BUILTIN },
 			{ id: 'abertura', name: 'Abertura', swatches: sw(['#FF4D4D', '#FFC44E', '#5DE6A2', '#80C0FE', '#B5ADFF', '#FF8CCD', '#1E2A44', '#F2F2F2']) },
-			{ id: 'neutros', name: 'Neutros', swatches: sw(['#111111', '#2B2B2B', '#4A4A4A', '#8D8D8D', '#C0C0C0', '#E3DAC9', '#F5F3EE']) },
-			{ id: 'verao', name: 'Verão', swatches: sw(['#FF7518', '#FFC72C', '#40E0D0', '#00B2A9', '#FA8072', '#FFF1A8']) }
+			{ id: 'exemplo-monocromatico', name: 'Monocromático', swatches: sw(['#111111', '#333333', '#555555', '#888888', '#BBBBBB', '#EEEEEE']) },
+			{ id: 'verao', name: 'Verão', swatches: sw(['#FF7518', '#FFC72C', '#40E0D0', '#00B2A9', '#FA8072', '#FFF1A8']) },
+			// as mesmas paletas de exemplo que o host.jsx cria na pasta padrão
+			{ id: 'exemplo-por-do-sol', name: 'Pôr do sol', swatches: sw(['#2B1B4A', '#6A2C70', '#C2456B', '#F08A4B', '#FFD27A', '#FFF1C9']) },
+			{ id: 'exemplo-sorveteria', name: 'Sorveteria', swatches: sw(['#F7C6D9', '#FDE2B8', '#F6EAC2', '#B8E0D2', '#A7C7E7', '#D9C2F0']) },
+			{ id: 'exemplo-neon', name: 'Neon', swatches: sw(['#0D0221', '#FF2A6D', '#F706CF', '#05D9E8', '#01FFC3', '#FFF338']) },
+			{ id: 'exemplo-oceano', name: 'Oceano', swatches: sw(['#03045E', '#0077B6', '#00B4D8', '#48CAE4', '#90E0EF', '#CAF0F8']) },
+			{ id: 'exemplo-floresta', name: 'Floresta', swatches: sw(['#0B2B1C', '#1F4D2B', '#3A7D44', '#7FB069', '#C9D99E', '#F2E8CF']) },
+			{ id: 'exemplo-terroso', name: 'Terroso', swatches: sw(['#3D2B1F', '#7A4E2D', '#B5703F', '#D9A273', '#E8D2B0', '#6B7F4F']) },
+			{ id: 'exemplo-tropical', name: 'Tropical', swatches: sw(['#FF5E5B', '#FFAA4C', '#FFED66', '#00CECB', '#0B7A75', '#2E294E']) },
+			{ id: 'exemplo-retro-70', name: 'Retrô 70', swatches: sw(['#8C3B19', '#D9622B', '#F2A541', '#F2D16B', '#6B8F71', '#2E4A3F']) },
+			{ id: 'exemplo-noite-urbana', name: 'Noite urbana', swatches: sw(['#0F1020', '#2A2D5E', '#4F5BD5', '#E03E7E', '#FFB86B', '#F7F7FF']) },
+			{ id: 'exemplo-brasil', name: 'Brasil', swatches: sw(['#009C3B', '#FFDF00', '#002776', '#FFFFFF']) },
+			{ id: 'exemplo-pastel', name: 'Pastel', swatches: sw(['#FFD6E0', '#FFEFCF', '#D4F4DD', '#CDE7FF', '#E5D9FF', '#FCE1F5']) }
 		],
 		'/Volumes/equipe/design/paletas': [
 			{ id: 'jornal', name: 'Jornal da noite', swatches: sw(['#0B1F4B', '#1560BD', '#80C0FE', '#E53935', '#FFFFFF']) },

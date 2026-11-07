@@ -7,7 +7,7 @@
 	var Host = root.PalHost;
 	var N = root.PalNames;
 	var X = root.PalExtract;
-	var VERSION = 'v1.2.1';
+	var VERSION = 'v1.2.2';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
@@ -558,6 +558,27 @@
 
 		// arrastar para reordenar (pointer capture fica na faixa, que nunca se move)
 		var D = null;
+		// destaque da amostra sob o mouse: "preso" até entrar em outra amostra (o vão entre elas não conta)
+		// e com uma espera curta ao trocar, para uma passada rápida não sacudir a faixa inteira
+		var hot = null, hotTimer = null;
+		function setHot(n) {
+			if (hot === n) return;
+			if (hot) hot.classList.remove('hot');
+			hot = n;
+			if (n) n.classList.add('hot');
+		}
+		strip.addEventListener('pointerover', function (e) {
+			var n = e.target.closest('.sw');
+			if (!n || n.classList.contains('leaving') || el.classList.contains('dragging')) return;
+			clearTimeout(hotTimer);
+			if (!hot || !hot.isConnected) setHot(n);
+			else if (n !== hot) hotTimer = setTimeout(function () { setHot(n); }, 45);
+		});
+		strip.addEventListener('pointerleave', function () {
+			clearTimeout(hotTimer);
+			hotTimer = setTimeout(function () { setHot(null); }, 60);
+		});
+
 		strip.addEventListener('pointerdown', function (e) {
 			var n = e.target.closest('.sw');
 			if (!n || n.classList.contains('leaving') || e.button !== 0 || macRightClick(e) || e.target.closest('.sw-edit')) return;
@@ -571,6 +592,7 @@
 				if (Math.abs(e.clientX - D.x) + Math.abs(e.clientY - D.y) < 6 || e.altKey) return;
 				D.started = true;
 				el.classList.add('dragging');
+				setHot(null);
 				D.n.classList.add('drag');
 				hideTip();
 				var r0 = rect(D.n);
@@ -626,6 +648,7 @@
 			d.n.animate([{ transform: from }, { transform: 'none' }], { duration: 320, easing: SPRING });
 			d.n.classList.remove('drag');
 			el.classList.remove('dragging');
+			setHot(d.n);
 			var order = liveNodes().map(function (x) { return x.dataset.id; });
 			var changed = order.join() !== d.before.map(function (s) { return s.id; }).join();
 			if (changed) {
