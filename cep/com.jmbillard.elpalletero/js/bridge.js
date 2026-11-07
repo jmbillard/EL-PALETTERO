@@ -132,6 +132,7 @@
 		savePrefs: function (prefs) { return call('savePrefs', JSON.stringify(prefs)); },
 		apply: function (hex, opts) { return call('apply', hex, JSON.stringify(opts || {})); },
 		capture: function (scope) { return call('capture', scope); },
+		inspect: function () { return call('inspect'); },
 		listPresets: function () { return call('listPresets'); },
 		savePreset: function (preset) { return call('savePreset', JSON.stringify(preset)); },
 		deletePreset: function (id) { return call('deletePreset', id); },

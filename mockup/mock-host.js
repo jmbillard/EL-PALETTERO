@@ -170,8 +170,15 @@
 		revealPresetFolder: function () { return { ok: true }; },
 		mountPresetVolume: function () { mounted = true; return this.listPresets(); },
 		resetPresetFolder: function () { prefs.presetFolder = folderNames[0]; return this.listPresets(); },
+		inspect: function () {
+			var sel = selLayers();
+			if (!sel.length) return { mode: 'image', source: 'comp', label: 'MAIN_COMP' };
+			var flat = sel.filter(function (l) { return !l.scene; });
+			if (flat.length) return { mode: 'layers', count: flat.length };
+			return { mode: 'image', source: 'layer', label: sel[0].name };
+		},
 		grabFrame: function () {
-			var l = selLayers()[0];
+			var l = selLayers().filter(function (x) { return x.scene; })[0];
 			// vídeo simula um render demorado (mostra o aviso de espera); imagem é lida na hora
 			if (l && l.scene) return { ok: true, url: scene(l.scene, 640, 360), label: l.name, kind: l.kind, temp: l.kind === 'video', readyAt: l.kind === 'video' ? Date.now() + 2600 : 0 };
 			return { ok: true, url: scene('comp', 640, 360), label: 'MAIN_COMP', kind: 'comp', temp: true, readyAt: Date.now() + 400 };

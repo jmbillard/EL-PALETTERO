@@ -513,7 +513,7 @@ var PAL_IMAGE_EXT = /\.(png|jpe?g|gif|bmp|webp)$/i;
 function PAL_grabFrame() {
 	var comp = app.project.activeItem;
 	if (!(comp instanceof CompItem)) return PAL_json({ ok: false, reason: 'nocomp' });
-	var layer = comp.selectedLayers.length ? comp.selectedLayers[0] : null;
+	var layer = PAL_firstRaster(comp.selectedLayers);
 	PAL_sweepTemp();
 	var out = new File(Folder.temp.fsName + '/elpalletero_' + new Date().getTime() + '.png');
 	var src = layer && layer.source ? layer.source : null;
@@ -672,6 +672,45 @@ function PAL_capture(scope) {
 	}
 	if (!out.length) for (i = 0; i < layers.length; i++) PAL_layerColors(layers[i], out);
 	return PAL_json({ ok: true, colors: out });
+}
+
+// ---------------------------------------------------------------- conta-gotas contextual
+// O conta-gotas decide pelo que está selecionado:
+//   propriedades de cor → 'props' · layers vetoriais (shape, texto, sólido) → 'layers'
+//   layer raster (imagem, vídeo, PSD, precomp) → 'image' · nada selecionado → 'image' do frame da comp
+
+function PAL_isRaster(layer) {
+	try {
+		var src = layer.source;
+		if (src instanceof CompItem) return true;
+		return src instanceof FootageItem && !(src.mainSource instanceof SolidSource);
+	} catch (e) { return false; }
+}
+
+function PAL_firstRaster(layers) {
+	for (var i = 0; i < layers.length; i++) if (PAL_isRaster(layers[i])) return layers[i];
+	return null;
+}
+
+function PAL_inspect() {
+	var comp = app.project ? app.project.activeItem : null;
+	if (!(comp instanceof CompItem)) return PAL_json({ mode: 'none', reason: 'nocomp' });
+	var layers = comp.selectedLayers, i, p, found = [];
+	if (!layers.length) return PAL_json({ mode: 'image', source: 'comp', label: comp.name });
+
+	for (i = 0; i < layers.length; i++) {
+		var sel = layers[i].selectedProperties;
+		for (p = 0; p < sel.length; p++) PAL_collect(sel[p], found);
+	}
+	if (found.length) return PAL_json({ mode: 'props', count: found.length });
+
+	var raster = null;
+	for (i = 0; i < layers.length; i++) {
+		if (PAL_isRaster(layers[i])) { if (!raster) raster = layers[i]; }
+		else PAL_layerColors(layers[i], found);
+	}
+	if (found.length || !raster) return PAL_json({ mode: 'layers', count: found.length });
+	return PAL_json({ mode: 'image', source: 'layer', label: raster.source.name });
 }
 
 // ---------------------------------------------------------------- migração O PALETTERO → El PALLETERO

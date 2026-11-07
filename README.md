@@ -17,7 +17,7 @@ o palletero guarda as cores do projeto num painel que você acopla em qualquer l
 - [aplicar cores](#-aplicar-cores)
 - [organizar a paleta](#-organizar-a-paleta)
 - [editor de cor e nomes automáticos](#-editor-de-cor-e-nomes-automáticos)
-- [capturar cores do projeto](#-capturar-cores-do-projeto)
+- [conta-gotas](#-conta-gotas)
 - [extrair cores de uma imagem](#-extrair-cores-de-uma-imagem)
 - [presets](#-presets)
 - [formatos do painel](#-formatos-do-painel)
@@ -146,18 +146,27 @@ cada cor ganha um nome em português, do mundo real: *menta*, *tijolo*, *céu*, 
 
 <br>
 
-## 📍 capturar cores do projeto
+## 📍 conta-gotas
 
-o **conta-gotas** (doca da esquerda) traz para a paleta as cores que já estão no projeto.
+o **conta-gotas** (doca da esquerda) traz para a paleta as cores que já estão no projeto, e entende o que está selecionado:
+
+| seleção | o conta-gotas | ícone |
+| --- | --- | --- |
+| propriedades de cor | captura as cores dessas propriedades | conta-gotas |
+| layers de shape, texto ou sólido | captura as cores dos layers (efeitos, shapes, textos, sólidos) | conta-gotas |
+| layer de **imagem, vídeo, PSD ou precomp** | abre a [extração de cores da imagem](#-extrair-cores-de-uma-imagem) | imagem |
+| nada | extrai as cores do **frame atual da composição** | imagem |
+| `Shift` + qualquer seleção | captura as cores do **projeto inteiro** | camadas |
+
+ao passar o mouse, o ícone e a dica já mostram o que o clique vai fazer.
 
 > <img src="docs/gifs/capturar.gif" alt="capturando cores da seleção e do projeto" width="860">
 
-- `◖ clique esquerdo` → cores da **seleção**: primeiro das propriedades selecionadas; sem propriedades, dos layers selecionados inteiros (efeitos, shapes, textos, sólidos).
-- `Shift` + `◖ clique esquerdo` → cores do **projeto inteiro**. com `Shift` pressionado, o ícone vira as camadas.
-
 > 🚩 *obs:*\
 > • só entram cores que ainda não estão na paleta, e já chegam com nome.\
-> • o vermelho padrão de efeitos que nunca foram alterados (`#FF0000`) é ignorado.
+> • o vermelho padrão de efeitos que nunca foram alterados (`#FF0000`) é ignorado.\
+> • quer as cores dos **efeitos** de um layer de imagem (um Tint, um Fill)? selecione as propriedades: propriedades selecionadas sempre têm prioridade.\
+> • com layers vetoriais e de imagem selecionados juntos, valem as cores dos vetoriais.
 
 <br>
 
@@ -167,11 +176,11 @@ o **conta-gotas** (doca da esquerda) traz para a paleta as cores que já estão 
 
 ## 📍 extrair cores de uma imagem
 
-o botão de **imagem** (doca da esquerda) lê o frame atual do layer selecionado e sugere as cores principais.
+o **conta-gotas**, com um layer de imagem selecionado (ou nada selecionado), lê o frame atual e sugere as cores principais.
 
 > <img src="docs/gifs/imagem.gif" alt="extraindo cores de uma imagem" width="860">
 
-- funciona com **imagem**, **vídeo**, **PSD** e **precomp**. sem layer com imagem, usa o frame atual da **composição**.
+- funciona com **imagem**, **vídeo**, **PSD** e **precomp**. sem nada selecionado, usa o frame atual da **composição**.
 - os marcadores na imagem mostram de onde veio cada cor. passe o mouse numa amostra para destacar o marcador.
 - `◖ clique` numa amostra → liga / desliga.
 - `−` / `+` → menos ou mais cores (de 2 a 12; o painel lembra a sua escolha).

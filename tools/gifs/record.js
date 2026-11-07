@@ -72,7 +72,8 @@ S.capturar = () => scene('capturar', {
 // 5. extrair cores de imagem
 S.imagem = () => scene('imagem', { clip: WS, layout: 'grid', dsf: 2, width: 900 }, async (p, H) => {
   await H.click('.layer[data-id="photo"]'); await H.wait(300);
-  await H.click('.tool[data-act="frame"]', { ms: 800 }); await H.wait(1400);
+  await H.to('.tool[data-act="capture"]', .5, .5, 800); await H.wait(700); // o ícone vira imagem
+  await H.click(null); await H.wait(1400);
   await H.click('.ex-step[data-d="1"]'); await H.wait(700);
   const st = await p.locator('.ex-stage').boundingBox();
   await H.glide(st.x + st.width * .2, st.y + st.height * .2, 500);

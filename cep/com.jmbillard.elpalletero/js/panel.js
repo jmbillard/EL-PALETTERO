@@ -89,8 +89,7 @@
 		el.innerHTML = [
 			'<div class="dock dock-a">',
 			'  <button class="tool" data-act="add" aria-label="Nova cor">' + ic('plus') + '</button>',
-			'  <button class="tool" data-act="capture" aria-label="Capturar cores"><span class="swap">' + ic('pipette') + ic('layers') + '</span></button>',
-			'  <button class="tool" data-act="frame" aria-label="Extrair cores de imagem">' + ic('image') + '</button>',
+			'  <button class="tool" data-act="capture" aria-label="Capturar cores"><span class="swap">' + ic('pipette') + ic('image') + ic('layers') + '</span></button>',
 			'</div>',
 			'<div class="strip" role="list" aria-label="Paleta"></div>',
 			'<div class="empty" hidden><span class="empty-dots"><i></i><i></i><i></i></span><span>Paleta vazia</span>',
@@ -404,10 +403,7 @@
 			}
 			var act = t.dataset.act;
 			if (act === 'add' && t.classList.contains('tool')) return '<b>Nova cor</b>';
-			if (act === 'capture' && t.classList.contains('tool')) {
-				return mods.shift ? '<b>Capturar do projeto inteiro</b>' : '<b>Capturar da seleção</b>' + kbd(KEY.shift, 'projeto inteiro');
-			}
-			if (act === 'frame') return '<b>Extrair cores de imagem</b><span>do layer selecionado (ou da comp)</span>';
+			if (act === 'capture' && t.classList.contains('tool')) return captureTip();
 			if (act === 'menu') return el.classList.contains('menu-open') ? '<b>Fechar ajustes</b>' : '<b>Ajustes</b>';
 			if (act === 'library') return el.classList.contains('lib-open') ? '<b>Fechar presets</b>' : '<b>Presets</b>';
 			if (act === 'folder') return '<b>' + esc(S.folder) + '</b>' + kbd('clique', 'trocar pasta') + kbd(KEY.alt, 'abrir');
@@ -662,9 +658,47 @@
 		// ------------------------------------------------------------------ ferramentas
 		function busy(btn, on) { btn.classList.toggle('busy', on); }
 
+		// ---------------------------------------------------------------- conta-gotas contextual
+		// No hover, pergunta ao AE o que está selecionado e o ícone vira o que vai acontecer:
+		// conta-gotas (propriedades/layers), imagem (layer raster ou frame da comp), camadas (Shift).
+		var capTool = q('.tool[data-act="capture"]');
+		var INSPECT = null;
+
+		function setMode(m) {
+			INSPECT = m || null;
+			capTool.dataset.mode = (m && m.mode) || '';
+			if (tipEl.classList.contains('on') && tipTarget === capTool) showTip(capTool);
+		}
+		function inspect() { return Host.inspect().then(function (m) { setMode(m); return m; }, function () { setMode(null); return null; }); }
+
+		capTool.addEventListener('pointerenter', inspect);
+
+		function captureTip() {
+			var shift = kbd(KEY.shift, 'projeto inteiro');
+			if (mods.shift) return '<b>Capturar do projeto inteiro</b>';
+			var m = INSPECT ? INSPECT.mode : '';
+			if (m === 'image') {
+				return INSPECT.source === 'comp' ?
+					'<b>Extrair cores do frame</b><span>nada selecionado: usa a comp</span>' + shift :
+					'<b>Extrair cores da imagem</b><span>' + esc(INSPECT.label || '') + '</span>' + shift;
+			}
+			if (m === 'props') return '<b>Capturar as propriedades selecionadas</b>' + shift;
+			if (m === 'layers') return '<b>Capturar as cores dos layers</b>' + shift;
+			if (m === 'none') return '<b>Abra uma composição</b>' + shift;
+			return '<b>Capturar cores</b>' + shift;
+		}
+
 		function capture(btn, e) {
-			var scope = e.shiftKey ? 'project' : 'selection';
-			var tool = q('.tool[data-act="capture"]');
+			if (e.shiftKey) return captureColors(btn, 'project');
+			inspect().then(function (m) {
+				if (m && m.mode === 'image') return openExtract(btn);
+				if (m && m.mode === 'none') { flash(capTool, 'nope', 420); return toast(REASONS.nocomp, { icon: 'alert' }); }
+				captureColors(btn, 'selection');
+			});
+		}
+
+		function captureColors(btn, scope) {
+			var tool = capTool;
 			busy(tool, true);
 			Host.capture(scope).then(function (r) {
 				busy(tool, false);
@@ -702,7 +736,6 @@
 			else if (act === 'sort') { closeSettings(); sortPalette(); }
 			else if (act === 'menu') toggleSide('settings');
 			else if (act === 'library') toggleSide('library');
-			else if (act === 'frame') openExtract(b);
 			else if (act === 'save-preset') savePreset();
 			else if (act === 'folder') chooseFolder(e);
 			else if (act === 'toggle-info') setPref('info', !S.prefs.info);
@@ -1026,7 +1059,7 @@
 			if (anyFull()) return;
 			closeSettings();
 			hideTip();
-			var tool = q('.tool[data-act="frame"]');
+			var tool = capTool;
 			busy(tool, true);
 			Host.grabFrame().then(function (r) {
 				if (!r || !r.ok) {

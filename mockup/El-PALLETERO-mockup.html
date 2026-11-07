@@ -190,6 +190,11 @@ h1 .o { animation: none; } }
 .swap { position: relative; width: 16px; height: 16px; }
 .swap .ic { position: absolute; inset: 0; }
 .swap .ic:last-child { opacity: 0; transform: rotate(-90deg) scale(.4); }
+/* conta-gotas contextual: com layer raster selecionado (ou nada selecionado) vira imagem */
+.swap .ic:nth-child(2):not(:last-child) { opacity: 0; transform: scale(.4) rotate(-25deg); }
+.tool[data-mode='image'] .swap .ic:first-child { opacity: 0; transform: scale(.4) rotate(25deg); }
+.pal:not(.shift) .tool[data-mode='image'] .swap .ic:nth-child(2) { opacity: 1; transform: none; }
+.pal:not(.shift) .tool[data-mode='image']:hover .swap .ic:nth-child(2) { transform: scale(1.1) rotate(-6deg); }
 .pal.shift [data-act='capture'] .swap .ic:first-child,
 .pal.menu-open [data-act='menu'] .swap .ic:first-child,
 .pal.lib-open [data-act='library'] .swap .ic:first-child { opacity: 0; transform: rotate(90deg) scale(.4); }
@@ -197,7 +202,6 @@ h1 .o { animation: none; } }
 .pal.menu-open [data-act='menu'] .swap .ic:last-child,
 .pal.lib-open [data-act='library'] .swap .ic:last-child { opacity: 1; transform: none; }
 .pal.shift [data-act='capture'], .pal.menu-open [data-act='menu'], .pal.lib-open [data-act='library'] { color: var(--accent); }
-.tool[data-act='frame']:hover .ic { transform: scale(1.12) rotate(-6deg); }
 .tool[data-act='library']:hover .swap .ic:first-child { transform: rotate(-12deg); }
 
 /* ------------------------------------------------------------ faixa de amostras */
@@ -762,7 +766,7 @@ h1 .o { animation: none; } }
 .pal.shift .tool[data-act='capture'] .i-l1 { transform: translateY(-2px); }
 .pal.shift .tool[data-act='capture'] .i-l3 { transform: translateY(2px); }
 /* imagem: enquanto lê o frame, pulsa (no lugar de girar) */
-.tool[data-act='frame'].busy .ic { animation: pal-breathe .9s ease-in-out infinite; }
+.pal:not(.shift) .tool[data-mode='image'].busy .swap .ic:nth-child(2) { animation: pal-breathe .9s ease-in-out infinite; }
 
 /* olho pisca; etiqueta balança; ✦ cintila; ? acena; ↻ dá uma volta */
 .ic .i-eye { transform-origin: 12px 12px; }
@@ -828,9 +832,9 @@ h1 .o { animation: none; } }
 		<div class="tile"><kbd>arrastar</kbd><p><b>Reordena</b> as cores. Os vizinhos abrem espaço.</p></div>
 		<div class="tile"><kbd>Alt</kbd><p><b>Modo excluir.</b> As amostras tremem; clique para remover. Tudo tem desfazer (Ctrl+Z).</p></div>
 		<div class="tile"><kbd>Ctrl</kbd><p><b>Copia o valor</b> no formato escolhido (HEX, RGB ou HSB).</p></div>
-		<div class="tile"><kbd>Shift</kbd><p>O <b>conta-gotas</b> vira <b>projeto inteiro</b> enquanto a tecla estiver pressionada.</p></div>
+		<div class="tile"><kbd>Shift</kbd><p>O <b>conta-gotas</b> vira <b>projeto inteiro</b> enquanto a tecla estiver pressionada. Passe o mouse nele: o ícone já mostra o que vai fazer.</p></div>
 		<div class="tile"><kbd>nomes</kbd><p><b>Cada cor ganha um nome</b> (menta, tijolo, céu…) que acompanha a cor no editor até você digitar o seu. A ✦ devolve o automático.</p></div>
-		<div class="tile"><kbd>imagem</kbd><p>Selecione <b>praia_entardecer.jpg</b> e use o botão de imagem: as cores principais do frame aparecem. Clique na imagem para pegar outras.</p></div>
+		<div class="tile"><kbd>conta-gotas</kbd><p><b>Entende a seleção:</b> com <b>praia_entardecer.jpg</b> selecionado ele vira imagem e extrai as cores do frame; com shapes, captura as cores dos layers; sem nada, usa o frame da comp.</p></div>
 		<div class="tile"><kbd>presets</kbd><p><b>Biblioteca de presets</b> numa pasta que você escolhe (pode ser da equipe). Clique substitui, Shift adiciona, ★ vira o padrão.</p></div>
 		<div class="tile"><kbd>projeto</kbd><p><b>Troque de projeto</b> no topo: cada .aep guarda a própria paleta num grupo de metadados El PALLETERO.</p></div>
 		<div class="tile"><kbd>formato</kbd><p><b>Faixa, coluna ou grade:</b> o painel se reorganiza sozinho. Arraste o canto para redimensionar.</p></div>
@@ -1332,8 +1336,15 @@ h1 .o { animation: none; } }
 		revealPresetFolder: function () { return { ok: true }; },
 		mountPresetVolume: function () { mounted = true; return this.listPresets(); },
 		resetPresetFolder: function () { prefs.presetFolder = folderNames[0]; return this.listPresets(); },
+		inspect: function () {
+			var sel = selLayers();
+			if (!sel.length) return { mode: 'image', source: 'comp', label: 'MAIN_COMP' };
+			var flat = sel.filter(function (l) { return !l.scene; });
+			if (flat.length) return { mode: 'layers', count: flat.length };
+			return { mode: 'image', source: 'layer', label: sel[0].name };
+		},
 		grabFrame: function () {
-			var l = selLayers()[0];
+			var l = selLayers().filter(function (x) { return x.scene; })[0];
 			// vídeo simula um render demorado (mostra o aviso de espera); imagem é lida na hora
 			if (l && l.scene) return { ok: true, url: scene(l.scene, 640, 360), label: l.name, kind: l.kind, temp: l.kind === 'video', readyAt: l.kind === 'video' ? Date.now() + 2600 : 0 };
 			return { ok: true, url: scene('comp', 640, 360), label: 'MAIN_COMP', kind: 'comp', temp: true, readyAt: Date.now() + 400 };
@@ -1492,6 +1503,7 @@ h1 .o { animation: none; } }
 		savePrefs: function (prefs) { return call('savePrefs', JSON.stringify(prefs)); },
 		apply: function (hex, opts) { return call('apply', hex, JSON.stringify(opts || {})); },
 		capture: function (scope) { return call('capture', scope); },
+		inspect: function () { return call('inspect'); },
 		listPresets: function () { return call('listPresets'); },
 		savePreset: function (preset) { return call('savePreset', JSON.stringify(preset)); },
 		deletePreset: function (id) { return call('deletePreset', id); },
@@ -1597,8 +1609,7 @@ h1 .o { animation: none; } }
 		el.innerHTML = [
 			'<div class="dock dock-a">',
 			'  <button class="tool" data-act="add" aria-label="Nova cor">' + ic('plus') + '</button>',
-			'  <button class="tool" data-act="capture" aria-label="Capturar cores"><span class="swap">' + ic('pipette') + ic('layers') + '</span></button>',
-			'  <button class="tool" data-act="frame" aria-label="Extrair cores de imagem">' + ic('image') + '</button>',
+			'  <button class="tool" data-act="capture" aria-label="Capturar cores"><span class="swap">' + ic('pipette') + ic('image') + ic('layers') + '</span></button>',
 			'</div>',
 			'<div class="strip" role="list" aria-label="Paleta"></div>',
 			'<div class="empty" hidden><span class="empty-dots"><i></i><i></i><i></i></span><span>Paleta vazia</span>',
@@ -1912,10 +1923,7 @@ h1 .o { animation: none; } }
 			}
 			var act = t.dataset.act;
 			if (act === 'add' && t.classList.contains('tool')) return '<b>Nova cor</b>';
-			if (act === 'capture' && t.classList.contains('tool')) {
-				return mods.shift ? '<b>Capturar do projeto inteiro</b>' : '<b>Capturar da seleção</b>' + kbd(KEY.shift, 'projeto inteiro');
-			}
-			if (act === 'frame') return '<b>Extrair cores de imagem</b><span>do layer selecionado (ou da comp)</span>';
+			if (act === 'capture' && t.classList.contains('tool')) return captureTip();
 			if (act === 'menu') return el.classList.contains('menu-open') ? '<b>Fechar ajustes</b>' : '<b>Ajustes</b>';
 			if (act === 'library') return el.classList.contains('lib-open') ? '<b>Fechar presets</b>' : '<b>Presets</b>';
 			if (act === 'folder') return '<b>' + esc(S.folder) + '</b>' + kbd('clique', 'trocar pasta') + kbd(KEY.alt, 'abrir');
@@ -2170,9 +2178,47 @@ h1 .o { animation: none; } }
 		// ------------------------------------------------------------------ ferramentas
 		function busy(btn, on) { btn.classList.toggle('busy', on); }
 
+		// ---------------------------------------------------------------- conta-gotas contextual
+		// No hover, pergunta ao AE o que está selecionado e o ícone vira o que vai acontecer:
+		// conta-gotas (propriedades/layers), imagem (layer raster ou frame da comp), camadas (Shift).
+		var capTool = q('.tool[data-act="capture"]');
+		var INSPECT = null;
+
+		function setMode(m) {
+			INSPECT = m || null;
+			capTool.dataset.mode = (m && m.mode) || '';
+			if (tipEl.classList.contains('on') && tipTarget === capTool) showTip(capTool);
+		}
+		function inspect() { return Host.inspect().then(function (m) { setMode(m); return m; }, function () { setMode(null); return null; }); }
+
+		capTool.addEventListener('pointerenter', inspect);
+
+		function captureTip() {
+			var shift = kbd(KEY.shift, 'projeto inteiro');
+			if (mods.shift) return '<b>Capturar do projeto inteiro</b>';
+			var m = INSPECT ? INSPECT.mode : '';
+			if (m === 'image') {
+				return INSPECT.source === 'comp' ?
+					'<b>Extrair cores do frame</b><span>nada selecionado: usa a comp</span>' + shift :
+					'<b>Extrair cores da imagem</b><span>' + esc(INSPECT.label || '') + '</span>' + shift;
+			}
+			if (m === 'props') return '<b>Capturar as propriedades selecionadas</b>' + shift;
+			if (m === 'layers') return '<b>Capturar as cores dos layers</b>' + shift;
+			if (m === 'none') return '<b>Abra uma composição</b>' + shift;
+			return '<b>Capturar cores</b>' + shift;
+		}
+
 		function capture(btn, e) {
-			var scope = e.shiftKey ? 'project' : 'selection';
-			var tool = q('.tool[data-act="capture"]');
+			if (e.shiftKey) return captureColors(btn, 'project');
+			inspect().then(function (m) {
+				if (m && m.mode === 'image') return openExtract(btn);
+				if (m && m.mode === 'none') { flash(capTool, 'nope', 420); return toast(REASONS.nocomp, { icon: 'alert' }); }
+				captureColors(btn, 'selection');
+			});
+		}
+
+		function captureColors(btn, scope) {
+			var tool = capTool;
 			busy(tool, true);
 			Host.capture(scope).then(function (r) {
 				busy(tool, false);
@@ -2210,7 +2256,6 @@ h1 .o { animation: none; } }
 			else if (act === 'sort') { closeSettings(); sortPalette(); }
 			else if (act === 'menu') toggleSide('settings');
 			else if (act === 'library') toggleSide('library');
-			else if (act === 'frame') openExtract(b);
 			else if (act === 'save-preset') savePreset();
 			else if (act === 'folder') chooseFolder(e);
 			else if (act === 'toggle-info') setPref('info', !S.prefs.info);
@@ -2534,7 +2579,7 @@ h1 .o { animation: none; } }
 			if (anyFull()) return;
 			closeSettings();
 			hideTip();
-			var tool = q('.tool[data-act="frame"]');
+			var tool = capTool;
 			busy(tool, true);
 			Host.grabFrame().then(function (r) {
 				if (!r || !r.ok) {
