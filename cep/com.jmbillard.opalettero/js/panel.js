@@ -10,6 +10,13 @@
 	var VERSION = 'v1.1';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
+
+	// Windows × Mac: no Mac o "Ctrl" do painel é ⌘ (Ctrl+clique lá é clique direito) e as teclas
+	// aparecem com os símbolos do sistema
+	var IS_MAC = /Mac/i.test(root.navigator.platform || root.navigator.userAgent);
+	var KEY = IS_MAC ? { ctrl: '⌘', alt: '⌥', shift: '⇧' } : { ctrl: 'Ctrl', alt: 'Alt', shift: 'Shift' };
+	function cmd(e) { return IS_MAC ? !!e.metaKey : !!e.ctrlKey; }
+	function macRightClick(e) { return IS_MAC && e.ctrlKey && !e.metaKey; }
 	var SPRING = 'cubic-bezier(.34,1.56,.64,1)';
 
 	// ícones de traço (24×24), baseados no Lucide (ISC)
@@ -387,22 +394,22 @@
 				return [
 					kbd('clique', 'aplicar', !mods.alt && !mods.ctrl),
 					kbd('botão dir.', 'editar'),
-					kbd('Ctrl', 'copiar', mods.ctrl),
-					kbd('Alt', 'excluir', mods.alt)
+					kbd(KEY.ctrl, 'copiar', mods.ctrl),
+					kbd(KEY.alt, 'excluir', mods.alt)
 				].join('');
 			}
 			var act = t.dataset.act;
 			if (act === 'add' && t.classList.contains('tool')) return '<b>Nova cor</b>';
 			if (act === 'capture' && t.classList.contains('tool')) {
-				return mods.shift ? '<b>Capturar do projeto inteiro</b>' : '<b>Capturar da seleção</b>' + kbd('Shift', 'projeto inteiro');
+				return mods.shift ? '<b>Capturar do projeto inteiro</b>' : '<b>Capturar da seleção</b>' + kbd(KEY.shift, 'projeto inteiro');
 			}
 			if (act === 'frame') return '<b>Extrair cores de imagem</b><span>do layer selecionado (ou da comp)</span>';
 			if (act === 'menu') return el.classList.contains('menu-open') ? '<b>Fechar ajustes</b>' : '<b>Ajustes</b>';
 			if (act === 'library') return el.classList.contains('lib-open') ? '<b>Fechar presets</b>' : '<b>Presets</b>';
-			if (act === 'folder') return '<b>' + esc(S.folder) + '</b>' + kbd('clique', 'trocar pasta') + kbd('Alt', 'abrir');
+			if (act === 'folder') return '<b>' + esc(S.folder) + '</b>' + kbd('clique', 'trocar pasta') + kbd(KEY.alt, 'abrir');
 			if (t.dataset.pid) {
 				var pr = presetById(t.dataset.pid);
-				return '<b>' + esc(pr ? pr.name : '') + '</b>' + kbd('clique', 'substituir', !mods.shift) + kbd('Shift', 'adicionar', mods.shift);
+				return '<b>' + esc(pr ? pr.name : '') + '</b>' + kbd('clique', 'substituir', !mods.shift) + kbd(KEY.shift, 'adicionar', mods.shift);
 			}
 			if (t.dataset.tip) {
 				// em layouts largos os rótulos estão escondidos: a dica assume o papel
@@ -449,7 +456,7 @@
 
 		// ------------------------------------------------------------------ teclas modificadoras (a UI reage em tempo real)
 		function setMods(e) {
-			var next = { alt: !!e.altKey, ctrl: !!(e.ctrlKey || e.metaKey), shift: !!e.shiftKey };
+			var next = { alt: !!e.altKey, ctrl: cmd(e), shift: !!e.shiftKey };
 			if (next.alt === mods.alt && next.ctrl === mods.ctrl && next.shift === mods.shift) return;
 			mods = next;
 			el.classList.toggle('alt', mods.alt && !isSheetOpen());
@@ -535,8 +542,9 @@
 		}
 
 		function clickSwatch(sw, e) {
+			if (macRightClick(e)) return; // o contextmenu abre o editor
 			if (e.altKey) return removeSwatch(sw);
-			if (e.ctrlKey || e.metaKey) {
+			if (cmd(e)) {
 				var v = C.format(sw.color, S.prefs.format);
 				copyText(v);
 				flash(nodes[sw.id], 'ok', 700);
@@ -549,7 +557,7 @@
 		var D = null;
 		strip.addEventListener('pointerdown', function (e) {
 			var n = e.target.closest('.sw');
-			if (!n || n.classList.contains('leaving') || e.button !== 0 || e.target.closest('.sw-edit')) return;
+			if (!n || n.classList.contains('leaving') || e.button !== 0 || macRightClick(e) || e.target.closest('.sw-edit')) return;
 			D = { n: n, x: e.clientX, y: e.clientY, started: false, before: snapshot() };
 			strip.setPointerCapture(e.pointerId);
 		});
@@ -1406,7 +1414,7 @@
 		// ------------------------------------------------------------------ teclado global
 		root.addEventListener('keydown', function (e) {
 			if (!ed.hidden || !exSheet.hidden) return;
-			if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
+			if (cmd(e) && !e.shiftKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
 			else if (e.key === 'Escape') closeSettings();
 		});
 
@@ -1457,5 +1465,5 @@
 		return { undo: undo, reload: function () { return loadProject(true); } };
 	}
 
-	root.PalApp = { mount: mount };
+	root.PalApp = { mount: mount, isMac: IS_MAC, keys: KEY };
 })(window);

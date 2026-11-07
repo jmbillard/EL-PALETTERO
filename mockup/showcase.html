@@ -166,6 +166,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	var list = document.getElementById('layers');
 	var sel = document.getElementById('proj');
 	var ws = document.querySelector('.ws');
+	var hintTxt = 'Ctrl ou Shift para selecionar vários.';
 	var KIND = { text: 'T', shape: '★', solid: '■', image: '▣', video: '▶' };
 	var thumbs = {};
 
@@ -178,7 +179,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			return '<button class="layer" data-id="' + l.id + '" aria-pressed="' + !!AE.selected[l.id] + '"><span class="k">' + KIND[l.kind] + '</span>' + l.name +
 				(l.scene ? '<img class="thumb" alt="" src="' + (thumbs[l.name] || (thumbs[l.name] = AE.thumb(l))) + '">' :
 				'<span class="chips"><i style="background:' + l.color + '"></i>' + (l.stroke ? '<i style="background:' + l.stroke + '"></i>' : '') + '</span>') + '</button>';
-		}).join('') + '<p class="hint">Ctrl ou Shift para selecionar vários.</p>';
+		}).join('') + '<p class="hint">' + hintTxt + '</p>';
 
 		if (!comp.children.length) {
 			comp.innerHTML = '<div class="lyr l-bg" data-id="bg"></div><div class="lyr l-bar" data-id="bar"></div><div class="lyr l-circle" data-id="circle"></div><div class="lyr l-title" data-id="title">ABER<br>TURA</div>';
@@ -213,7 +214,16 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		f.style.width = ''; f.style.height = '';
 	});
 
+	// no Mac, mostra ⌘ ⌥ ⇧ no lugar de Ctrl Alt Shift
+	if (window.PalApp.isMac) {
+		var K = window.PalApp.keys, map = { Ctrl: K.ctrl, Alt: K.alt, Shift: K.shift };
+		document.querySelectorAll('.tile kbd').forEach(function (k) { if (map[k.textContent]) k.textContent = map[k.textContent]; });
+		document.querySelectorAll('.tile p').forEach(function (p) { p.innerHTML = p.innerHTML.replace(/Ctrl\+Z/g, '⌘Z').replace(/\bShift\b/g, '⇧'); });
+	}
+	hintTxt = window.PalApp.isMac ? '⌘ ou ⇧ para selecionar vários.' : 'Ctrl ou Shift para selecionar vários.';
+
 	var pal = document.getElementById('pal');
+	draw();
 	window.PalApp.mount(pal);
 	// o pontinho da aba acompanha a última cor aplicada
 	new MutationObserver(function () {

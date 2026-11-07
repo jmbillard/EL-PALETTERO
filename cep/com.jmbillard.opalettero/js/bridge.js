@@ -26,6 +26,23 @@
 		});
 	}
 
+	// Com o painel em foco, o After Effects fica com as teclas para os próprios atalhos
+	// (Ctrl/⌘+Z desfaria algo no projeto, Delete apagaria layers…). Aqui o painel pede essas teclas.
+	// Os códigos são do sistema: virtual-key no Windows, kVK no Mac.
+	var IS_MAC = /Mac/i.test(root.navigator.platform || root.navigator.userAgent);
+	var KEYS = IS_MAC ? [
+		{ keyCode: 53 }, { keyCode: 36 }, { keyCode: 76 }, { keyCode: 51 }, { keyCode: 117 }, { keyCode: 49 },  // esc, return, enter, delete, del, espaço
+		{ keyCode: 123 }, { keyCode: 124 }, { keyCode: 125 }, { keyCode: 126 }, { keyCode: 120 }, { keyCode: 14 }, // setas, F2, E
+		{ keyCode: 6, metaKey: true }, { keyCode: 58 }, { keyCode: 61 }, { keyCode: 55 }, { keyCode: 56 }, { keyCode: 60 }  // ⌘Z, ⌥, ⌘, ⇧
+	] : [
+		{ keyCode: 27 }, { keyCode: 13 }, { keyCode: 46 }, { keyCode: 8 }, { keyCode: 32 },
+		{ keyCode: 37 }, { keyCode: 38 }, { keyCode: 39 }, { keyCode: 40 }, { keyCode: 113 }, { keyCode: 69 },
+		{ keyCode: 90, ctrlKey: true }, { keyCode: 18 }, { keyCode: 17 }, { keyCode: 16 }
+	];
+	if (cep && cep.registerKeyEventsInterest) {
+		try { cep.registerKeyEventsInterest(JSON.stringify(KEYS)); } catch (e) {}
+	}
+
 	function openURL(url) {
 		if (root.cep && root.cep.util) root.cep.util.openURLInDefaultBrowser(url);
 		else root.open(url, '_blank', 'noopener');

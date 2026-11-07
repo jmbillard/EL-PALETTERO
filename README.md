@@ -9,6 +9,8 @@ Mesma ideia, interface nova: menos texto, mais ícones, animações em cada muda
 
 > 🧪 **mockup interativo:** abra `mockup/O-PALETTERO-mockup.html` no navegador. É o mesmo código do painel, ligado a uma composição de mentira.
 
+> ⌨️ as teclas abaixo estão como no **Windows**. No **Mac**: `Ctrl` → `⌘ Cmd`, `Alt` → `⌥ Option`, `Shift` → `⇧`. No Mac, `Ctrl` + clique continua sendo clique direito (abre o editor). As dicas do painel já mostram os símbolos do sistema em uso.
+
 | ação | o que faz |
 | --- | --- |
 | `◖ clique` numa cor | aplica nos layers selecionados. Se houver **propriedades de cor selecionadas**, muda só elas; senão usa um efeito **Fill** (e reaproveita o último Fill criado pelo painel em vez de empilhar). |
@@ -42,7 +44,21 @@ Ao trocar de projeto, o painel recarrega a paleta automaticamente.
 2. libere extensões não assinadas (uma vez só):
    - **Windows:** `reg add HKCU\Software\Adobe\CSXS.11 /v PlayerDebugMode /t REG_SZ /d 1 /f` (repita com `CSXS.12` para o AE 2025+)
    - **macOS:** `defaults write com.adobe.CSXS.11 PlayerDebugMode 1` (repita com `com.adobe.CSXS.12`)
-3. reinicie o After Effects e abra **Janela → Extensões → O PALETTERO**.
+   - no Mac, se o painel não aparecer depois disso, rode `killall cfprefsd` (o macOS guarda as preferências em cache) e abra o AE de novo.
+3. reinicie o After Effects e abra **Janela → Extensões → O PALETTERO** (no Mac: **Window → Extensions** se o AE estiver em inglês).
+
+### windows × mac
+
+| | Windows | macOS |
+| --- | --- | --- |
+| pasta de extensões | `%APPDATA%\Adobe\CEP\extensions\` (só o seu usuário) ou `C:\Program Files (x86)\Common Files\Adobe\CEP\extensions\` (todos) | `~/Library/Application Support/Adobe/CEP/extensions/` ou `/Library/Application Support/Adobe/CEP/extensions/` |
+| preferências e presets | `%APPDATA%\O PALETTERO script\` | `~/Library/Application Support/O PALETTERO script/` |
+| pasta de presets em rede | caminho UNC (`\\servidor\paletas`) ou unidade mapeada | volume montado (`/Volumes/paletas`) |
+| frame temporário | `%TEMP%\opalettero_*.png` | pasta temporária do sistema |
+
+- o painel pede ao After Effects as teclas que usa (`Esc`, `Enter`, `Delete`, setas, `Ctrl/⌘ + Z`…) enquanto está em foco, com os códigos de tecla de cada sistema. Assim `Ctrl/⌘ + Z` desfaz a paleta, e não o projeto, e `Delete` não apaga layers.
+- no Windows, um PNG que ainda está aberto não pode ser apagado; o que sobrar é limpo na próxima extração.
+- um mesmo preset funciona nos dois sistemas: são arquivos `.json` em UTF-8 com nomes só em ASCII.
 
 > 🧩 o painel usa o Node.js do CEP (`--enable-nodejs`) só para ler o PNG do frame. O frame é gerado com `saveFrameToPng`, um método que existe no After Effects mas não está na documentação oficial.\
 > 🛠️ depuração: com o painel aberto, acesse `http://localhost:8099` no Chrome.\

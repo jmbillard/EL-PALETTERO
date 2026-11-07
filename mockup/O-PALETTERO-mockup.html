@@ -1276,6 +1276,23 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		});
 	}
 
+	// Com o painel em foco, o After Effects fica com as teclas para os próprios atalhos
+	// (Ctrl/⌘+Z desfaria algo no projeto, Delete apagaria layers…). Aqui o painel pede essas teclas.
+	// Os códigos são do sistema: virtual-key no Windows, kVK no Mac.
+	var IS_MAC = /Mac/i.test(root.navigator.platform || root.navigator.userAgent);
+	var KEYS = IS_MAC ? [
+		{ keyCode: 53 }, { keyCode: 36 }, { keyCode: 76 }, { keyCode: 51 }, { keyCode: 117 }, { keyCode: 49 },  // esc, return, enter, delete, del, espaço
+		{ keyCode: 123 }, { keyCode: 124 }, { keyCode: 125 }, { keyCode: 126 }, { keyCode: 120 }, { keyCode: 14 }, // setas, F2, E
+		{ keyCode: 6, metaKey: true }, { keyCode: 58 }, { keyCode: 61 }, { keyCode: 55 }, { keyCode: 56 }, { keyCode: 60 }  // ⌘Z, ⌥, ⌘, ⇧
+	] : [
+		{ keyCode: 27 }, { keyCode: 13 }, { keyCode: 46 }, { keyCode: 8 }, { keyCode: 32 },
+		{ keyCode: 37 }, { keyCode: 38 }, { keyCode: 39 }, { keyCode: 40 }, { keyCode: 113 }, { keyCode: 69 },
+		{ keyCode: 90, ctrlKey: true }, { keyCode: 18 }, { keyCode: 17 }, { keyCode: 16 }
+	];
+	if (cep && cep.registerKeyEventsInterest) {
+		try { cep.registerKeyEventsInterest(JSON.stringify(KEYS)); } catch (e) {}
+	}
+
 	function openURL(url) {
 		if (root.cep && root.cep.util) root.cep.util.openURLInDefaultBrowser(url);
 		else root.open(url, '_blank', 'noopener');
@@ -1389,6 +1406,13 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	var VERSION = 'v1.1';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
+
+	// Windows × Mac: no Mac o "Ctrl" do painel é ⌘ (Ctrl+clique lá é clique direito) e as teclas
+	// aparecem com os símbolos do sistema
+	var IS_MAC = /Mac/i.test(root.navigator.platform || root.navigator.userAgent);
+	var KEY = IS_MAC ? { ctrl: '⌘', alt: '⌥', shift: '⇧' } : { ctrl: 'Ctrl', alt: 'Alt', shift: 'Shift' };
+	function cmd(e) { return IS_MAC ? !!e.metaKey : !!e.ctrlKey; }
+	function macRightClick(e) { return IS_MAC && e.ctrlKey && !e.metaKey; }
 	var SPRING = 'cubic-bezier(.34,1.56,.64,1)';
 
 	// ícones de traço (24×24), baseados no Lucide (ISC)
@@ -1766,22 +1790,22 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 				return [
 					kbd('clique', 'aplicar', !mods.alt && !mods.ctrl),
 					kbd('botão dir.', 'editar'),
-					kbd('Ctrl', 'copiar', mods.ctrl),
-					kbd('Alt', 'excluir', mods.alt)
+					kbd(KEY.ctrl, 'copiar', mods.ctrl),
+					kbd(KEY.alt, 'excluir', mods.alt)
 				].join('');
 			}
 			var act = t.dataset.act;
 			if (act === 'add' && t.classList.contains('tool')) return '<b>Nova cor</b>';
 			if (act === 'capture' && t.classList.contains('tool')) {
-				return mods.shift ? '<b>Capturar do projeto inteiro</b>' : '<b>Capturar da seleção</b>' + kbd('Shift', 'projeto inteiro');
+				return mods.shift ? '<b>Capturar do projeto inteiro</b>' : '<b>Capturar da seleção</b>' + kbd(KEY.shift, 'projeto inteiro');
 			}
 			if (act === 'frame') return '<b>Extrair cores de imagem</b><span>do layer selecionado (ou da comp)</span>';
 			if (act === 'menu') return el.classList.contains('menu-open') ? '<b>Fechar ajustes</b>' : '<b>Ajustes</b>';
 			if (act === 'library') return el.classList.contains('lib-open') ? '<b>Fechar presets</b>' : '<b>Presets</b>';
-			if (act === 'folder') return '<b>' + esc(S.folder) + '</b>' + kbd('clique', 'trocar pasta') + kbd('Alt', 'abrir');
+			if (act === 'folder') return '<b>' + esc(S.folder) + '</b>' + kbd('clique', 'trocar pasta') + kbd(KEY.alt, 'abrir');
 			if (t.dataset.pid) {
 				var pr = presetById(t.dataset.pid);
-				return '<b>' + esc(pr ? pr.name : '') + '</b>' + kbd('clique', 'substituir', !mods.shift) + kbd('Shift', 'adicionar', mods.shift);
+				return '<b>' + esc(pr ? pr.name : '') + '</b>' + kbd('clique', 'substituir', !mods.shift) + kbd(KEY.shift, 'adicionar', mods.shift);
 			}
 			if (t.dataset.tip) {
 				// em layouts largos os rótulos estão escondidos: a dica assume o papel
@@ -1828,7 +1852,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 
 		// ------------------------------------------------------------------ teclas modificadoras (a UI reage em tempo real)
 		function setMods(e) {
-			var next = { alt: !!e.altKey, ctrl: !!(e.ctrlKey || e.metaKey), shift: !!e.shiftKey };
+			var next = { alt: !!e.altKey, ctrl: cmd(e), shift: !!e.shiftKey };
 			if (next.alt === mods.alt && next.ctrl === mods.ctrl && next.shift === mods.shift) return;
 			mods = next;
 			el.classList.toggle('alt', mods.alt && !isSheetOpen());
@@ -1914,8 +1938,9 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		}
 
 		function clickSwatch(sw, e) {
+			if (macRightClick(e)) return; // o contextmenu abre o editor
 			if (e.altKey) return removeSwatch(sw);
-			if (e.ctrlKey || e.metaKey) {
+			if (cmd(e)) {
 				var v = C.format(sw.color, S.prefs.format);
 				copyText(v);
 				flash(nodes[sw.id], 'ok', 700);
@@ -1928,7 +1953,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		var D = null;
 		strip.addEventListener('pointerdown', function (e) {
 			var n = e.target.closest('.sw');
-			if (!n || n.classList.contains('leaving') || e.button !== 0 || e.target.closest('.sw-edit')) return;
+			if (!n || n.classList.contains('leaving') || e.button !== 0 || macRightClick(e) || e.target.closest('.sw-edit')) return;
 			D = { n: n, x: e.clientX, y: e.clientY, started: false, before: snapshot() };
 			strip.setPointerCapture(e.pointerId);
 		});
@@ -2785,7 +2810,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		// ------------------------------------------------------------------ teclado global
 		root.addEventListener('keydown', function (e) {
 			if (!ed.hidden || !exSheet.hidden) return;
-			if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
+			if (cmd(e) && !e.shiftKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
 			else if (e.key === 'Escape') closeSettings();
 		});
 
@@ -2836,7 +2861,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		return { undo: undo, reload: function () { return loadProject(true); } };
 	}
 
-	root.PalApp = { mount: mount };
+	root.PalApp = { mount: mount, isMac: IS_MAC, keys: KEY };
 })(window);
 
 </script>
@@ -2848,6 +2873,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	var list = document.getElementById('layers');
 	var sel = document.getElementById('proj');
 	var ws = document.querySelector('.ws');
+	var hintTxt = 'Ctrl ou Shift para selecionar vários.';
 	var KIND = { text: 'T', shape: '★', solid: '■', image: '▣', video: '▶' };
 	var thumbs = {};
 
@@ -2860,7 +2886,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			return '<button class="layer" data-id="' + l.id + '" aria-pressed="' + !!AE.selected[l.id] + '"><span class="k">' + KIND[l.kind] + '</span>' + l.name +
 				(l.scene ? '<img class="thumb" alt="" src="' + (thumbs[l.name] || (thumbs[l.name] = AE.thumb(l))) + '">' :
 				'<span class="chips"><i style="background:' + l.color + '"></i>' + (l.stroke ? '<i style="background:' + l.stroke + '"></i>' : '') + '</span>') + '</button>';
-		}).join('') + '<p class="hint">Ctrl ou Shift para selecionar vários.</p>';
+		}).join('') + '<p class="hint">' + hintTxt + '</p>';
 
 		if (!comp.children.length) {
 			comp.innerHTML = '<div class="lyr l-bg" data-id="bg"></div><div class="lyr l-bar" data-id="bar"></div><div class="lyr l-circle" data-id="circle"></div><div class="lyr l-title" data-id="title">ABER<br>TURA</div>';
@@ -2895,7 +2921,16 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		f.style.width = ''; f.style.height = '';
 	});
 
+	// no Mac, mostra ⌘ ⌥ ⇧ no lugar de Ctrl Alt Shift
+	if (window.PalApp.isMac) {
+		var K = window.PalApp.keys, map = { Ctrl: K.ctrl, Alt: K.alt, Shift: K.shift };
+		document.querySelectorAll('.tile kbd').forEach(function (k) { if (map[k.textContent]) k.textContent = map[k.textContent]; });
+		document.querySelectorAll('.tile p').forEach(function (p) { p.innerHTML = p.innerHTML.replace(/Ctrl\+Z/g, '⌘Z').replace(/\bShift\b/g, '⇧'); });
+	}
+	hintTxt = window.PalApp.isMac ? '⌘ ou ⇧ para selecionar vários.' : 'Ctrl ou Shift para selecionar vários.';
+
 	var pal = document.getElementById('pal');
+	draw();
 	window.PalApp.mount(pal);
 	// o pontinho da aba acompanha a última cor aplicada
 	new MutationObserver(function () {

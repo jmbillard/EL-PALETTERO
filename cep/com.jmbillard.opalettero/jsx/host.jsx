@@ -255,6 +255,15 @@ function PAL_revealPresetFolder() {
 
 // ---------------------------------------------------------------- frame do layer selecionado
 
+// no Windows um PNG ainda aberto não pode ser apagado: o que sobrar sai na próxima extração
+function PAL_sweepTemp() {
+	try {
+		var old = Folder.temp.getFiles('opalettero_*.png');
+		var limit = new Date().getTime() - 60000;
+		for (var i = 0; i < old.length; i++) if (old[i].modified && old[i].modified.getTime() < limit) old[i].remove();
+	} catch (e) {}
+}
+
 function PAL_releaseFrame(tmpId, path) {
 	try {
 		if (tmpId) {
@@ -273,6 +282,7 @@ function PAL_grabFrame() {
 	var comp = app.project.activeItem;
 	if (!(comp instanceof CompItem)) return PAL_json({ ok: false, reason: 'nocomp' });
 	var layer = comp.selectedLayers.length ? comp.selectedLayers[0] : null;
+	PAL_sweepTemp();
 	var out = new File(Folder.temp.fsName + '/opalettero_' + new Date().getTime() + '.png');
 	var src = layer && layer.source ? layer.source : null;
 
