@@ -1,0 +1,236 @@
+<title>El PALLETERO</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+/* layout: cabeçalho curto → janela de app falsa (layers · viewer · painel) → guia de interações */
+:root {
+	color-scheme: dark;
+	--ground: #0D0E11;
+	--chrome: #1A1B1F;
+	--chrome-2: #222328;
+	--chrome-3: #2C2E34;
+	--text: #E9EAEE;
+	--dim: #8C909A;
+	--sel: #4CC2FF;
+	--display: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
+	--body: 'Segoe UI', -apple-system, system-ui, sans-serif;
+	--mono: 'JetBrains Mono', Consolas, Menlo, monospace;
+}
+html, body { height: auto; }
+body {
+	background: var(--ground);
+	color: var(--text);
+	font: 14px/1.5 var(--body);
+	padding-left: max(16px, env(safe-area-inset-left, 0px));
+	padding-right: max(16px, env(safe-area-inset-right, 0px));
+	padding-block: 28px 48px;
+}
+.wrap { max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+
+.hero { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 32px; }
+.eyebrow { margin: 0 0 6px; font: 600 11px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
+h1 { margin: 0; font: 800 clamp(34px, 6vw, 58px)/.95 var(--display); letter-spacing: -.02em; }
+h1 .el { font-weight: 500; font-size: .5em; letter-spacing: 0; margin-right: .18em; vertical-align: .55em; color: var(--dim); }
+h1 .o { display: inline-block; width: .78em; height: .78em; border-radius: 50%; vertical-align: -.04em; margin-right: .06em;
+	background: conic-gradient(#FF4D4D, #FFC44E, #5DE6A2, #80C0FE, #B5ADFF, #FF8CCD, #FF4D4D); animation: spin 12s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.lede { margin: 0; max-width: 42ch; color: var(--dim); text-wrap: pretty; }
+
+/* ---------- janela falsa */
+.ws { background: var(--chrome); border-radius: 12px; box-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 30px 80px -30px #000; overflow: hidden; }
+.ws-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 8px 12px; background: var(--chrome-2); border-bottom: 1px solid rgba(255,255,255,.05); }
+.dots { display: flex; gap: 6px; }
+.dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--chrome-3); }
+.proj { display: flex; align-items: center; gap: 6px; font: 500 12px var(--mono); color: var(--dim); }
+.proj select { background: var(--chrome); color: var(--text); border: 1px solid var(--chrome-3); border-radius: 6px; font: 500 12px var(--mono); padding: 3px 6px; cursor: pointer; }
+.layouts { margin-left: auto; display: inline-flex; background: var(--chrome); border-radius: 8px; padding: 2px; gap: 2px; }
+.layouts button { border: 0; background: transparent; color: var(--dim); font: 600 11px var(--mono); padding: 5px 10px; border-radius: 6px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; transition: background .2s, color .2s; }
+.layouts button:hover { color: var(--text); }
+.layouts button[aria-pressed="true"] { background: var(--chrome-3); color: var(--text); }
+.layouts svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; }
+button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px solid var(--sel); outline-offset: 1px; }
+
+.ws-body { display: grid; gap: 1px; background: rgba(0,0,0,.35);
+	grid-template-columns: 170px minmax(0, 1fr);
+	grid-template-rows: minmax(260px, auto) auto;
+	grid-template-areas: 'layers viewer' 'dock dock'; }
+.ws[data-layout="column"] .ws-body { grid-template-columns: 170px minmax(0, 1fr) 168px; grid-template-rows: 420px; grid-template-areas: 'layers viewer dock'; }
+.ws[data-layout="grid"] .ws-body { grid-template-columns: 170px minmax(0, 1fr) 320px; grid-template-rows: 420px; grid-template-areas: 'layers viewer dock'; }
+.ws-body > * { background: var(--chrome); min-width: 0; }
+
+.layers { grid-area: layers; padding: 8px; display: flex; flex-direction: column; gap: 2px; }
+.pane-title { font: 600 10px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); padding: 4px 6px 8px; }
+.layer { display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 6px; border: 0; background: transparent; color: var(--text); font: 12px var(--body); text-align: left; cursor: pointer; transition: background .15s; }
+.layer:hover { background: var(--chrome-2); }
+.layer[aria-pressed="true"] { background: rgba(76,194,255,.16); box-shadow: inset 2px 0 0 var(--sel); }
+.layer .k { width: 18px; font: 600 10px var(--mono); color: var(--dim); text-align: center; }
+.layer .chips { margin-left: auto; display: flex; gap: 3px; }
+.layer .thumb { margin-left: auto; width: 32px; height: 18px; border-radius: 3px; object-fit: cover; box-shadow: inset 0 0 0 1px rgba(255,255,255,.15); }
+.layer .chips i { width: 12px; height: 12px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.15); transition: background .4s; }
+.hint { margin-top: auto; padding: 8px 6px 2px; color: var(--dim); font-size: 11px; line-height: 1.4; }
+
+.viewer { grid-area: viewer; display: grid; place-items: center; padding: 18px;
+	background: repeating-conic-gradient(#17181c 0 25%, #1b1c20 0 50%) 0 0 / 16px 16px; }
+.comp { position: relative; width: 100%; max-width: 560px; aspect-ratio: 16 / 9; overflow: hidden; box-shadow: 0 10px 40px -10px #000; container-type: inline-size; }
+.lyr { position: absolute; cursor: pointer; transition: background-color .45s, color .45s, border-color .45s; }
+.lyr.sel { outline: 1.5px solid var(--sel); outline-offset: 2px; }
+.lyr.sel::after { content: ''; position: absolute; inset: -6px; pointer-events: none;
+	background: linear-gradient(var(--sel), var(--sel)) 0 0 / 6px 6px no-repeat, linear-gradient(var(--sel), var(--sel)) 100% 0 / 6px 6px no-repeat,
+	linear-gradient(var(--sel), var(--sel)) 0 100% / 6px 6px no-repeat, linear-gradient(var(--sel), var(--sel)) 100% 100% / 6px 6px no-repeat; }
+.lyr.pulse { animation: pulse .6s ease-out; }
+@keyframes pulse { 0% { filter: brightness(1.8) saturate(1.3); } 100% { filter: none; } }
+.l-bg { inset: 0; cursor: default; }
+.l-bg.sel { outline-offset: -4px; }
+.l-bar { left: -2%; right: 34%; bottom: 16%; height: 15%; border: 4px solid; border-left: 0; border-radius: 0 999px 999px 0; }
+.l-circle { right: 9%; top: 14%; width: 30%; aspect-ratio: 1; border-radius: 50%; }
+.l-title { left: 7%; top: 26%; font: 800 11cqw/0.9 var(--display); letter-spacing: -.03em; background: transparent !important; }
+
+.dockslot { grid-area: dock; padding: 8px; display: flex; }
+.frame { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; border-radius: 6px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255,255,255,.07); resize: both; max-width: 100%; }
+.ws[data-layout="strip"] .frame { height: 102px; resize: vertical; min-height: 64px; }
+.tab { display: flex; align-items: center; gap: 8px; height: 24px; padding: 0 10px; background: var(--chrome-2); font: 600 10px var(--mono); letter-spacing: .08em; color: var(--dim); flex: none; }
+.tab::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-dot, #FFC44E); transition: background .4s; }
+.tab span { margin-left: auto; opacity: .7; }
+#pal { flex: 1; min-height: 0; }
+
+/* ---------- guia */
+.try { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.try h2 { grid-column: 1 / -1; margin: 8px 0 0; font: 800 22px var(--display); letter-spacing: -.01em; }
+.tile { display: flex; gap: 10px; align-items: flex-start; padding: 12px; border-radius: 10px; background: var(--chrome); }
+.tile kbd { flex: none; font: 600 10px/1 var(--mono); padding: 5px 6px; border-radius: 5px; background: var(--chrome-3); color: var(--text); white-space: nowrap; }
+.tile p { margin: 0; color: var(--dim); font-size: 13px; }
+.tile b { color: var(--text); font-weight: 600; }
+
+@media (max-width: 720px) {
+	.ws-body, .ws[data-layout] .ws-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; grid-template-areas: 'viewer' 'layers' 'dock'; }
+	.ws[data-layout="column"] .frame { height: 360px; max-width: 180px; }
+	.ws[data-layout="grid"] .frame { height: 300px; }
+	.layers { flex-direction: row; flex-wrap: wrap; }
+	.pane-title, .hint { display: none; }
+	.layouts { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) { h1 .el { font-weight: 500; font-size: .5em; letter-spacing: 0; margin-right: .18em; vertical-align: .55em; color: var(--dim); }
+h1 .o { animation: none; } }
+{{PANEL_CSS}}
+</style>
+
+<div class="wrap">
+	<header class="hero">
+		<div>
+			<p class="eyebrow">extensão CEP para After Effects · mockup interativo</p>
+			<h1><span class="o" aria-hidden="true"></span><span class="el">El</span>PALLETERO</h1>
+		</div>
+		<p class="lede">O painel abaixo é o mesmo código da extensão, ligado a uma composição de mentira. Selecione um layer e clique numa cor.</p>
+	</header>
+
+	<section class="ws" data-layout="strip" aria-label="Simulação do After Effects">
+		<div class="ws-bar">
+			<span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+			<label class="proj" for="proj">projeto <select id="proj"></select></label>
+			<div class="layouts" role="group" aria-label="Formato do painel">
+				<button data-layout="strip" aria-pressed="true"><svg viewBox="0 0 24 24"><rect x="2" y="9" width="20" height="6" rx="1"/></svg>Faixa</button>
+				<button data-layout="column" aria-pressed="false"><svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="20" rx="1"/></svg>Coluna</button>
+				<button data-layout="grid" aria-pressed="false"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Grade</button>
+			</div>
+		</div>
+		<div class="ws-body">
+			<aside class="layers" id="layers" aria-label="Layers"></aside>
+			<div class="viewer"><div class="comp" id="comp"></div></div>
+			<div class="dockslot"><div class="frame"><div class="tab">El PALLETERO <span>≡</span></div><div id="pal"></div></div></div>
+		</div>
+	</section>
+
+	<section class="try" aria-label="Interações">
+		<h2>Experimente</h2>
+		<div class="tile"><kbd>clique</kbd><p><b>Aplica a cor</b> nos layers selecionados. Com propriedades de cor selecionadas, muda só elas; senão usa um Fill (e reaproveita o último).</p></div>
+		<div class="tile"><kbd>botão dir.</kbd><p><b>Edita.</b> O editor nasce da própria amostra e volta para ela ao confirmar. Cole qualquer #hex, rgb ou hsb.</p></div>
+		<div class="tile"><kbd>arrastar</kbd><p><b>Reordena</b> as cores. Os vizinhos abrem espaço.</p></div>
+		<div class="tile"><kbd>Alt</kbd><p><b>Modo excluir.</b> As amostras tremem; clique para remover. Tudo tem desfazer (Ctrl+Z).</p></div>
+		<div class="tile"><kbd>Ctrl</kbd><p><b>Copia o valor</b> no formato escolhido (HEX, RGB ou HSB).</p></div>
+		<div class="tile"><kbd>Shift</kbd><p>O <b>conta-gotas</b> vira <b>projeto inteiro</b> enquanto a tecla estiver pressionada. Passe o mouse nele: o ícone já mostra o que vai fazer.</p></div>
+		<div class="tile"><kbd>nomes</kbd><p><b>Cada cor ganha um nome</b> (menta, tijolo, céu…) que acompanha a cor no editor até você digitar o seu. A ✦ devolve o automático.</p></div>
+		<div class="tile"><kbd>conta-gotas</kbd><p><b>Entende a seleção:</b> com <b>praia_entardecer.jpg</b> selecionado ele vira imagem e extrai as cores do frame; com shapes, captura as cores dos layers; sem nada, usa o frame da comp.</p></div>
+		<div class="tile"><kbd>presets</kbd><p><b>Biblioteca de presets</b> numa pasta que você escolhe (pode ser da equipe). Clique substitui, Shift adiciona, ★ vira o padrão.</p></div>
+		<div class="tile"><kbd>projeto</kbd><p><b>Troque de projeto</b> no topo: cada .aep guarda a própria paleta num grupo de metadados El PALLETERO.</p></div>
+		<div class="tile"><kbd>formato</kbd><p><b>Faixa, coluna ou grade:</b> o painel se reorganiza sozinho. Arraste o canto para redimensionar.</p></div>
+	</section>
+</div>
+
+<script>
+{{PANEL_JS}}
+</script>
+<script>
+(function () {
+	'use strict';
+	var AE = window.MockAE;
+	var comp = document.getElementById('comp');
+	var list = document.getElementById('layers');
+	var sel = document.getElementById('proj');
+	var ws = document.querySelector('.ws');
+	var hintTxt = 'Ctrl ou Shift para selecionar vários.';
+	var KIND = { text: 'T', shape: '★', solid: '■', image: '▣', video: '▶' };
+	var thumbs = {};
+
+	AE.projects.forEach(function (p) { var o = document.createElement('option'); o.value = o.textContent = p; sel.appendChild(o); });
+	sel.addEventListener('change', function () { AE.switchProject(sel.value); });
+
+	function draw() {
+		var layers = AE.layers();
+		list.innerHTML = '<div class="pane-title">Layers</div>' + layers.map(function (l) {
+			return '<button class="layer" data-id="' + l.id + '" aria-pressed="' + !!AE.selected[l.id] + '"><span class="k">' + KIND[l.kind] + '</span>' + l.name +
+				(l.scene ? '<img class="thumb" alt="" src="' + (thumbs[l.name] || (thumbs[l.name] = AE.thumb(l))) + '">' :
+				'<span class="chips"><i style="background:' + l.color + '"></i>' + (l.stroke ? '<i style="background:' + l.stroke + '"></i>' : '') + '</span>') + '</button>';
+		}).join('') + '<p class="hint">' + hintTxt + '</p>';
+
+		if (!comp.children.length) {
+			comp.innerHTML = '<div class="lyr l-bg" data-id="bg"></div><div class="lyr l-bar" data-id="bar"></div><div class="lyr l-circle" data-id="circle"></div><div class="lyr l-title" data-id="title">ABER<br>TURA</div>';
+		}
+		layers.forEach(function (l) {
+			var n = comp.querySelector('[data-id="' + l.id + '"]');
+			if (!n) return;
+			if (l.kind === 'text') n.style.color = l.color; else n.style.backgroundColor = l.color;
+			if (l.stroke) n.style.borderColor = l.stroke;
+			n.classList.toggle('sel', !!AE.selected[l.id]);
+			if (l.flash && Date.now() - l.flash < 100) { n.classList.remove('pulse'); void n.offsetWidth; n.classList.add('pulse'); }
+		});
+	}
+
+	function pick(e) {
+		var t = e.target.closest('[data-id]');
+		if (!t) return;
+		AE.select(t.dataset.id, e.ctrlKey || e.metaKey || e.shiftKey);
+	}
+	list.addEventListener('click', pick);
+	comp.addEventListener('click', pick);
+	AE.onChange(draw);
+	draw();
+	AE.select('circle');
+
+	document.querySelector('.layouts').addEventListener('click', function (e) {
+		var b = e.target.closest('button');
+		if (!b) return;
+		ws.dataset.layout = b.dataset.layout;
+		document.querySelectorAll('.layouts button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
+		var f = document.querySelector('.frame');
+		f.style.width = ''; f.style.height = '';
+	});
+
+	// no Mac, mostra ⌘ ⌥ ⇧ no lugar de Ctrl Alt Shift
+	if (window.PalApp.isMac) {
+		var K = window.PalApp.keys, map = { Ctrl: K.ctrl, Alt: K.alt, Shift: K.shift };
+		document.querySelectorAll('.tile kbd').forEach(function (k) { if (map[k.textContent]) k.textContent = map[k.textContent]; });
+		document.querySelectorAll('.tile p').forEach(function (p) { p.innerHTML = p.innerHTML.replace(/Ctrl\+Z/g, '⌘Z').replace(/\bShift\b/g, '⇧'); });
+	}
+	hintTxt = window.PalApp.isMac ? '⌘ ou ⇧ para selecionar vários.' : 'Ctrl ou Shift para selecionar vários.';
+
+	var pal = document.getElementById('pal');
+	draw();
+	window.PalApp.mount(pal);
+	// o pontinho da aba acompanha a última cor aplicada
+	new MutationObserver(function () {
+		var a = pal.style.getPropertyValue('--accent');
+		if (a) document.querySelector('.tab').style.setProperty('--accent-dot', a);
+	}).observe(pal, { attributes: true, attributeFilter: ['style'] });
+})();
+</script>

@@ -1,12 +1,30 @@
-# 🧾 O PALETTERO *script*
+# 🎨 El PALLETERO · v1.2 beta
 
-🗨️ **pt-BR** ⚡ uma paleta de cores simples para o After Effects ⚡
+🗨️ **pt-BR** ⚡ a paleta de cores do projeto, como painel do After Effects ⚡
 
-> 📂 **arquivos:**\
-> • **O PALETEIRO beta.jsx** → aquivo que deve ser executado ou instalado no after effects.\
-> • **O_PALETTERO_SOURCE_beta.jsxbin** → arquivo que contém o binário do script.
+o palletero guarda as cores do projeto num painel que você acopla em qualquer lugar da interface. um clique aplica a cor nos layers selecionados. as cores podem vir do seletor, dos layers, do projeto inteiro, de uma imagem ou de uma biblioteca de presets compartilhada pela equipe.
 
-esse script ainda está em fase *beta*, então, em caso de bugs, sugestões e ajuda, é só chamar...
+> <img src="docs/gifs/aplicar.gif" alt="aplicando cores da paleta nos layers" width="860">
+
+> 🧪 *quer experimentar sem instalar?* baixe [`mockup/El-PALLETERO-mockup.html`](mockup/El-PALLETERO-mockup.html) e abra no navegador: é o mesmo código do painel, ligado a uma composição de mentira. todos os GIFs desta página foram gravados nele.
+
+<br>
+
+## 📍 sumário
+
+- [instalação](#-instalação)
+- [vindo do O PALETTERO](#-vindo-do-o-palettero)
+- [aplicar cores](#-aplicar-cores)
+- [organizar a paleta](#-organizar-a-paleta)
+- [editor de cor e nomes automáticos](#-editor-de-cor-e-nomes-automáticos)
+- [conta-gotas](#-conta-gotas)
+- [extrair cores de uma imagem](#-extrair-cores-de-uma-imagem)
+- [presets](#-presets)
+- [formatos do painel](#-formatos-do-painel)
+- [ajustes](#-ajustes)
+- [teclado e atalhos](#-teclado-e-atalhos)
+- [desenvolvimento](#-desenvolvimento)
+- [script clássico](#-script-clássico)
 
 <br>
 
@@ -14,40 +32,22 @@ esse script ainda está em fase *beta*, então, em caso de bugs, sugestões e aj
 
 <br>
 
-> 📟 *interface da paleta:*
->
-> ![ui](docs/images/ui_1.png)
+## 📍 instalação
 
-a interface é responsiva e exibirá todas as informações da forma mais eficiente possível.
+requer After Effects **2022 (22.0)** ou mais novo, no Windows ou no macOS.
 
-- **botão +**:\
-`◖ clique esquerdo` → adiciona um nova cor.\
-`◗ clique direito` → adiciona todas as cores de qualquer propriedade ou efeito de todos os layers selecionados.\
-`Ctrl + ◗ clique direito` → limpa a paleta e adiciona todas as cores de qualquer propriedade ou efeito do projeto.
-  >
-
-> 🚩 *obs:*\
-> • caso não exista uma propriedade ou efeito selecionado, ou a cor do mesmo já exista na paleta, o botão + abrirá o editor de cores.
-
-<br><br>
-
-- **botão ⇅**:\
-`◖ clique esquerdo` → puxa a paleta do projeto.\
-`◗ clique direito` → ordena a paleta, usando os critérios: *1 - matiz*, *2 - brilho*, *3 - saturação*.\
-`Alt + ◗ clique direito` → excluir todas as cores da paleta.
-  >
+1. copie a pasta `cep/com.jmbillard.elpalletero` para a pasta de extensões:
+   - **Windows:** `%APPDATA%\Adobe\CEP\extensions\` (só o seu usuário) ou `C:\Program Files (x86)\Common Files\Adobe\CEP\extensions\` (todos)
+   - **macOS:** `~/Library/Application Support/Adobe/CEP/extensions/` ou `/Library/Application Support/Adobe/CEP/extensions/`
+2. libere extensões sem assinatura (uma vez só):
+   - **Windows:** `reg add HKCU\Software\Adobe\CSXS.11 /v PlayerDebugMode /t REG_SZ /d 1 /f` (repita com `CSXS.12` para o AE 2025 ou mais novo)
+   - **macOS:** `defaults write com.adobe.CSXS.11 PlayerDebugMode 1` (repita com `com.adobe.CSXS.12`)
+3. **reinicie** o After Effects.
+4. abra o painel em `Window` > `Extensions` > `El PALLETERO` e acople onde preferir.
 
 > 🚩 *obs:*\
-> • as paletas são salvas dentro dos metadados do projeto.\
-> • caso não exista nenhuma paleta salva no projeto, as cores iniciais serão puxadas.
-
-<br><br>
-
-- **botões de cor**:\
-`◖ clique esquerdo` → aplica o efeito **Fill** em todos os layers selecionados.\
-`◗ clique direito` → editar a cor clicada.\
-`Alt + ◗ clique direito` → excluir a cor clicada.
-  >
+> • no macOS, se o painel não aparecer, rode `killall cfprefsd` no Terminal (o sistema guarda as preferências em cache) e abra o After Effects de novo.\
+> • as preferências e os presets ficam em `%APPDATA%\El PALLETERO\` (Windows) ou `~/Library/Application Support/El PALLETERO/` (macOS).
 
 <br>
 
@@ -55,15 +55,21 @@ a interface é responsiva e exibirá todas as informações da forma mais eficie
 
 <br>
 
-> 📟 *interface do editor de cores:*
->
-> ![ui](docs/images/ui_2.png)
+## 📍 vindo do O PALETTERO
 
-- **cancelar**:\
-`◖ clique esquerdo` → cancela a alteração ou adição da cor atual.
+o painel se chamava **O PALETTERO** até a v1.1. na primeira vez que o El PALLETERO abre, ele traz tudo do nome antigo:
 
-- **aplicar**:\
-`◖ clique esquerdo` → aplica a alteração ou adição da cor atual.
+| o quê | de | para |
+| --- | --- | --- |
+| preferências | pasta `O PALETTERO script` | pasta `El PALLETERO` |
+| presets da pasta padrão | `O PALETTERO script/presets` | `El PALLETERO/presets` |
+| pasta de presets personalizada (rede) | continua a mesma | continua a mesma |
+| paleta de cada projeto | metadados do O PALETTERO | metadados do El PALLETERO, no primeiro salvamento |
+
+> 🚩 *obs:*\
+> • a pasta antiga **não é apagada**: o [script clássico](docs/script-classico.md) continua usando ela.\
+> • só abrir um projeto antigo não altera nada nele. a paleta passa para o formato novo na primeira mudança na paleta.\
+> • se a versão anterior da extensão estiver instalada, apague a pasta `com.jmbillard.opalettero` da pasta de extensões, para não ficarem dois painéis no menu.
 
 <br>
 
@@ -71,64 +77,240 @@ a interface é responsiva e exibirá todas as informações da forma mais eficie
 
 <br>
 
-> 📟 *interface do editor de cores:*
->
-> ![ui](docs/images/ui_3.png)
+## 📍 aplicar cores
 
-**EXIBIR**:
+1. selecione os layers (ou as propriedades de cor) na composição.
+2. `◖ clique esquerdo` na cor.
 
-- **botão 𝒊**:\
-`◖ clique esquerdo` → abre a documentação do script no repositório do GitHub.
-- **informação de cor** → habilita / desabilita a exibição de textos nas amostras de cor.
-- **nome personalizado** → habilita / desabilita a exibição do nome da cor.
-- **#HEX**, **RGB**, **HSB** → exibem seus respectivos valores nas amostras de cor.
+- com **propriedades de cor selecionadas** (Fill, Stroke, Tint, a cor de um efeito, o Source Text…), só elas mudam.
+- sem propriedades selecionadas, cada layer ganha um efeito **Fill** com o nome da cor (`#FF4D4D`). aplicar outra cor **reaproveita** esse Fill em vez de empilhar outro.
+- com keyframes, a cor entra no tempo atual.
+- a última cor aplicada ganha um pontinho e passa a ser a cor de destaque do painel.
 
 > 🚩 *obs:*\
-> • as alterações feitas nessa seção são salvas automaticamente.
+> • cada aplicação é **um passo** de desfazer no After Effects (`El PALLETERO · aplicar #HEX`).\
+> • sem nada selecionado, a amostra balança e o aviso explica o que falta.
 
-<br><br>
+<br>
 
-**PALETA**:
+---
 
-- **definir como paleta padrão** → define a lista de cores ao lado como a paleta padrão.
+<br>
 
-> 🚩 *obs:*\
-> • a paleta padrão é sempre puxada caso não exista nenhuma paleta salva no projeto o clicar no botão ' *⇅* '.
+## 📍 organizar a paleta
 
-<br><br>
+> <img src="docs/gifs/organizar.gif" alt="arrastar, copiar e excluir cores" width="860">
 
-**CORES**:
-
-- **botão ⇅**:\
-`◖ clique esquerdo` → puxa a paleta do projeto.\
-`◗ clique direito` → ordena a paleta, usando os critérios: *1 - matiz*, *2 - brilho*, *3 - saturação*.\
-`Alt + ◗ clique direito` → excluir todas as cores da paleta.
-  >
-
-- **botão +**:\
-`◖ clique esquerdo` → adiciona um nova cor.\
-  >
-
-- **botões de cor**:\
-`◖ clique esquerdo` → editar a cor clicada.
-  >
-
-- **nomes de cor**:\
-`◖ clique esquerdo` → editar o nome clicado.
-  >
-
-- **X**:\
-`◖ clique esquerdo` → remove a cor da lista.
+- **arrastar** → reordena. os vizinhos abrem espaço enquanto você arrasta.
+- `Ctrl` / `⌘` + `◖ clique` → copia o valor da cor (HEX, RGB ou HSB, conforme os ajustes).
+- segure `Alt` / `⌥` → **modo excluir**: as amostras tremem e mostram um ×. clique para remover.
+- `◗ clique direito` ou o ✏️ → editor de cor. o lápis fica no canto da amostra: uma argolinha marca o lugar e vira o lápis quando o mouse chega lá (o balde some enquanto isso).
 
 > 🚩 *obs:*\
-> • as alterações feitas nessa seção só serão salvas após clicar no botão '*salvar paleta*'.
+> • toda mudança na paleta tem **desfazer**: o botão no aviso ou `Ctrl+Z` / `⌘Z` com o painel em foco.\
+> • a paleta é salva no projeto na hora. não existe botão de salvar.
 
-<br><br>
+<br>
 
-**BOTÕES**:
+---
 
-- **cancelar**:\
-`◖ clique esquerdo` → cancela o salvamento da paleta no projeto.
+<br>
 
-- **salvar paleta**:\
-`◖ clique esquerdo` → salva a paleta no projeto.
+## 📍 editor de cor e nomes automáticos
+
+o editor nasce da própria amostra e volta para ela quando você confirma.
+
+> <img src="docs/gifs/editor.gif" alt="editor de cor com nome automático" width="420">
+
+- **quadrado** → saturação e brilho. **faixa colorida** → matiz. com o mouse ou com as setas do teclado (`Shift` anda mais rápido).
+- **campo de valor** → digite ou cole a cor. o botão `HEX` alterna para `RGB` e `HSB`. colar em qualquer lugar do editor também funciona (`#ff4d4d`, `rgb(255, 77, 77)`, `0 70 100`…).
+- **metade esquerda da prévia** → a cor original. `◖ clique` volta para ela.
+- `Enter` confirma, `Esc` cancela. o 🗑️ exclui a cor.
+
+### nomes automáticos
+
+cada cor ganha um nome em português, do mundo real: *menta*, *tijolo*, *céu*, *mostarda*, *berinjela*, *noite*…
+
+- o nome é o da cor de referência mais próxima (são cerca de 150, comparadas em CIELAB, que mede diferença de cor como o olho).
+- se o nome já existe na paleta, entra um vizinho parecido (*vermelho* → *melancia*) ou *suave* / *forte*.
+- no editor, o nome automático (em itálico, com ✦ preenchido) **acompanha a cor** enquanto você mexe.
+- digitou um nome seu? ele fica fixo. o ✦ devolve o automático.
+
+> 🚩 *obs:*\
+> • nomes antigos como `cor 3`, vazios ou iguais ao hex viram automáticos.\
+> • para ver os nomes nas amostras, ligue **mostrar nomes** nos [ajustes](#-ajustes).
+
+<br>
+
+---
+
+<br>
+
+## 📍 conta-gotas
+
+o **conta-gotas** (doca da esquerda) traz para a paleta as cores que já estão no projeto, e entende o que está selecionado:
+
+| seleção | o conta-gotas | ícone |
+| --- | --- | --- |
+| propriedades de cor | captura as cores dessas propriedades | conta-gotas |
+| layers de shape, texto ou sólido | captura as cores dos layers (efeitos, shapes, textos, sólidos) | conta-gotas |
+| layer de **imagem, vídeo, PSD ou precomp** | abre a [extração de cores da imagem](#-extrair-cores-de-uma-imagem) | imagem |
+| nada | extrai as cores do **frame atual da composição** | imagem |
+| `Shift` + qualquer seleção | captura as cores do **projeto inteiro** | camadas |
+
+ao passar o mouse, o ícone e a dica já mostram o que o clique vai fazer.
+
+> <img src="docs/gifs/capturar.gif" alt="capturando cores da seleção e do projeto" width="860">
+
+> 🚩 *obs:*\
+> • só entram cores que ainda não estão na paleta, e já chegam com nome.\
+> • o vermelho padrão de efeitos que nunca foram alterados (`#FF0000`) é ignorado.\
+> • quer as cores dos **efeitos** de um layer de imagem (um Tint, um Fill)? selecione as propriedades: propriedades selecionadas sempre têm prioridade.\
+> • com layers vetoriais e de imagem selecionados juntos, valem as cores dos vetoriais.
+
+<br>
+
+---
+
+<br>
+
+## 📍 extrair cores de uma imagem
+
+o **conta-gotas**, com um layer de imagem selecionado (ou nada selecionado), lê o frame atual e sugere as cores principais.
+
+> <img src="docs/gifs/imagem.gif" alt="extraindo cores de uma imagem" width="860">
+
+- funciona com **imagem**, **vídeo**, **PSD** e **precomp**. sem nada selecionado, usa o frame atual da **composição**.
+- os marcadores na imagem mostram de onde veio cada cor. passe o mouse numa amostra para destacar o marcador.
+- `◖ clique` numa amostra → liga / desliga.
+- `−` / `+` → menos ou mais cores (de 2 a 12; o painel lembra a sua escolha).
+- `◖ clique` na imagem → adiciona a cor daquele ponto (a lupa mostra a cor antes do clique).
+- ✓ ou `Enter` → adiciona as cores ligadas à paleta.
+
+> 🚩 *obs:*\
+> • as cores são agrupadas por **k-means em CIELAB**, e o painel escolhe grupos bem diferentes entre si. a mesma imagem sempre dá o mesmo resultado.\
+> • vídeos e precomps precisam ser renderizados. se demorar, aparece *renderizando frame · Ns*. `Esc` cancela.\
+> • o painel só lê o frame depois que o arquivo foi gravado por completo, e apaga os temporários no final.
+
+<br>
+
+---
+
+<br>
+
+## 📍 presets
+
+a paleta do projeto mora no `.aep`. os **presets** são uma biblioteca de paletas numa pasta que você escolhe, que pode ser uma pasta de rede da equipe.
+
+> <img src="docs/gifs/presets.gif" alt="biblioteca de presets" width="420">
+
+- `◖ clique` num preset → **substitui** a paleta do projeto.
+- `Shift` + `◖ clique` → **adiciona** as cores que faltam.
+- **salvar preset** → a paleta do projeto vira um preset novo.
+- ✏️ renomeia, ★ define o preset usado em projetos sem paleta, 🗑️ exclui.
+
+a pasta de presets entende caminhos de rede do Windows e do Mac, volumes montados de novo (`VFX-1`) e volumes desmontados → [documentação completa](docs/presets.md).
+
+<br>
+
+---
+
+<br>
+
+## 📍 formatos do painel
+
+o painel se reorganiza sozinho conforme o tamanho:
+
+> <img src="docs/gifs/layouts.gif" alt="faixa, lista e grade" width="860">
+
+| formato | quando | como fica |
+| --- | --- | --- |
+| **faixa** | largo e baixo | amostras lado a lado; a amostra sob o mouse cresce |
+| **lista** | estreito e alto | uma cor por linha, com nome e valor |
+| **grade** | espaçoso | blocos quadrados; o editor e a extração ganham espaço |
+
+<br>
+
+---
+
+<br>
+
+## 📍 ajustes
+
+o **⋯** (doca da direita) abre os ajustes no lugar das cores.
+
+- **HEX · RGB · HSB** → formato dos valores nas amostras e do que é copiado.
+- 👁 **valores sempre visíveis** → mostra os valores sem precisar passar o mouse (quando cabem).
+- 🏷 **mostrar nomes** → mostra o nome da cor nas amostras.
+- ⇅ **ordenar por matiz** → matiz → luminosidade → saturação, cinzas no fim.
+- 🗑 **segure para limpar** → segure o botão até a barra encher para esvaziar a paleta (tem desfazer).
+- **?** → esta documentação.
+
+<br>
+
+---
+
+<br>
+
+## 📍 teclado e atalhos
+
+| ação | Windows | macOS |
+| --- | --- | --- |
+| aplicar | `◖ clique` | `◖ clique` |
+| editar | `◗ clique direito` | `◗ clique direito` ou `Ctrl` + `◖ clique` |
+| copiar valor | `Ctrl` + `◖ clique` | `⌘` + `◖ clique` |
+| excluir | `Alt` + `◖ clique` | `⌥` + `◖ clique` |
+| capturar do projeto inteiro | `Shift` + conta-gotas | `⇧` + conta-gotas |
+| adicionar preset sem substituir | `Shift` + `◖ clique` no preset | `⇧` + `◖ clique` no preset |
+| desfazer (paleta) | `Ctrl+Z` | `⌘Z` |
+| confirmar / cancelar (editor, extração) | `Enter` / `Esc` | `Return` / `Esc` |
+| amostra em foco: aplicar · editar · excluir | `Enter` · `F2` · `Delete` | `Return` · `F2` · `Delete` |
+
+> 🚩 *obs:*\
+> • com o painel em foco, ele pede essas teclas ao After Effects, para `Ctrl+Z` / `⌘Z` desfazer a paleta, e não o projeto, e `Delete` não apagar layers.\
+> • os ícones mostram o que vão fazer: a lixeira abre a tampa no hover (e abre mais enquanto você segura *limpar*), as setas de ordenar trocam de lugar, o ✓ se desenha, o × gira, o conta-gotas "suga" enquanto captura e as camadas se abrem com `Shift`.\
+> • as dicas do painel aparecem quando o mouse pode fazer alguma coisa e mudam ao vivo quando você segura `Ctrl`, `Alt` ou `Shift`. as dicas das amostras somem depois que você já as viu algumas vezes.
+
+<br>
+
+---
+
+<br>
+
+## 📍 desenvolvimento
+
+```text
+cep/com.jmbillard.elpalletero/
+├── CSXS/manifest.xml   → registro da extensão (AEFT 22+)
+├── index.html          → painel
+├── css/panel.css       → visual e animações
+├── js/color.js         → conversões de cor (HSB, CIELAB…)
+├── js/names.js         → nomes automáticos
+├── js/extract.js       → extração de cores (k-means em CIELAB)
+├── js/bridge.js        → ponte painel ↔ ExtendScript (ou o mock, no navegador)
+├── js/panel.js         → estado, interações e animações
+└── jsx/host.jsx        → lado After Effects: metadados, presets, rede, aplicar, capturar, frames
+mockup/                 → página de demonstração com um "After Effects de mentira"
+tools/                  → scripts que geram o mockup e os GIFs desta documentação
+```
+
+- **depurar:** com o painel aberto, acesse `http://localhost:8099` no Chrome.
+- **mockup:** depois de mudar o painel, rode `node tools/build-mockup.js`.
+- **GIFs:** `node tools/gifs/record.js` grava todos de novo a partir do mockup (ou `node tools/gifs/record.js editor presets` para alguns). precisa do Playwright e do `ffmpeg`.
+
+> 🚩 *obs:*\
+> • o painel usa o Node.js do CEP (`--enable-nodejs`) só para ler o PNG do frame.\
+> • o frame é gerado com `saveFrameToPng`, um método que existe no After Effects mas não está na documentação oficial.
+
+<br>
+
+---
+
+<br>
+
+## 📍 script clássico
+
+a versão original em ScriptUI, com o nome antigo **O PALETTERO** (`O PALETEIRO beta.jsx`), continua no repositório → [documentação do script clássico](docs/script-classico.md).
+
+> 🚩 *obs:*\
+> • a extensão lê as paletas salvas pelo script e migra para o formato novo. o script não lê as paletas salvas pela extensão.
