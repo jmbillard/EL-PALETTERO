@@ -183,6 +183,8 @@
 			else if (o === 'col') r = strip.clientHeight / n >= 22;
 			else r = true;
 			el.dataset.roomy = r ? '1' : '0';
+			// amostra baixa: não cabe o balde acima dos rótulos, então ele vai para a direita
+			el.dataset.tight = o === 'row' && strip.clientHeight < (S.prefs.names ? 60 : 46) ? '1' : '0';
 		}
 
 		if (root.ResizeObserver) new ResizeObserver(measure).observe(el);
@@ -195,9 +197,9 @@
 			n.dataset.id = sw.id;
 			n.tabIndex = 0;
 			n.setAttribute('role', 'listitem');
-			n.innerHTML = '<span class="sw-glyph">' + ic('bucket', 'g-fill') + ic('copy', 'g-copy') + ic('x', 'g-del') + ic('check', 'g-ok') + '</span>' +
-				'<span class="sw-meta"><span class="sw-name"></span><span class="sw-val"></span></span>' +
-				'<button class="sw-edit" tabindex="-1" aria-label="Editar cor">' + ic('pencil') + '</button><i class="sw-dot"></i>';
+			n.innerHTML = '<button class="sw-edit" tabindex="-1" aria-label="Editar cor">' + ic('pencil') + '</button>' +
+				'<span class="sw-glyph">' + ic('bucket', 'g-fill') + ic('copy', 'g-copy') + ic('x', 'g-del') + ic('check', 'g-ok') + '</span>' +
+				'<span class="sw-meta"><span class="sw-name"></span><span class="sw-val"></span></span><i class="sw-dot"></i>';
 			return n;
 		}
 
@@ -769,6 +771,7 @@
 			S.prefs[k] = v;
 			syncSettings();
 			repaintAll();
+			roomy();
 			Host.savePrefs({
 				labelType: S.prefs.format === 'HEX' ? '#HEX' : S.prefs.format,
 				showColorInfo: S.prefs.info,

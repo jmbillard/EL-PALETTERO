@@ -104,7 +104,7 @@ o painel se chamava **O PALETTERO** até a v1.1. na primeira vez que o El PALLET
 - **arrastar** → reordena. os vizinhos abrem espaço enquanto você arrasta.
 - `Ctrl` / `⌘` + `◖ clique` → copia o valor da cor (HEX, RGB ou HSB, conforme os ajustes).
 - segure `Alt` / `⌥` → **modo excluir**: as amostras tremem e mostram um ×. clique para remover.
-- `◗ clique direito` ou o ✏️ (aparece ao passar o mouse) → editor de cor.
+- `◗ clique direito` ou o ✏️ → editor de cor. o lápis fica no canto da amostra: uma argolinha marca o lugar e vira o lápis quando o mouse chega lá (o balde some enquanto isso).
 
 > 🚩 *obs:*\
 > • toda mudança na paleta tem **desfazer**: o botão no aviso ou `Ctrl+Z` / `⌘Z` com o painel em foco.\

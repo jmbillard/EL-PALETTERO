@@ -128,12 +128,17 @@
 .sw.drag { z-index: 10; transition: none; box-shadow: 0 0 0 2px #fff, 0 14px 30px -8px rgba(0, 0, 0, .7); cursor: grabbing; }
 .pal.dragging .sw:not(.drag) { transition: flex-grow .2s, transform .2s; }
 
-/* glifo central: balde (aplicar) · copiar (ctrl) · × (alt) · ✓ (aplicado) */
+/* glifo: balde (aplicar) · copiar (ctrl) · × (alt) · ✓ (aplicado)
+   fica na área livre acima dos rótulos; se a amostra é baixa, vai para a direita */
+.sw { --meta-h: 34px; }
+.pal:not(.show-names) .sw { --meta-h: 22px; }
 .sw-glyph {
-	position: absolute; left: 50%; top: 50%;
+	position: absolute; left: 50%;
+	top: max(3px, calc((100% - var(--meta-h)) / 2 - 11px));
 	width: 22px; height: 22px;
-	margin: -11px 0 0 -11px;
+	margin-left: -11px;
 	pointer-events: none;
+	transition: top .3s var(--ease);
 }
 .sw-glyph .ic { position: absolute; inset: 3px; opacity: 0; transform: scale(.5); transition: opacity .2s, transform .3s var(--spring); }
 .sw:hover .g-fill { opacity: .9; transform: none; }
@@ -141,8 +146,9 @@
 .pal.ctrl .sw:hover .g-copy { opacity: .9; transform: none; }
 .pal.alt .sw .g-del { opacity: .95; transform: none; }
 .sw.ok .g-ok { opacity: 1; transform: scale(1.25); stroke-width: 3; }
-.pal[data-roomy='1'].show-info .sw-glyph, .pal[data-orient='col'] .sw-glyph { top: auto; bottom: 50%; }
-.pal[data-orient='col'] .sw-glyph { left: auto; right: 6px; margin: 0 0 -11px 0; }
+/* lista e faixa baixa: rótulos · balde · lápis, lado a lado */
+.pal[data-orient='col'] .sw-glyph, .pal[data-tight='1'] .sw-glyph { top: 50%; left: auto; right: 28px; margin: -11px 0 0 0; }
+.pal[data-tight='1'] .sw:hover .sw-meta { right: 54px; }
 
 /* rótulos */
 .sw-meta {
@@ -157,32 +163,44 @@
 .sw-val { font: 10px/1.2 var(--mono); opacity: .78; letter-spacing: .02em; overflow: hidden; text-overflow: ellipsis; }
 .pal:not(.show-names) .sw-name { display: none; }
 .sw:hover .sw-meta, .pal[data-roomy='1'].show-info .sw-meta { opacity: 1; transform: none; }
-.pal[data-orient='col'] .sw-meta { top: 0; bottom: 0; right: 30px; flex-direction: row; align-items: center; gap: 8px; }
+.pal[data-orient='col'] .sw-meta { top: 0; bottom: 0; right: 8px; flex-direction: row; align-items: center; gap: 8px; }
 .pal[data-orient='col'] .sw-name { flex: 0 1 auto; }
 .pal[data-orient='col'] .sw-val { flex: 1 1 auto; }
 
-/* lápis de editar */
+/* lápis de editar: no hover da amostra só uma argolinha marca o canto;
+   com o mouse no canto ela vira o lápis e o balde some (um ou outro, nunca os dois) */
 .sw-edit {
-	position: absolute; top: 4px; right: 4px;
-	width: 20px; height: 20px;
+	position: absolute; top: 2px; right: 2px; z-index: 1;
+	width: 24px; height: 24px; padding: 0;
 	display: grid; place-items: center;
-	border: 0; border-radius: 6px;
-	background: rgba(0, 0, 0, .22);
+	border: 0; border-radius: 7px;
+	background: transparent;
 	color: var(--ink);
 	cursor: pointer;
-	opacity: 0; transform: scale(.6);
-	transition: opacity .18s, transform .25s var(--spring), background .15s;
+	transition: background .18s, transform .25s var(--spring);
 }
-.sw-edit .ic { width: 12px; height: 12px; }
-.sw:hover .sw-edit { opacity: 1; transform: none; }
-.sw-edit:hover { background: rgba(0, 0, 0, .45); transform: scale(1.12) !important; }
-.pal.alt .sw-edit, .pal.ctrl .sw-edit { display: none; }
-.pal[data-orient='col'] .sw-edit { top: 50%; margin-top: -10px; right: 30px; }
-.pal[data-orient='col'] .sw:hover .sw-meta { right: 56px; }
+.sw-edit::before {
+	content: ''; position: absolute; left: 50%; top: 50%;
+	width: 6px; height: 6px; margin: -3px 0 0 -3px;
+	border-radius: 50%; border: 1.5px solid var(--ink);
+	opacity: 0; transform: scale(.3);
+	transition: opacity .2s, transform .3s var(--spring);
+}
+.sw-edit .ic { width: 12px; height: 12px; opacity: 0; transform: scale(.3) rotate(-60deg); transition: opacity .18s, transform .35s var(--spring); }
+.sw:hover .sw-edit::before { opacity: .55; transform: none; }
+.sw-edit:hover { background: rgba(0, 0, 0, .28); }
+.sw-edit:hover::before { opacity: 0; transform: scale(2.6); }
+.sw-edit:hover .ic { opacity: 1; transform: none; }
+.sw-edit:active { transform: scale(.86); }
+.sw-edit:hover ~ .sw-glyph .ic { opacity: 0 !important; transform: scale(.5) !important; }
+.sw.drag .sw-edit, .pal.alt .sw-edit, .pal.ctrl .sw-edit { display: none; }
+.pal[data-orient='col'] .sw-edit, .pal[data-tight='1'] .sw-edit { top: 50%; margin-top: -12px; right: 3px; }
+.pal[data-orient='col'] .sw:hover .sw-meta { right: 54px; }
 
 /* marca da última cor aplicada */
 .sw-dot { position: absolute; top: 5px; left: 5px; width: 5px; height: 5px; border-radius: 50%; background: var(--ink); transform: scale(0); transition: transform .35s var(--spring); }
 .sw.last .sw-dot { transform: scale(1); }
+.pal[data-tight='1'] .sw-dot { top: 3px; left: 50%; margin-left: -2.5px; }
 
 /* modo excluir (alt) */
 .pal.alt .sw { animation: pal-jiggle .32s ease-in-out infinite alternate; cursor: not-allowed; }
