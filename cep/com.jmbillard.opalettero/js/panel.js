@@ -45,6 +45,7 @@
 		folder: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
 		sparkle: '<path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.13-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.13a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.13 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.13a.5.5 0 0 1-.96 0z"/>',
 		minus: '<path d="M5 12h14"/>',
+		unplug: '<path d="m19 5 3-3"/><path d="m2 22 3-3"/><path d="M6.3 20.3a2.4 2.4 0 0 0 3.4 0L12 18l-6-6-2.3 2.3a2.4 2.4 0 0 0 0 3.4Z"/><path d="M7.5 13.5 10 11"/><path d="M10.5 16.5 13 14"/><path d="m12 6 6 6 2.3-2.3a2.4 2.4 0 0 0 0-3.4l-2.6-2.6a2.4 2.4 0 0 0-3.4 0Z"/>',
 		file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>'
 	};
 
@@ -76,6 +77,7 @@
 			preset: '',       // preset de origem da paleta do projeto
 			presets: [],
 			folder: '',
+			offline: null,    // { volume, canMount } quando a pasta de presets não está acessível
 			last: null,
 			undo: [],
 			key: null
@@ -818,17 +820,33 @@
 		}
 
 		function loadPresets(focusId, rename) {
-			return Host.listPresets().then(function (r) {
+			return Host.listPresets().then(function (r) { gotPresets(r, focusId, rename); })
+				.catch(function () { toast('Não foi possível ler a pasta de presets', { icon: 'alert' }); });
+		}
+		function gotPresets(r, focusId, rename) {
+			{
 				S.presets = (r && r.presets) || [];
 				S.folder = (r && r.folder) || S.folder;
+				S.offline = r && r.offline ? { volume: r.volume || '', canMount: !!r.canMount } : null;
 				if (!library.hidden) renderLibrary(focusId, rename);
-			}).catch(function () { toast('Não foi possível ler a pasta de presets', { icon: 'alert' }); });
+			}
 		}
 
 		function renderLibrary(focusId, rename) {
 			var html = '<div class="pcard is-project" role="listitem" data-tip="Paleta deste projeto · salva no .aep">' + bars(S.swatches) +
 				'<span class="pc-name">' + ic('file') + '<span>' + esc(S.project || 'projeto') + '</span></span></div>' +
 				'<button class="pcard add" data-act="save-preset" data-tip="Salvar a paleta do projeto como preset">' + ic('plus') + '<span class="pc-name">Salvar preset</span></button>';
+			if (S.offline) {
+				// volume de rede desmontado / unidade desconectada: explica e oferece saída
+				html += '<div class="pcard offline" role="listitem">' +
+					'<span class="off-ic">' + ic('unplug') + '</span>' +
+					'<span class="off-txt"><b>' + esc(S.offline.volume || 'pasta') + '</b> não está acessível</span>' +
+					'<span class="off-acts">' +
+					(S.offline.canMount ? '<button class="off-btn" data-off="mount">Montar</button>' : '') +
+					'<button class="off-btn" data-off="retry" data-tip="Tentar de novo">' + ic('reset') + '</button>' +
+					'<button class="off-btn" data-off="local" data-tip="Usar a pasta local">' + ic('folder') + '</button>' +
+					'</span></div>';
+			}
 			S.presets.forEach(function (p, i) {
 				var cls = 'pcard' + (p.id === S.prefs.defaultPreset ? ' is-default' : '') + (p.name === S.preset ? ' is-origin' : '');
 				html += '<div class="' + cls + '" role="listitem" tabindex="0" data-pid="' + esc(p.id) + '" style="--i:' + i + '">' + bars(p.swatches) +
@@ -868,9 +886,10 @@
 
 		function savePreset() {
 			if (!S.swatches.length) return toast('A paleta do projeto está vazia', { icon: 'alert' });
+			if (S.offline) return toast((S.offline.volume || 'A pasta') + ' não está acessível', { icon: 'unplug' });
 			var name = N.unique(S.project && S.project !== 'sem título' ? S.project : 'minha paleta', S.presets.map(function (p) { return p.name; }));
 			Host.savePreset({ name: name, swatches: plain(S.swatches) }).then(function (r) {
-				if (!r || !r.ok) return toast('A pasta de presets não aceita gravação', { icon: 'alert' });
+				if (!r || !r.ok) return toast(r && r.reason === 'offline' ? 'A pasta de presets não está acessível' : 'A pasta de presets não aceita gravação', { icon: 'alert' });
 				S.preset = name;
 				save();
 				loadPresets(r.id, true);
@@ -939,18 +958,37 @@
 		}
 
 		function chooseFolder(e) {
-			if (e.altKey) return Host.revealPresetFolder();
+			if (e.altKey) return Host.revealPresetFolder().then(function (r) { if (!r || !r.ok) toast('A pasta não está acessível', { icon: 'unplug' }); });
 			Host.choosePresetFolder().then(function (r) {
 				if (!r || !r.ok) return;
 				S.folder = r.folder;
 				q('.lib-path').textContent = shortPath(S.folder);
-				loadPresets();
-				toast('Presets de ' + shortPath(r.folder), { icon: 'folder' });
+				return Host.listPresets().then(function (l) {
+					gotPresets(l);
+					if (S.offline) toast((S.offline.volume || 'A pasta') + ' não está acessível', { icon: 'unplug' });
+					else toast('Presets de ' + shortPath(S.folder), { icon: 'folder' });
+				});
 			});
 		}
 
 		libList.addEventListener('click', function (e) {
 			if (e.target.closest('.pc-input')) return;
+			var off = e.target.closest('[data-off]');
+			if (off) {
+				var card0 = off.closest('.pcard');
+				off.classList.add('busy');
+				var job = off.dataset.off === 'mount' ? Host.mountPresetVolume() : off.dataset.off === 'local' ? Host.resetPresetFolder() : Host.listPresets();
+				return job.then(function (r) {
+					gotPresets(r);
+					if (S.offline) {
+						card0 = libList.querySelector('.offline');
+						if (card0) card0.animate([{ transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' }, { transform: 'none' }], { duration: 300 });
+						toast((S.offline.volume || 'A pasta') + ' continua inacessível', { icon: 'unplug' });
+					} else {
+						toast('Presets de ' + shortPath(S.folder), { icon: 'folder' });
+					}
+				});
+			}
 			var card = e.target.closest('[data-pid]');
 			if (!card) { if (e.target.closest('.is-project')) closeSettings(); return; }
 			var p = presetById(card.dataset.pid);
@@ -1459,6 +1497,7 @@
 			poll();
 			setInterval(function () { if (!document.hidden) poll(); }, 2000);
 			root.addEventListener('focus', poll);
+			root.addEventListener('focus', function () { if (S.offline && !library.hidden) loadPresets(); });
 		});
 
 		measure();

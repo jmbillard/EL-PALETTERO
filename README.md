@@ -60,6 +60,17 @@ Ao trocar de projeto, o painel recarrega a paleta automaticamente.
 - no Windows, um PNG que ainda está aberto não pode ser apagado; o que sobrar é limpo na próxima extração.
 - um mesmo preset funciona nos dois sistemas: são arquivos `.json` em UTF-8 com nomes só em ASCII.
 
+**pasta de presets em rede** (lógica adaptada do *O PADEIRO*)
+
+- ao escolher a pasta, o painel guarda o caminho desta máquina e também uma forma neutra de rede (`//servidor/share/pasta`). A tradução é descoberta na hora, sem lista fixa de servidores:
+  - **Windows:** uma unidade mapeada (`L:\paletas`) vira o caminho de rede lendo o `net use`.
+  - **Mac:** um volume (`/Volumes/VFX-1/paletas`) vira o caminho de rede lendo o `mount`.
+- ao abrir, a forma de rede é convertida para o caminho que existe agora:
+  - **Windows:** usa a letra de unidade, se houver uma mapeada; senão, o UNC.
+  - **Mac:** usa o volume montado com aquele servidor/share. Isso cobre subpastas montadas como volume, nomes com espaço e o servidor com nome curto ou completo.
+- no Mac, se o share foi montado de novo como `VFX-1` … `VFX-5`, o painel encontra a variante certa.
+- se o volume não estiver montado ou a unidade estiver desconectada, o painel **não cria nada**. A biblioteca mostra o aviso com **Montar** (Mac), **tentar de novo** e **usar a pasta local**, e tenta de novo sozinha quando o painel volta a ter foco.
+
 > 🧩 o painel usa o Node.js do CEP (`--enable-nodejs`) só para ler o PNG do frame. O frame é gerado com `saveFrameToPng`, um método que existe no After Effects mas não está na documentação oficial.\
 > 🛠️ depuração: com o painel aberto, acesse `http://localhost:8099` no Chrome.\
 > 🔁 depois de mudar o código do painel, rode `node tools/build-mockup.js` para atualizar o mockup.

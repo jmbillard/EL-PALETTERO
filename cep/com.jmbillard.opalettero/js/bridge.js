@@ -137,6 +137,8 @@
 		deletePreset: function (id) { return call('deletePreset', id); },
 		choosePresetFolder: function () { return call('choosePresetFolder'); },
 		revealPresetFolder: function () { return call('revealPresetFolder'); },
+		mountPresetVolume: function () { return call('mountPresetVolume'); },
+		resetPresetFolder: function () { return call('resetPresetFolder'); },
 		grabFrame: function () { return call('grabFrame'); },
 		releaseFrame: function (r) { return r && r.temp ? call('releaseFrame', r.tmpId || 0, r.path) : Promise.resolve(); },
 		loadImage: loadImage,

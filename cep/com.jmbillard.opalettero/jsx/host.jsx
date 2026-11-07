@@ -156,7 +156,7 @@ function PAL_loadPrefs() {
 		showColorInfo: p.showColorInfo !== false,
 		labelType: p.labelType || '#HEX',
 		defaultPreset: p.defaultPreset || '',
-		presetFolder: PAL_presetFolder().fsName
+		presetFolder: PAL_presetLocation().path
 	});
 }
 
@@ -168,13 +168,205 @@ function PAL_savePrefs(json) {
 	return PAL_json({ ok: true });
 }
 
+// ---------------------------------------------------------------- caminhos de rede (Windows × Mac)
+// Adaptado do O PADEIRO (file system lib / acessorista): sufixos de volume no Mac,
+// leitura do "mount" e montagem via osascript. Aqui o mapa servidor ↔ unidade ↔ volume
+// é descoberto na hora ("net use" no Windows, "mount" no Mac), sem lista fixa de servidores.
+//
+// A pasta de presets é guardada em duas formas:
+//   presetFolder    → como foi escolhida nesta máquina (C:\..., L:\..., /Volumes/VFX-1/...)
+//   presetFolderNet → forma neutra de rede "//servidor/share/resto" (vazia se for pasta local)
+// Em qualquer sistema, a forma neutra é convertida para o caminho que existe agora.
+
+var PAL_OS = $.os.indexOf('Win') >= 0 ? 'Win' : 'Mac';
+var PAL_MOUNTS = null, PAL_MOUNTS_AT = 0;
+
+function PAL_slash(p) { return String(p || '').replace(/\\/g, '/'); }
+function PAL_trim(s) { return String(s || '').replace(/^\s+|\s+$/g, ''); }
+
+// "//servidor/share/a/b" → { server, share, rest: '/a/b' }
+function PAL_splitUNC(p) {
+	var m = PAL_slash(p).replace(/^smb:/i, '').match(/^\/\/(?:[^@\/]*@)?([^\/]+)\/([^\/]+)(\/.*)?$/);
+	if (!m) return null;
+	return { server: m[1], share: m[2], rest: (m[3] || '').replace(/\/+$/, '') };
+}
+
+// servidores iguais? compara o nome completo ou só o primeiro rótulo (vfx-ml-sp ≈ vfx-ml-sp.servicos.corp…)
+function PAL_sameServer(a, b) {
+	a = String(a).toLowerCase(); b = String(b).toLowerCase();
+	return a == b || a.split('.')[0] == b.split('.')[0];
+}
+
+// Windows: unidades mapeadas → UNC, lendo "net use" (uma vez por sessão do AE)
+function PAL_winDrives() {
+	if (PAL_MOUNTS) return PAL_MOUNTS;
+	PAL_MOUNTS = {};
+	try {
+		var lines = String(system.callSystem('cmd.exe /c net use')).split(/\r?\n/);
+		for (var i = 0; i < lines.length; i++) {
+			var m = lines[i].match(/\s([A-Z]):\s+(\\\\\S.*?)(\s{2,}|\s*$)/i);
+			if (m) PAL_MOUNTS[m[1].toUpperCase()] = PAL_slash(PAL_trim(m[2]));
+		}
+	} catch (e) {}
+	return PAL_MOUNTS;
+}
+
+// Mac: volumes SMB/AFP montados → [{ server, share, mount }], lendo "/sbin/mount" (cache de 20 s)
+function PAL_macMounts() {
+	var now = new Date().getTime();
+	if (PAL_MOUNTS && now - PAL_MOUNTS_AT < 20000) return PAL_MOUNTS;
+	PAL_MOUNTS = [];
+	PAL_MOUNTS_AT = now;
+	try {
+		var lines = String(system.callSystem('/sbin/mount')).split(/\r?\n/);
+		for (var i = 0; i < lines.length; i++) {
+			var m = lines[i].match(/^\/\/(?:[^@\/]*@)?([^\/]+)\/(.+?) on (\/Volumes\/.+?) \((smbfs|afpfs|nfs)/);
+			if (!m) continue;
+			var share = m[2];
+			try { share = decodeURIComponent(share); } catch (e) {}
+			PAL_MOUNTS.push({ server: m[1], share: share, mount: m[3].replace(/\\040/g, ' ').replace(/\/+$/, '') });
+		}
+	} catch (e) {}
+	return PAL_MOUNTS;
+}
+
+// Mac: /Volumes/VFX/... que virou /Volumes/VFX-1 ... -5 ao ser montado de novo (do O PADEIRO)
+function PAL_resolveVolume(path) {
+	var m = path.match(/^\/Volumes\/([^\/]+)(\/.*)?$/);
+	if (!m || new Folder(path).exists) return path;
+	var base = m[1].replace(/-[1-5]$/, ''), rest = m[2] || '';
+	var names = [m[1]];
+	for (var i = 0; i <= 5; i++) { var n = i ? base + '-' + i : base; if (n != m[1]) names.push(n); }
+	var best = path, bestDepth = -1;
+	var parts = rest.split('/');
+	for (var c = 0; c < names.length; c++) {
+		var cur = '/Volumes/' + names[c];
+		if (!new Folder(cur).exists) continue;
+		var depth = 0;
+		for (var p = 0; p < parts.length; p++) {
+			if (!parts[p]) continue;
+			cur += '/' + parts[p];
+			if (!new Folder(cur).exists) break;
+			depth++;
+		}
+		if (cur == '/Volumes/' + names[c] + rest) return cur;
+		if (depth > bestDepth) { bestDepth = depth; best = '/Volumes/' + names[c] + rest; }
+	}
+	return best;
+}
+
+// caminho desta máquina → forma neutra de rede (ou '' se for local)
+function PAL_toNet(path) {
+	path = PAL_slash(path);
+	if (PAL_splitUNC(path)) return path.replace(/^smb:/i, '');
+	if (PAL_OS == 'Win') {
+		var d = path.match(/^([A-Z]):(\/.*)?$/i);
+		if (d) {
+			var unc = PAL_winDrives()[d[1].toUpperCase()];
+			if (unc) return unc + (d[2] || '').replace(/\/+$/, '');
+		}
+		return '';
+	}
+	var v = path.match(/^(\/Volumes\/[^\/]+)(\/.*)?$/);
+	if (!v) return '';
+	var mounts = PAL_macMounts();
+	for (var i = 0; i < mounts.length; i++) {
+		if (mounts[i].mount == v[1]) return '//' + mounts[i].server + '/' + mounts[i].share + (v[2] || '').replace(/\/+$/, '');
+	}
+	return '';
+}
+
+// forma neutra de rede → caminho que existe nesta máquina (ou o melhor palpite)
+function PAL_fromNet(net) {
+	var u = PAL_splitUNC(net);
+	if (!u) return net;
+	if (PAL_OS == 'Win') {
+		// prefere a letra de unidade, se existir uma mapeada para esse share
+		var drives = PAL_winDrives();
+		for (var d in drives) {
+			var du = PAL_splitUNC(drives[d]);
+			if (!du || !PAL_sameServer(du.server, u.server) || du.share.toLowerCase() != u.share.toLowerCase()) continue;
+			if ((u.rest + '/').toLowerCase().indexOf((du.rest + '/').toLowerCase()) == 0) {
+				return d + ':' + (u.rest.substr(du.rest.length) || '/');
+			}
+		}
+		return '//' + u.server + '/' + u.share + u.rest;
+	}
+	var mounts = PAL_macMounts();
+	for (var i = 0; i < mounts.length; i++) {
+		var m = mounts[i];
+		var ms = m.share.split('/'), us = (u.share + u.rest).split('/');
+		if (!PAL_sameServer(m.server, u.server)) continue;
+		// o share montado pode ser um subcaminho (//srv/VFX/imagem montado como /Volumes/imagem)
+		var ok = true;
+		for (var k = 0; k < ms.length; k++) if (!us[k] || us[k].toLowerCase() != ms[k].toLowerCase()) { ok = false; break; }
+		if (ok) return m.mount + (us.length > ms.length ? '/' + us.slice(ms.length).join('/') : '');
+	}
+	return PAL_resolveVolume('/Volumes/' + u.share + u.rest);
+}
+
+// caminho guardado (de qualquer sistema) → caminho desta máquina
+function PAL_localPath(native, net) {
+	if (net) return PAL_fromNet(net);
+	native = String(native || '');
+	if (PAL_splitUNC(native)) return PAL_fromNet(native);
+	if (PAL_OS == 'Mac') {
+		if (/^[A-Z]:[\\\/]/i.test(native)) return '';                     // unidade do Windows sem forma de rede: impossível resolver
+		if (/^\/Volumes\//.test(native)) return PAL_resolveVolume(native);
+	} else if (/^\/Volumes\//.test(native)) {
+		return '';                                                         // volume do Mac sem forma de rede
+	}
+	return native;
+}
+
+// raiz do volume/unidade (para saber se está montado)
+function PAL_volumeRoot(path) {
+	path = PAL_slash(path);
+	var m = path.match(/^(\/Volumes\/[^\/]+)/) || path.match(/^(\/\/[^\/]+\/[^\/]+)/) || path.match(/^([A-Z]:)/i);
+	return m ? m[1] : '';
+}
+
 // ---------------------------------------------------------------- presets (um .json por preset)
 
-function PAL_presetFolder() {
+function PAL_defaultPresetPath() { return PAL_PREFS_FOLDER + '/presets'; }
+
+// { folder: Folder|null, path, offline, volume, net }
+function PAL_presetLocation() {
 	var p = PAL_readPrefs();
-	var f = new Folder(p.presetFolder || (PAL_PREFS_FOLDER + '/presets'));
-	if (!f.exists) f.create();
-	return f;
+	var native = p.presetFolder || PAL_defaultPresetPath();
+	var net = p.presetFolderNet || '';
+	var path = PAL_localPath(native, net);
+	var u = PAL_splitUNC(net || native);
+	var volume = u ? u.share : (PAL_volumeRoot(native).replace(/^\/Volumes\//, '') || native);
+
+	if (!path) return { folder: null, path: native, offline: true, volume: volume, net: net };
+	var f = new Folder(path);
+	if (f.exists) return { folder: f, path: f.fsName, offline: false, volume: volume, net: net };
+
+	// só cria a pasta se o volume existir (nunca cria nada dentro de /Volumes por engano)
+	var root = PAL_volumeRoot(path);
+	if (root && !new Folder(root).exists) return { folder: null, path: path, offline: true, volume: volume, net: net };
+	if (f.create()) return { folder: f, path: f.fsName, offline: false, volume: volume, net: net };
+	return { folder: null, path: path, offline: true, volume: volume, net: net };
+}
+
+function PAL_presetFolder() {
+	var loc = PAL_presetLocation();
+	if (!loc.folder) throw new Error('offline');
+	return loc.folder;
+}
+
+// Mac: tenta montar o share da pasta de presets (o Finder pede a senha se precisar)
+function PAL_mountPresetVolume() {
+	if (PAL_OS != 'Mac') return PAL_json({ ok: false });
+	var p = PAL_readPrefs();
+	var u = PAL_splitUNC(p.presetFolderNet || p.presetFolder);
+	if (!u) return PAL_json({ ok: false, reason: 'local' });
+	try {
+		system.callSystem('osascript -e \'mount volume "smb://' + u.server + '/' + encodeURI(u.share).replace(/'/g, '') + '"\'');
+	} catch (e) {}
+	PAL_MOUNTS = null;
+	return PAL_listPresets();
 }
 
 function PAL_builtinSwatches() {
@@ -184,7 +376,9 @@ function PAL_builtinSwatches() {
 }
 
 function PAL_readPresets() {
-	var files = PAL_presetFolder().getFiles('*.json'), out = [];
+	var loc = PAL_presetLocation();
+	if (!loc.folder) return [];
+	var files = loc.folder.getFiles('*.json'), out = [];
 	for (var i = 0; i < files.length; i++) {
 		try {
 			var data = PAL_parse(PAL_readFile(files[i].fsName));
@@ -209,14 +403,16 @@ function PAL_defaultPreset() {
 }
 
 function PAL_listPresets() {
-	// cria um primeiro preset para a biblioteca nunca começar vazia
+	var loc = PAL_presetLocation();
+	if (!loc.folder) return PAL_json({ folder: loc.path, offline: true, volume: loc.volume, canMount: PAL_OS == 'Mac' && !!loc.net, presets: [] });
+	// cria um primeiro preset para a biblioteca nunca começar vazia (só na pasta padrão)
 	var list = PAL_readPresets();
 	if (!list.length && !PAL_readPrefs().presetsSeeded) {
 		PAL_savePreset(PAL_json({ name: 'O PALETTERO', swatches: PAL_builtinSwatches() }));
 		PAL_savePrefs(PAL_json({ presetsSeeded: true }));
 		list = PAL_readPresets();
 	}
-	return PAL_json({ folder: PAL_presetFolder().fsName, presets: list });
+	return PAL_json({ folder: loc.path, offline: false, presets: list });
 }
 
 function PAL_slug(s) {
@@ -228,7 +424,9 @@ function PAL_slug(s) {
 function PAL_savePreset(presetJson) {
 	var p = PAL_parse(presetJson);
 	var id = p.id || (PAL_slug(p.name) + '-' + new Date().getTime().toString(36));
-	var f = new File(PAL_presetFolder().fsName + '/' + id + '.json');
+	var loc = PAL_presetLocation();
+	if (!loc.folder) return PAL_json({ ok: false, reason: 'offline' });
+	var f = new File(loc.folder.fsName + '/' + id + '.json');
 	f.encoding = 'UTF-8';
 	if (!f.open('w')) return PAL_json({ ok: false, reason: 'readonly' });
 	f.write(PAL_json({ name: p.name, swatches: p.swatches, updated: new Date().getTime() }));
@@ -237,19 +435,36 @@ function PAL_savePreset(presetJson) {
 }
 
 function PAL_deletePreset(id) {
-	var f = new File(PAL_presetFolder().fsName + '/' + id + '.json');
+	var loc = PAL_presetLocation();
+	if (!loc.folder) return PAL_json({ ok: false, reason: 'offline' });
+	var f = new File(loc.folder.fsName + '/' + id + '.json');
 	return PAL_json({ ok: f.exists ? f.remove() : false });
 }
 
 function PAL_choosePresetFolder() {
-	var f = Folder.selectDialog('Pasta de presets do O PALETTERO', PAL_presetFolder());
+	var loc = PAL_presetLocation();
+	var start = loc.folder || new Folder(Folder.myDocuments);
+	var f = Folder.selectDialog('Pasta de presets do O PALETTERO', start);
 	if (!f) return PAL_json({ ok: false });
-	PAL_savePrefs(PAL_json({ presetFolder: f.fsName }));
-	return PAL_json({ ok: true, folder: f.fsName });
+	PAL_MOUNTS = null;
+	var net = PAL_toNet(f.fsName);
+	PAL_savePrefs(PAL_json({ presetFolder: f.fsName, presetFolderNet: net }));
+	return PAL_json({ ok: true, folder: f.fsName, net: net });
 }
 
+function PAL_resetPresetFolder() {
+	PAL_savePrefs(PAL_json({ presetFolder: '', presetFolderNet: '' }));
+	return PAL_listPresets();
+}
+
+// abre a pasta no Explorer/Finder
 function PAL_revealPresetFolder() {
-	PAL_presetFolder().execute();
+	var loc = PAL_presetLocation();
+	if (!loc.folder) return PAL_json({ ok: false, reason: 'offline' });
+	try {
+		if (PAL_OS == 'Win') system.callSystem('explorer "' + loc.folder.fsName + '"');
+		else system.callSystem('open "' + loc.folder.fsName.replace(/"/g, '\\"') + '"');
+	} catch (e) { loc.folder.execute(); }
 	return PAL_json({ ok: true });
 }
 

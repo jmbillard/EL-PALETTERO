@@ -43,6 +43,12 @@
 			{ id: 'esporte', name: 'Esporte', swatches: sw(['#009C3B', '#FFE01B', '#0047AB', '#FFFFFF', '#111111']) }
 		]
 	};
+	// terceira pasta: volume de rede que começa desmontado (Montar resolve)
+	var OFFLINE = '/Volumes/PROMO/paletas';
+	var mounted = false;
+	folders[OFFLINE] = [
+		{ id: 'promo', name: 'Promo 2026', swatches: sw(['#FF1493', '#7F00FF', '#00B7EB', '#FFE01B', '#111111']) }
+	];
 	var folderNames = Object.keys(folders);
 
 	var prefs = { showColorLabels: true, showColorInfo: true, labelType: '#HEX', defaultPreset: 'o-palettero', presetFolder: folderNames[0] };
@@ -142,6 +148,7 @@
 			return { ok: true };
 		},
 		listPresets: function () {
+			if (prefs.presetFolder === OFFLINE && !mounted) return { folder: OFFLINE, offline: true, volume: 'PROMO', canMount: true, presets: [] };
 			return { folder: prefs.presetFolder, presets: presets().slice().sort(function (a, b) { return a.name.localeCompare(b.name); }) };
 		},
 		savePreset: function (json) {
@@ -161,6 +168,8 @@
 			return { ok: true, folder: prefs.presetFolder };
 		},
 		revealPresetFolder: function () { return { ok: true }; },
+		mountPresetVolume: function () { mounted = true; return this.listPresets(); },
+		resetPresetFolder: function () { prefs.presetFolder = folderNames[0]; return this.listPresets(); },
 		grabFrame: function () {
 			var l = selLayers()[0];
 			// vídeo simula um render demorado (mostra o aviso de espera); imagem é lida na hora

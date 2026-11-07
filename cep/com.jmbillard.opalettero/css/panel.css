@@ -493,6 +493,24 @@
 .pal:not([data-orient='row']) .lib-folder { height: 26px; justify-content: flex-start; }
 .lib-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* pasta de presets inacessível */
+.pcard.offline {
+	width: 190px; cursor: default; justify-content: center; gap: 6px;
+	background: rgba(255, 90, 104, .07); box-shadow: inset 0 0 0 1px rgba(255, 90, 104, .35);
+}
+.pcard.offline:hover { transform: none; }
+.pal:not([data-orient='row']) .pcard.offline { width: auto; height: auto; padding: 8px; }
+.off-ic { position: absolute; top: 6px; right: 6px; color: var(--danger); }
+.off-ic .ic { width: 13px; height: 13px; animation: pal-unplug 2.4s ease-in-out infinite; }
+.off-txt { color: var(--mute); font-size: 11px; line-height: 1.25; padding-right: 18px; }
+.off-txt b { color: var(--fg); font-weight: 600; }
+.off-acts { display: flex; gap: 4px; }
+.off-btn { height: 20px; min-width: 22px; display: inline-grid; place-items: center; padding: 0 7px; border: 0; border-radius: 6px; background: var(--raise-2); color: var(--fg); font: 600 10.5px var(--ui); cursor: pointer; transition: transform .2s var(--spring), background .15s; }
+.off-btn .ic { width: 11px; height: 11px; }
+.off-btn:hover { background: #33363e; transform: translateY(-1px); }
+.off-btn.busy .ic { animation: pal-spin .8s linear infinite; }
+@keyframes pal-unplug { 0%, 70%, 100% { transform: none; } 80% { transform: translate(-1px, 1px) rotate(-8deg); } 90% { transform: translate(1px, -1px) rotate(6deg); } }
+
 /* ------------------------------------------------------------ extrair cores */
 .extract {
 	display: grid; gap: 8px; padding: 8px;
