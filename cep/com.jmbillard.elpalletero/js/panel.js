@@ -7,7 +7,7 @@
 	var Host = root.PalHost;
 	var N = root.PalNames;
 	var X = root.PalExtract;
-	var VERSION = 'v1.2.3';
+	var VERSION = 'v1.2.4';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
@@ -177,6 +177,7 @@
 			roomy();
 			if (!settings.hidden) placePill(false);
 			if (!exSheet.hidden) fitStage();
+			if (!library.hidden) libFade();
 		}
 
 		function roomy() {
@@ -931,13 +932,15 @@
 			S.presets.forEach(function (p, i) {
 				var cls = 'pcard' + (p.id === S.prefs.defaultPreset ? ' is-default' : '') + (p.name === S.preset ? ' is-origin' : '');
 				html += '<div class="' + cls + '" role="listitem" tabindex="0" data-pid="' + esc(p.id) + '" style="--i:' + i + '">' + bars(p.swatches) +
-					'<span class="pc-name">' + esc(p.name) + '</span>' +
+					'<span class="pc-row"><span class="pc-name">' + esc(p.name) + '</span>' +
+					'<span class="pc-grip" aria-hidden="true" data-tip="Arraste para reordenar"><i></i><i></i><i></i><i></i><i></i><i></i></span></span>' +
 					'<span class="pc-acts"><button class="pc-btn pc-ren" data-tip="Renomear">' + ic('pencil') + '</button>' +
 					'<button class="pc-btn pc-star" data-tip="Padrão para projetos sem paleta">' + ic('star') + '</button>' +
 					'<button class="pc-btn pc-del" data-tip="Excluir preset">' + ic('trash') + '</button></span></div>';
 			});
 			libList.innerHTML = html;
 			q('.lib-path').textContent = shortPath(S.folder);
+			libFade();
 			if (focusId) {
 				var c = cardOf(focusId);
 				if (!c) return;
@@ -1052,8 +1055,88 @@
 			});
 		}
 
+		// gradiente nas bordas da lista: os cartões se esvaem onde a lista é cortada
+		function libFade() {
+			var row = el.dataset.orient === 'row';
+			var pos = row ? libList.scrollLeft : libList.scrollTop;
+			var max = row ? libList.scrollWidth - libList.clientWidth : libList.scrollHeight - libList.clientHeight;
+			libList.classList.toggle('fade-start', pos > 2);
+			libList.classList.toggle('fade-end', pos < max - 2);
+		}
+		libList.addEventListener('scroll', libFade);
+
+		// arrastar presets pela alça (área vazia à direita do nome) para reordenar
+		var PD = null;
+		function presetCards() { return Array.prototype.slice.call(libList.querySelectorAll('.pcard[data-pid]')); }
+		libList.addEventListener('pointerdown', function (e) {
+			var grip = e.target.closest('.pc-grip');
+			if (!grip || e.button !== 0) return;
+			var card = grip.closest('.pcard');
+			PD = { card: card, x: e.clientX, y: e.clientY, started: false, before: presetCards().map(function (c) { return c.dataset.pid; }) };
+			libList.setPointerCapture(e.pointerId);
+			e.preventDefault();
+		});
+		libList.addEventListener('pointermove', function (e) {
+			if (!PD) return;
+			var row = el.dataset.orient === 'row';
+			if (!PD.started) {
+				if (Math.abs(e.clientX - PD.x) + Math.abs(e.clientY - PD.y) < 4) return;
+				PD.started = true;
+				hideTip();
+				libList.classList.add('sorting');
+				PD.card.classList.add('drag');
+				var r0 = rect(PD.card);
+				PD.gx = PD.x - r0.left; PD.gy = PD.y - r0.top;
+			}
+			// rola sozinho perto das bordas
+			var lr = rect(libList), edge = 28;
+			if (row) libList.scrollLeft += e.clientX < lr.left + edge ? -8 : e.clientX > lr.right - edge ? 8 : 0;
+			else libList.scrollTop += e.clientY < lr.top + edge ? -8 : e.clientY > lr.bottom - edge ? 8 : 0;
+			// posição de destino pelo centro dos outros cartões
+			var others = presetCards().filter(function (c) { return c !== PD.card; });
+			var idx = 0;
+			others.forEach(function (c, i) {
+				var b = rect(c);
+				if (row ? e.clientX > b.left + b.width / 2 : e.clientY > b.top + b.height / 2) idx = i + 1;
+			});
+			var cur = presetCards().indexOf(PD.card);
+			if (idx !== cur) {
+				var firsts = others.map(rect);
+				var ref = others[idx] || null;
+				if (ref) libList.insertBefore(PD.card, ref);
+				else libList.appendChild(PD.card);
+				others.forEach(function (c, i) {
+					var l = rect(c), f = firsts[i];
+					var dx = f.left - l.left, dy = f.top - l.top;
+					if (dx || dy) c.animate([{ transform: 'translate(' + dx + 'px,' + dy + 'px)' }, { transform: 'none' }], { duration: 200, easing: EASE });
+				});
+			}
+			PD.card.style.transform = '';
+			var nat = rect(PD.card);
+			var tx = row ? e.clientX - PD.gx - nat.left : 0;
+			var ty = row ? 0 : e.clientY - PD.gy - nat.top;
+			PD.card.style.transform = 'translate(' + tx + 'px,' + ty + 'px)';
+		});
+		function endPresetDrag() {
+			if (!PD) return;
+			var d = PD;
+			PD = null;
+			if (!d.started) return;
+			var from = d.card.style.transform;
+			d.card.style.transform = '';
+			d.card.animate([{ transform: from }, { transform: 'none' }], { duration: 260, easing: SPRING });
+			d.card.classList.remove('drag');
+			libList.classList.remove('sorting');
+			var ids = presetCards().map(function (c) { return c.dataset.pid; });
+			if (ids.join() === d.before.join()) return;
+			S.presets = ids.map(presetById);
+			Host.savePresetOrder(ids).catch(function () { toast('Não foi possível salvar a ordem', { icon: 'alert' }); });
+		}
+		libList.addEventListener('pointerup', endPresetDrag);
+		libList.addEventListener('pointercancel', endPresetDrag);
+
 		libList.addEventListener('click', function (e) {
-			if (e.target.closest('.pc-input')) return;
+			if (e.target.closest('.pc-input') || e.target.closest('.pc-grip')) return;
 			var off = e.target.closest('[data-off]');
 			if (off) {
 				var card0 = off.closest('.pcard');

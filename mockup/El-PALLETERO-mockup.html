@@ -564,7 +564,15 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 }
 .pal:not([data-orient='row']) .library { flex-direction: column; }
 .lib-list { flex: 1; min-width: 0; min-height: 0; display: flex; gap: 6px; overflow-x: auto; overflow-y: hidden; scroll-behavior: smooth; }
-.pal:not([data-orient='row']) .lib-list { flex-direction: column; overflow-x: hidden; overflow-y: auto; }
+.pal:not([data-orient='row']) .lib-list { flex-direction: column; overflow-x: hidden; overflow-y: auto; padding-right: 7px; margin-right: -3px; }
+.pal[data-orient='row'] .lib-list { padding-bottom: 7px; margin-bottom: -3px; }
+/* gradiente onde a lista é cortada (topo/base; início/fim na faixa) */
+.lib-list.fade-end { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent); }
+.lib-list.fade-start { -webkit-mask-image: linear-gradient(to top, #000 calc(100% - 26px), transparent); mask-image: linear-gradient(to top, #000 calc(100% - 26px), transparent); }
+.lib-list.fade-start.fade-end { -webkit-mask-image: linear-gradient(to bottom, transparent, #000 26px, #000 calc(100% - 26px), transparent); mask-image: linear-gradient(to bottom, transparent, #000 26px, #000 calc(100% - 26px), transparent); }
+.pal[data-orient='row'] .lib-list.fade-end { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); }
+.pal[data-orient='row'] .lib-list.fade-start { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 32px), transparent); }
+.pal[data-orient='row'] .lib-list.fade-start.fade-end { -webkit-mask-image: linear-gradient(to right, transparent, #000 32px, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(to right, transparent, #000 32px, #000 calc(100% - 32px), transparent); }
 .lib-list::-webkit-scrollbar { height: 4px; width: 4px; }
 .lib-list::-webkit-scrollbar-thumb { background: var(--raise-2); border-radius: 2px; }
 
@@ -582,13 +590,23 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	animation-delay: calc(var(--i, 0) * 35ms);
 }
 .pal:not([data-orient='row']) .pcard { width: auto; height: 46px; }
-.pcard:hover { transform: translateY(-2px); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22), 0 8px 18px -10px #000; }
+.pcard:hover { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .28); }
 .pcard:active { transform: scale(.97); }
 .pcard:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .pc-bars { flex: 1; min-height: 8px; display: flex; gap: 1px; border-radius: 4px; overflow: hidden; transition: gap .3s var(--ease); }
 .pc-bars i { flex: 1; transition: flex-grow .3s var(--ease); }
 .pcard:hover .pc-bars { gap: 2px; }
 .pcard:hover .pc-bars i:hover { flex-grow: 2.4; }
+.pc-row { display: flex; align-items: center; gap: 6px; min-width: 0; flex: none; }
+.pc-row .pc-name { flex: 0 1 auto; min-width: 0; }
+/* alça de arrastar: a área vazia à direita do nome; os pontinhos aparecem no hover */
+.pc-grip { flex: 1 1 auto; align-self: stretch; min-width: 18px; display: grid; grid-template-columns: repeat(2, 2.5px); grid-auto-rows: 2.5px; gap: 2px; align-content: center; justify-content: end; padding-right: 2px; cursor: grab; touch-action: none; }
+.pc-grip i { border-radius: 50%; background: var(--mute); opacity: 0; transition: opacity .2s, background .2s; }
+.pcard:hover .pc-grip i { opacity: .55; }
+.pc-grip:hover i { opacity: 1; background: var(--fg); }
+.lib-list.sorting, .lib-list.sorting * { cursor: grabbing !important; }
+.lib-list.sorting .pcard:not(.drag) .pc-btn { opacity: 0 !important; }
+.pcard.drag { z-index: 5; box-shadow: inset 0 0 0 1.5px var(--accent), 0 14px 28px -12px #000; transition: none; animation: none; }
 .pc-name { display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--mute); flex: none; transition: color .2s; }
 .pc-name > span { overflow: hidden; text-overflow: ellipsis; }
 .pc-name .ic { width: 11px; height: 11px; }
@@ -1239,6 +1257,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 
 	var prefs = { showColorLabels: true, showColorInfo: true, labelType: '#HEX', defaultPreset: 'el-palletero', presetFolder: folderNames[0] };
 	var current = 'abertura_v3.aep';
+	var orders = {}; // ordem dos presets por pasta
 	var listeners = [];
 
 	function proj() { return projects[current]; }
@@ -1333,9 +1352,16 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			for (var k in n) prefs[k] = n[k];
 			return { ok: true };
 		},
+		savePresetOrder: function (json) { orders[prefs.presetFolder] = JSON.parse(json); return { ok: true }; },
 		listPresets: function () {
 			if (prefs.presetFolder === OFFLINE && !mounted) return { folder: OFFLINE, offline: true, volume: 'PROMO', canMount: true, presets: [] };
-			return { folder: prefs.presetFolder, presets: presets().slice().sort(function (a, b) { return a.name.localeCompare(b.name); }) };
+			var list = presets().slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+			var order = orders[prefs.presetFolder];
+			if (order) {
+				var known = list.filter(function (p) { return order.indexOf(p.id) >= 0; }).sort(function (a, b) { return order.indexOf(a.id) - order.indexOf(b.id); });
+				list = known.concat(list.filter(function (p) { return order.indexOf(p.id) < 0; }));
+			}
+			return { folder: prefs.presetFolder, presets: list };
 		},
 		savePreset: function (json) {
 			var p = JSON.parse(json), list = presets();
@@ -1527,6 +1553,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		listPresets: function () { return call('listPresets'); },
 		savePreset: function (preset) { return call('savePreset', JSON.stringify(preset)); },
 		deletePreset: function (id) { return call('deletePreset', id); },
+		savePresetOrder: function (ids) { return call('savePresetOrder', JSON.stringify(ids)); },
 		choosePresetFolder: function () { return call('choosePresetFolder'); },
 		revealPresetFolder: function () { return call('revealPresetFolder'); },
 		mountPresetVolume: function () { return call('mountPresetVolume'); },
@@ -1547,7 +1574,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	var Host = root.PalHost;
 	var N = root.PalNames;
 	var X = root.PalExtract;
-	var VERSION = 'v1.2.3';
+	var VERSION = 'v1.2.4';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
@@ -1717,6 +1744,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			roomy();
 			if (!settings.hidden) placePill(false);
 			if (!exSheet.hidden) fitStage();
+			if (!library.hidden) libFade();
 		}
 
 		function roomy() {
@@ -2471,13 +2499,15 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			S.presets.forEach(function (p, i) {
 				var cls = 'pcard' + (p.id === S.prefs.defaultPreset ? ' is-default' : '') + (p.name === S.preset ? ' is-origin' : '');
 				html += '<div class="' + cls + '" role="listitem" tabindex="0" data-pid="' + esc(p.id) + '" style="--i:' + i + '">' + bars(p.swatches) +
-					'<span class="pc-name">' + esc(p.name) + '</span>' +
+					'<span class="pc-row"><span class="pc-name">' + esc(p.name) + '</span>' +
+					'<span class="pc-grip" aria-hidden="true" data-tip="Arraste para reordenar"><i></i><i></i><i></i><i></i><i></i><i></i></span></span>' +
 					'<span class="pc-acts"><button class="pc-btn pc-ren" data-tip="Renomear">' + ic('pencil') + '</button>' +
 					'<button class="pc-btn pc-star" data-tip="Padrão para projetos sem paleta">' + ic('star') + '</button>' +
 					'<button class="pc-btn pc-del" data-tip="Excluir preset">' + ic('trash') + '</button></span></div>';
 			});
 			libList.innerHTML = html;
 			q('.lib-path').textContent = shortPath(S.folder);
+			libFade();
 			if (focusId) {
 				var c = cardOf(focusId);
 				if (!c) return;
@@ -2592,8 +2622,88 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			});
 		}
 
+		// gradiente nas bordas da lista: os cartões se esvaem onde a lista é cortada
+		function libFade() {
+			var row = el.dataset.orient === 'row';
+			var pos = row ? libList.scrollLeft : libList.scrollTop;
+			var max = row ? libList.scrollWidth - libList.clientWidth : libList.scrollHeight - libList.clientHeight;
+			libList.classList.toggle('fade-start', pos > 2);
+			libList.classList.toggle('fade-end', pos < max - 2);
+		}
+		libList.addEventListener('scroll', libFade);
+
+		// arrastar presets pela alça (área vazia à direita do nome) para reordenar
+		var PD = null;
+		function presetCards() { return Array.prototype.slice.call(libList.querySelectorAll('.pcard[data-pid]')); }
+		libList.addEventListener('pointerdown', function (e) {
+			var grip = e.target.closest('.pc-grip');
+			if (!grip || e.button !== 0) return;
+			var card = grip.closest('.pcard');
+			PD = { card: card, x: e.clientX, y: e.clientY, started: false, before: presetCards().map(function (c) { return c.dataset.pid; }) };
+			libList.setPointerCapture(e.pointerId);
+			e.preventDefault();
+		});
+		libList.addEventListener('pointermove', function (e) {
+			if (!PD) return;
+			var row = el.dataset.orient === 'row';
+			if (!PD.started) {
+				if (Math.abs(e.clientX - PD.x) + Math.abs(e.clientY - PD.y) < 4) return;
+				PD.started = true;
+				hideTip();
+				libList.classList.add('sorting');
+				PD.card.classList.add('drag');
+				var r0 = rect(PD.card);
+				PD.gx = PD.x - r0.left; PD.gy = PD.y - r0.top;
+			}
+			// rola sozinho perto das bordas
+			var lr = rect(libList), edge = 28;
+			if (row) libList.scrollLeft += e.clientX < lr.left + edge ? -8 : e.clientX > lr.right - edge ? 8 : 0;
+			else libList.scrollTop += e.clientY < lr.top + edge ? -8 : e.clientY > lr.bottom - edge ? 8 : 0;
+			// posição de destino pelo centro dos outros cartões
+			var others = presetCards().filter(function (c) { return c !== PD.card; });
+			var idx = 0;
+			others.forEach(function (c, i) {
+				var b = rect(c);
+				if (row ? e.clientX > b.left + b.width / 2 : e.clientY > b.top + b.height / 2) idx = i + 1;
+			});
+			var cur = presetCards().indexOf(PD.card);
+			if (idx !== cur) {
+				var firsts = others.map(rect);
+				var ref = others[idx] || null;
+				if (ref) libList.insertBefore(PD.card, ref);
+				else libList.appendChild(PD.card);
+				others.forEach(function (c, i) {
+					var l = rect(c), f = firsts[i];
+					var dx = f.left - l.left, dy = f.top - l.top;
+					if (dx || dy) c.animate([{ transform: 'translate(' + dx + 'px,' + dy + 'px)' }, { transform: 'none' }], { duration: 200, easing: EASE });
+				});
+			}
+			PD.card.style.transform = '';
+			var nat = rect(PD.card);
+			var tx = row ? e.clientX - PD.gx - nat.left : 0;
+			var ty = row ? 0 : e.clientY - PD.gy - nat.top;
+			PD.card.style.transform = 'translate(' + tx + 'px,' + ty + 'px)';
+		});
+		function endPresetDrag() {
+			if (!PD) return;
+			var d = PD;
+			PD = null;
+			if (!d.started) return;
+			var from = d.card.style.transform;
+			d.card.style.transform = '';
+			d.card.animate([{ transform: from }, { transform: 'none' }], { duration: 260, easing: SPRING });
+			d.card.classList.remove('drag');
+			libList.classList.remove('sorting');
+			var ids = presetCards().map(function (c) { return c.dataset.pid; });
+			if (ids.join() === d.before.join()) return;
+			S.presets = ids.map(presetById);
+			Host.savePresetOrder(ids).catch(function () { toast('Não foi possível salvar a ordem', { icon: 'alert' }); });
+		}
+		libList.addEventListener('pointerup', endPresetDrag);
+		libList.addEventListener('pointercancel', endPresetDrag);
+
 		libList.addEventListener('click', function (e) {
-			if (e.target.closest('.pc-input')) return;
+			if (e.target.closest('.pc-input') || e.target.closest('.pc-grip')) return;
 			var off = e.target.closest('[data-off]');
 			if (off) {
 				var card0 = off.closest('.pcard');

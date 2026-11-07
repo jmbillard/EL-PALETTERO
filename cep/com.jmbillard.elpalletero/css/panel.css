@@ -447,7 +447,15 @@
 }
 .pal:not([data-orient='row']) .library { flex-direction: column; }
 .lib-list { flex: 1; min-width: 0; min-height: 0; display: flex; gap: 6px; overflow-x: auto; overflow-y: hidden; scroll-behavior: smooth; }
-.pal:not([data-orient='row']) .lib-list { flex-direction: column; overflow-x: hidden; overflow-y: auto; }
+.pal:not([data-orient='row']) .lib-list { flex-direction: column; overflow-x: hidden; overflow-y: auto; padding-right: 7px; margin-right: -3px; }
+.pal[data-orient='row'] .lib-list { padding-bottom: 7px; margin-bottom: -3px; }
+/* gradiente onde a lista é cortada (topo/base; início/fim na faixa) */
+.lib-list.fade-end { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent); }
+.lib-list.fade-start { -webkit-mask-image: linear-gradient(to top, #000 calc(100% - 26px), transparent); mask-image: linear-gradient(to top, #000 calc(100% - 26px), transparent); }
+.lib-list.fade-start.fade-end { -webkit-mask-image: linear-gradient(to bottom, transparent, #000 26px, #000 calc(100% - 26px), transparent); mask-image: linear-gradient(to bottom, transparent, #000 26px, #000 calc(100% - 26px), transparent); }
+.pal[data-orient='row'] .lib-list.fade-end { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); }
+.pal[data-orient='row'] .lib-list.fade-start { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 32px), transparent); }
+.pal[data-orient='row'] .lib-list.fade-start.fade-end { -webkit-mask-image: linear-gradient(to right, transparent, #000 32px, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(to right, transparent, #000 32px, #000 calc(100% - 32px), transparent); }
 .lib-list::-webkit-scrollbar { height: 4px; width: 4px; }
 .lib-list::-webkit-scrollbar-thumb { background: var(--raise-2); border-radius: 2px; }
 
@@ -465,13 +473,23 @@
 	animation-delay: calc(var(--i, 0) * 35ms);
 }
 .pal:not([data-orient='row']) .pcard { width: auto; height: 46px; }
-.pcard:hover { transform: translateY(-2px); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22), 0 8px 18px -10px #000; }
+.pcard:hover { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .28); }
 .pcard:active { transform: scale(.97); }
 .pcard:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .pc-bars { flex: 1; min-height: 8px; display: flex; gap: 1px; border-radius: 4px; overflow: hidden; transition: gap .3s var(--ease); }
 .pc-bars i { flex: 1; transition: flex-grow .3s var(--ease); }
 .pcard:hover .pc-bars { gap: 2px; }
 .pcard:hover .pc-bars i:hover { flex-grow: 2.4; }
+.pc-row { display: flex; align-items: center; gap: 6px; min-width: 0; flex: none; }
+.pc-row .pc-name { flex: 0 1 auto; min-width: 0; }
+/* alça de arrastar: a área vazia à direita do nome; os pontinhos aparecem no hover */
+.pc-grip { flex: 1 1 auto; align-self: stretch; min-width: 18px; display: grid; grid-template-columns: repeat(2, 2.5px); grid-auto-rows: 2.5px; gap: 2px; align-content: center; justify-content: end; padding-right: 2px; cursor: grab; touch-action: none; }
+.pc-grip i { border-radius: 50%; background: var(--mute); opacity: 0; transition: opacity .2s, background .2s; }
+.pcard:hover .pc-grip i { opacity: .55; }
+.pc-grip:hover i { opacity: 1; background: var(--fg); }
+.lib-list.sorting, .lib-list.sorting * { cursor: grabbing !important; }
+.lib-list.sorting .pcard:not(.drag) .pc-btn { opacity: 0 !important; }
+.pcard.drag { z-index: 5; box-shadow: inset 0 0 0 1.5px var(--accent), 0 14px 28px -12px #000; transition: none; animation: none; }
 .pc-name { display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--mute); flex: none; transition: color .2s; }
 .pc-name > span { overflow: hidden; text-overflow: ellipsis; }
 .pc-name .ic { width: 11px; height: 11px; }

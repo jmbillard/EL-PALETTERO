@@ -65,6 +65,7 @@
 
 	var prefs = { showColorLabels: true, showColorInfo: true, labelType: '#HEX', defaultPreset: 'el-palletero', presetFolder: folderNames[0] };
 	var current = 'abertura_v3.aep';
+	var orders = {}; // ordem dos presets por pasta
 	var listeners = [];
 
 	function proj() { return projects[current]; }
@@ -159,9 +160,16 @@
 			for (var k in n) prefs[k] = n[k];
 			return { ok: true };
 		},
+		savePresetOrder: function (json) { orders[prefs.presetFolder] = JSON.parse(json); return { ok: true }; },
 		listPresets: function () {
 			if (prefs.presetFolder === OFFLINE && !mounted) return { folder: OFFLINE, offline: true, volume: 'PROMO', canMount: true, presets: [] };
-			return { folder: prefs.presetFolder, presets: presets().slice().sort(function (a, b) { return a.name.localeCompare(b.name); }) };
+			var list = presets().slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+			var order = orders[prefs.presetFolder];
+			if (order) {
+				var known = list.filter(function (p) { return order.indexOf(p.id) >= 0; }).sort(function (a, b) { return order.indexOf(a.id) - order.indexOf(b.id); });
+				list = known.concat(list.filter(function (p) { return order.indexOf(p.id) < 0; }));
+			}
+			return { folder: prefs.presetFolder, presets: list };
 		},
 		savePreset: function (json) {
 			var p = JSON.parse(json), list = presets();

@@ -136,6 +136,7 @@
 		listPresets: function () { return call('listPresets'); },
 		savePreset: function (preset) { return call('savePreset', JSON.stringify(preset)); },
 		deletePreset: function (id) { return call('deletePreset', id); },
+		savePresetOrder: function (ids) { return call('savePresetOrder', JSON.stringify(ids)); },
 		choosePresetFolder: function () { return call('choosePresetFolder'); },
 		revealPresetFolder: function () { return call('revealPresetFolder'); },
 		mountPresetVolume: function () { return call('mountPresetVolume'); },

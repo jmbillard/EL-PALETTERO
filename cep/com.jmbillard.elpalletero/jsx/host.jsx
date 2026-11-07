@@ -464,8 +464,36 @@ function PAL_listPresets() {
 		PAL_savePrefs(PAL_json({ presetsSeeded: 1 }));
 	}
 	PAL_seedExamples(loc);
-	list = PAL_readPresets();
+	list = PAL_orderPresets(PAL_readPresets(), loc);
 	return PAL_json({ folder: loc.path, offline: false, presets: list });
+}
+
+// ordem dos presets: guardada nas preferências de cada pessoa, por pasta
+// (numa pasta de equipe cada um tem a sua ordem e os arquivos não mudam)
+function PAL_orderKey(loc) { return PAL_slash(loc.folder ? loc.folder.fsName : loc.path).toLowerCase().replace(/\/+$/, ''); }
+
+function PAL_orderPresets(list, loc) {
+	var orders = PAL_readPrefs().presetOrders || {};
+	var order = orders[PAL_orderKey(loc)];
+	if (!(order instanceof Array) || !order.length) return list;
+	var pos = {};
+	for (var i = 0; i < order.length; i++) pos[order[i]] = i;
+	// os conhecidos na ordem salva; os novos depois, em ordem alfabética (estável)
+	var known = [], fresh = [];
+	for (var j = 0; j < list.length; j++) (pos.hasOwnProperty(list[j].id) ? known : fresh).push(list[j]);
+	known.sort(function (a, b) { return pos[a.id] - pos[b.id]; });
+	return known.concat(fresh);
+}
+
+// idsJson: ["id1", "id2", …] na ordem desejada
+function PAL_savePresetOrder(idsJson) {
+	var loc = PAL_presetLocation();
+	if (!loc.folder) return PAL_json({ ok: false, reason: 'offline' });
+	var prefs = PAL_readPrefs();
+	var orders = prefs.presetOrders || {};
+	orders[PAL_orderKey(loc)] = PAL_parse(idsJson);
+	PAL_savePrefs(PAL_json({ presetOrders: orders }));
+	return PAL_json({ ok: true });
 }
 
 function PAL_slug(s) {
