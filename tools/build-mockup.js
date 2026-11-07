@@ -10,6 +10,8 @@ const read = (p) => fs.readFileSync(p, 'utf8');
 const css = read(path.join(ext, 'css', 'panel.css'));
 const js = [
 	path.join(ext, 'js', 'color.js'),
+	path.join(ext, 'js', 'names.js'),
+	path.join(ext, 'js', 'extract.js'),
 	path.join(root, 'mockup', 'mock-host.js'),
 	path.join(ext, 'js', 'bridge.js'),
 	path.join(ext, 'js', 'panel.js')

@@ -65,6 +65,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 .layer[aria-pressed="true"] { background: rgba(76,194,255,.16); box-shadow: inset 2px 0 0 var(--sel); }
 .layer .k { width: 18px; font: 600 10px var(--mono); color: var(--dim); text-align: center; }
 .layer .chips { margin-left: auto; display: flex; gap: 3px; }
+.layer .thumb { margin-left: auto; width: 32px; height: 18px; border-radius: 3px; object-fit: cover; box-shadow: inset 0 0 0 1px rgba(255,255,255,.15); }
 .layer .chips i { width: 12px; height: 12px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.15); transition: background .4s; }
 .hint { margin-top: auto; padding: 8px 6px 2px; color: var(--dim); font-size: 11px; line-height: 1.4; }
 
@@ -157,11 +158,11 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 .ic { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 
 /* ------------------------------------------------------------ docas */
-.dock { display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+.dock { display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, auto); align-content: center; justify-content: start; gap: 4px; }
 .dock-a { grid-area: a; }
 .dock-b { grid-area: b; }
-.pal[data-thin='1'][data-orient='row'] .dock { flex-direction: row; align-items: center; }
-.pal[data-orient='col'] .dock, .pal[data-orient='grid'] .dock { flex-direction: row; }
+.pal[data-thin='1'][data-orient='row'] .dock, .pal[data-orient='col'] .dock, .pal[data-orient='grid'] .dock { grid-template-rows: auto; }
+.pal[data-orient='col'] .dock-b, .pal[data-orient='grid'] .dock-b { justify-content: end; }
 
 .tool {
 	position: relative;
@@ -189,10 +190,14 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 .swap .ic { position: absolute; inset: 0; }
 .swap .ic:last-child { opacity: 0; transform: rotate(-90deg) scale(.4); }
 .pal.shift [data-act='capture'] .swap .ic:first-child,
-.pal.menu-open [data-act='menu'] .swap .ic:first-child { opacity: 0; transform: rotate(90deg) scale(.4); }
+.pal.menu-open [data-act='menu'] .swap .ic:first-child,
+.pal.lib-open [data-act='library'] .swap .ic:first-child { opacity: 0; transform: rotate(90deg) scale(.4); }
 .pal.shift [data-act='capture'] .swap .ic:last-child,
-.pal.menu-open [data-act='menu'] .swap .ic:last-child { opacity: 1; transform: none; }
-.pal.shift [data-act='capture'], .pal.menu-open [data-act='menu'] { color: var(--accent); }
+.pal.menu-open [data-act='menu'] .swap .ic:last-child,
+.pal.lib-open [data-act='library'] .swap .ic:last-child { opacity: 1; transform: none; }
+.pal.shift [data-act='capture'], .pal.menu-open [data-act='menu'], .pal.lib-open [data-act='library'] { color: var(--accent); }
+.tool[data-act='frame']:hover .ic { transform: scale(1.12) rotate(-6deg); }
+.tool[data-act='library']:hover .swap .ic:first-child { transform: rotate(-12deg); }
 
 /* ------------------------------------------------------------ faixa de amostras */
 .strip {
@@ -399,7 +404,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 .ed-old:hover { width: 40%; }
 .ed-old:hover .ic { opacity: 1; transform: none; }
 .ed-prev.is-new .ed-old { display: none; }
-.ed-new { flex: 1; background: var(--new); display: flex; align-items: flex-end; padding: 5px; transition: background-color .08s; min-width: 0; }
+.ed-new { flex: 1; background: var(--new); display: flex; align-self: stretch; align-items: flex-end; padding: 5px; transition: background-color .08s; min-width: 0; }
 .ed-name {
 	width: 100%; min-width: 0;
 	border: 0; border-radius: 5px; padding: 3px 5px;
@@ -407,6 +412,18 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	font: 600 12px var(--ui);
 	transition: background .2s;
 }
+.ed-auto {
+	flex: none; width: 22px; height: 22px; margin-left: 2px;
+	display: grid; place-items: center;
+	border: 0; border-radius: 6px; background: transparent;
+	color: var(--new-ink); opacity: .45; cursor: pointer;
+	transition: opacity .2s, background .2s;
+}
+.ed-auto .ic { width: 13px; height: 13px; }
+.ed-auto:hover { opacity: 1; background: rgba(127, 127, 127, .2); }
+.editor.is-auto .ed-auto { opacity: 1; }
+.editor.is-auto .ed-auto .ic { fill: currentColor; }
+.editor.is-auto .ed-name { font-style: italic; }
 .ed-name::placeholder { color: var(--new-ink); opacity: .55; }
 .ed-name:hover { background: rgba(127, 127, 127, .18); }
 .ed-name:focus { outline: 0; background: rgba(0, 0, 0, .25); }
@@ -505,6 +522,162 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 @keyframes pal-fade { from { opacity: 0; } }
 @keyframes pal-bob { 50% { transform: translateY(-3px); background: var(--mute); } }
 
+
+/* ------------------------------------------------------------ presets */
+.library {
+	grid-area: s; position: relative; inset: auto;
+	border-radius: 10px;
+	display: flex; gap: 6px; padding: 5px;
+	box-shadow: 0 0 0 1px var(--line);
+	min-width: 0; min-height: 0;
+}
+.pal:not([data-orient='row']) .library { flex-direction: column; }
+.lib-list { flex: 1; min-width: 0; min-height: 0; display: flex; gap: 6px; overflow-x: auto; overflow-y: hidden; scroll-behavior: smooth; }
+.pal:not([data-orient='row']) .lib-list { flex-direction: column; overflow-x: hidden; overflow-y: auto; }
+.lib-list::-webkit-scrollbar { height: 4px; width: 4px; }
+.lib-list::-webkit-scrollbar-thumb { background: var(--raise-2); border-radius: 2px; }
+
+.pcard {
+	position: relative; flex: none;
+	width: 116px; min-height: 0;
+	display: flex; flex-direction: column; justify-content: flex-end; gap: 4px;
+	padding: 5px; border: 0; border-radius: 8px;
+	background: var(--bg); color: var(--fg);
+	font: 11px var(--ui); text-align: left;
+	cursor: pointer; overflow: hidden;
+	box-shadow: inset 0 0 0 1px var(--line);
+	transition: transform .3s var(--spring), box-shadow .2s, background .2s;
+	animation: pal-rise .38s var(--ease) backwards;
+	animation-delay: calc(var(--i, 0) * 35ms);
+}
+.pal:not([data-orient='row']) .pcard { width: auto; height: 46px; }
+.pcard:hover { transform: translateY(-2px); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .22), 0 8px 18px -10px #000; }
+.pcard:active { transform: scale(.97); }
+.pcard:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.pc-bars { flex: 1; min-height: 8px; display: flex; gap: 1px; border-radius: 4px; overflow: hidden; transition: gap .3s var(--ease); }
+.pc-bars i { flex: 1; transition: flex-grow .3s var(--ease); }
+.pcard:hover .pc-bars { gap: 2px; }
+.pcard:hover .pc-bars i:hover { flex-grow: 2.4; }
+.pc-name { display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--mute); flex: none; transition: color .2s; }
+.pc-name > span { overflow: hidden; text-overflow: ellipsis; }
+.pc-name .ic { width: 11px; height: 11px; }
+.pcard:hover .pc-name { color: var(--fg); }
+.pc-input { flex: none; width: 100%; height: 16px; border: 0; border-radius: 4px; padding: 0 4px; background: var(--raise-2); color: var(--fg); font: 600 11px var(--ui); box-shadow: 0 0 0 1.5px var(--accent); }
+.pc-input:focus { outline: 0; }
+
+.pcard.is-project { cursor: default; background: transparent; box-shadow: inset 0 0 0 1.5px var(--accent); }
+.pcard.is-project:hover { transform: none; }
+.pcard.is-project .pc-name { color: var(--fg); font-weight: 600; }
+.pcard.add { align-items: center; justify-content: center; color: var(--mute); background: transparent; box-shadow: inset 0 0 0 1.5px var(--raise-2); border: 0; }
+.pcard.add .ic { transition: transform .35s var(--spring); }
+.pcard.add:hover { color: var(--fg); box-shadow: inset 0 0 0 1.5px var(--mute); }
+.pcard.add:hover .ic { transform: rotate(90deg) scale(1.15); }
+.pcard.add .pc-name { color: inherit; }
+.pal:not([data-orient='row']) .pcard.add { flex-direction: row; gap: 6px; }
+
+.pc-acts { position: absolute; top: 4px; right: 4px; display: flex; gap: 2px; }
+.pc-btn {
+	width: 20px; height: 20px; display: grid; place-items: center;
+	border: 0; border-radius: 6px; background: rgba(10, 11, 13, .72); color: var(--fg);
+	cursor: pointer; opacity: 0; transform: translateY(-4px) scale(.8);
+	transition: opacity .18s, transform .25s var(--spring), color .15s;
+}
+.pc-btn .ic { width: 11px; height: 11px; }
+.pcard:hover .pc-btn, .pcard:focus-within .pc-btn { opacity: 1; transform: none; }
+.pcard:hover .pc-btn:nth-child(2) { transition-delay: .03s; }
+.pcard:hover .pc-btn:nth-child(3) { transition-delay: .06s; }
+.pc-btn:hover { transform: scale(1.15) !important; }
+.pc-del:hover { color: var(--danger); }
+.pcard.is-default .pc-star { opacity: 1; transform: none; color: #FFC44E; }
+.pcard.is-default .pc-star .ic { fill: currentColor; }
+.pcard.is-origin::after { content: ''; position: absolute; left: 5px; top: 5px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--bg); }
+
+.lib-folder {
+	flex: none; display: flex; align-items: center; justify-content: center; gap: 6px;
+	min-width: 28px; padding: 0 6px; border: 0; border-radius: 8px;
+	background: transparent; color: var(--mute); font: 10px var(--mono); cursor: pointer;
+	transition: background .18s, color .18s;
+}
+.lib-folder:hover { background: var(--raise-2); color: var(--fg); }
+.lib-folder:hover .ic { transform: translateY(-1px); }
+.lib-folder .ic { transition: transform .25s var(--spring); }
+.pal[data-orient='row'] .lib-path { display: none; }
+.pal:not([data-orient='row']) .lib-folder { height: 26px; justify-content: flex-start; }
+.lib-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ------------------------------------------------------------ extrair cores */
+.extract {
+	display: grid; gap: 8px; padding: 8px;
+	grid-template-columns: minmax(0, 1.25fr) minmax(130px, 1fr);
+	grid-template-rows: minmax(0, 1fr);
+	grid-template-areas: 'img side';
+}
+.pal[data-shape='tall'] .extract { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(60px, 1fr) auto; grid-template-areas: 'img' 'side'; }
+.extract > :not(.ed-flood) { animation: pal-rise .4s var(--ease) backwards; }
+.extract > .ex-side { animation-delay: .08s; }
+.ex-img { grid-area: img; position: relative; display: grid; place-items: center; min-width: 0; min-height: 0; border-radius: 8px; background: repeating-conic-gradient(#1a1b20 0 25%, #202228 0 50%) 0 0 / 12px 12px; overflow: hidden; }
+.ex-stage { position: relative; cursor: crosshair; }
+.ex-stage img { display: block; width: 100%; height: 100%; border-radius: 3px; user-select: none; -webkit-user-drag: none; }
+.extract.loading .ex-stage { visibility: hidden; }
+.ex-wait { position: absolute; inset: 0; display: none; background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .07) 50%, transparent 70%) 0 0 / 200% 100%; animation: pal-shimmer 1.1s linear infinite; }
+.extract.loading .ex-wait { display: block; }
+
+.ex-mark {
+	position: absolute; width: 12px; height: 12px;
+	border-radius: 50%; background: var(--c);
+	border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .4), 0 2px 6px rgba(0, 0, 0, .5);
+	transform: translate(-50%, -50%) scale(.7); opacity: .55;
+	cursor: pointer;
+	transition: transform .3s var(--spring), opacity .2s;
+}
+.ex-mark.on { opacity: 1; transform: translate(-50%, -50%); }
+.ex-mark.hot { transform: translate(-50%, -50%) scale(1.6); z-index: 2; }
+.extract.enter .ex-mark { animation: pal-drop .5s var(--spring) backwards; animation-delay: calc(var(--i) * 45ms); }
+
+.ex-loupe {
+	position: absolute; width: 30px; height: 30px; margin: -15px 0 0 -15px;
+	border-radius: 50%; background: var(--c, #000);
+	border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .5), 0 6px 16px rgba(0, 0, 0, .5);
+	pointer-events: none; opacity: 0; transform: scale(.4) translate(18px, -18px);
+	transition: opacity .15s, transform .2s var(--spring);
+}
+.ex-loupe.on { opacity: 1; transform: translate(18px, -18px); }
+.ex-loupe i { position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; margin: -2px; border-radius: 50%; background: #fff; mix-blend-mode: difference; }
+
+.ex-side { grid-area: side; display: flex; flex-direction: column; justify-content: space-between; gap: 6px; min-width: 0; min-height: 0; }
+.ex-head { display: flex; align-items: center; gap: 6px; color: var(--mute); font-size: 11px; min-width: 0; }
+.ex-head .ic { width: 13px; height: 13px; }
+.ex-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pal[data-short='1'] .ex-head { display: none; }
+.pal[data-short='1'] .ex-chips { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; padding: 2px; }
+.pal[data-short='1'] .ex-chip { flex: none; }
+.pal[data-short='1'] .ex-mark { width: 9px; height: 9px; border-width: 1.5px; }
+.ex-chips { display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start; overflow: auto; min-height: 0; }
+.ex-chip {
+	position: relative; width: 22px; height: 22px; padding: 0;
+	border: 0; border-radius: 6px; background: var(--c); color: var(--ink);
+	cursor: pointer; opacity: .35; transform: scale(.82);
+	transition: opacity .2s, transform .3s var(--spring), box-shadow .2s;
+}
+.ex-chip .ic { width: 12px; height: 12px; stroke-width: 3; opacity: 0; transform: scale(.4); transition: opacity .2s, transform .3s var(--spring); }
+.ex-chip.on { opacity: 1; transform: none; }
+.ex-chip.on .ic { opacity: 1; transform: none; }
+.ex-chip:hover, .ex-chip.hot { transform: scale(1.12); box-shadow: 0 0 0 1.5px #fff; }
+.extract.enter .ex-chip { animation: pal-pop .45s var(--spring) backwards; animation-delay: calc(var(--i) * 45ms); }
+.ex-ctrl { display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
+.ex-count { display: flex; align-items: center; margin-right: auto; border-radius: 7px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); }
+.ex-step { width: 24px; height: 26px; display: grid; place-items: center; border: 0; background: transparent; color: var(--mute); cursor: pointer; transition: color .15s, transform .2s var(--spring); }
+.ex-step .ic { width: 12px; height: 12px; }
+.ex-step:hover { color: var(--fg); }
+.ex-step:active { transform: scale(.8); }
+.ex-step.nope { animation: pal-shake .4s; }
+.ex-n { min-width: 16px; text-align: center; font: 600 11px var(--mono); }
+.extract .ed-btn.ok { background: var(--accent); color: var(--accent-ink); }
+
+@keyframes pal-shimmer { to { background-position: -200% 0; } }
+@keyframes pal-pop { from { transform: scale(0); opacity: 0; } }
+@keyframes pal-drop { from { transform: translate(-50%, -160%) scale(0); opacity: 0; } }
+
 @media (prefers-reduced-motion: reduce) {
 	.pal *, .pal *::before, .pal *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
@@ -545,7 +718,10 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		<div class="tile"><kbd>Alt</kbd><p><b>Modo excluir.</b> As amostras tremem; clique para remover. Tudo tem desfazer (Ctrl+Z).</p></div>
 		<div class="tile"><kbd>Ctrl</kbd><p><b>Copia o valor</b> no formato escolhido (HEX, RGB ou HSB).</p></div>
 		<div class="tile"><kbd>Shift</kbd><p>O <b>conta-gotas</b> vira <b>projeto inteiro</b> enquanto a tecla estiver pressionada.</p></div>
-		<div class="tile"><kbd>projeto</kbd><p><b>Troque de projeto</b> no topo: a paleta acompanha, salva nos metadados do .aep.</p></div>
+		<div class="tile"><kbd>nomes</kbd><p><b>Cada cor ganha um nome</b> (menta, tijolo, céu…) que acompanha a cor no editor até você digitar o seu. A ✦ devolve o automático.</p></div>
+		<div class="tile"><kbd>imagem</kbd><p>Selecione <b>praia_entardecer.jpg</b> e use o botão de imagem: as cores principais do frame aparecem. Clique na imagem para pegar outras.</p></div>
+		<div class="tile"><kbd>presets</kbd><p><b>Biblioteca de presets</b> numa pasta que você escolhe (pode ser da equipe). Clique substitui, Shift adiciona, ★ vira o padrão.</p></div>
+		<div class="tile"><kbd>projeto</kbd><p><b>Troque de projeto</b> no topo: cada .aep guarda a própria paleta num grupo de metadados O PALETTERO.</p></div>
 		<div class="tile"><kbd>formato</kbd><p><b>Faixa, coluna ou grade:</b> o painel se reorganiza sozinho. Arraste o canto para redimensionar.</p></div>
 	</section>
 </div>
@@ -645,6 +821,36 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		return hex;
 	}
 
+
+	// CIELAB (D65) — distâncias que batem com a percepção
+	function rgbToLab(rgb) {
+		var c = rgb.map(function (v) { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+		var x = (c[0] * 0.4124 + c[1] * 0.3576 + c[2] * 0.1805) / 0.95047;
+		var y = (c[0] * 0.2126 + c[1] * 0.7152 + c[2] * 0.0722);
+		var z = (c[0] * 0.0193 + c[1] * 0.1192 + c[2] * 0.9505) / 1.08883;
+		function f(t) { return t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116; }
+		var fx = f(x), fy = f(y), fz = f(z);
+		return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
+	}
+
+	function labToRgb(lab) {
+		var fy = (lab[0] + 16) / 116, fx = lab[1] / 500 + fy, fz = fy - lab[2] / 200;
+		function g(t) { return t * t * t > 0.008856 ? t * t * t : (t - 16 / 116) / 7.787; }
+		var x = g(fx) * 0.95047, y = g(fy), z = g(fz) * 1.08883;
+		var r = x * 3.2406 + y * -1.5372 + z * -0.4986;
+		var gg = x * -0.9689 + y * 1.8758 + z * 0.0415;
+		var b = x * 0.0557 + y * -0.2040 + z * 1.0570;
+		return [r, gg, b].map(function (v) {
+			v = v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055;
+			return clamp(v * 255, 0, 255);
+		});
+	}
+
+	function deltaE(a, b) {
+		var d0 = a[0] - b[0], d1 = a[1] - b[1], d2 = a[2] - b[2];
+		return Math.sqrt(d0 * d0 + d1 * d1 + d2 * d2);
+	}
+
 	// mesmo critério do script: cores por matiz → luminosidade → saturação; cinzas no fim
 	function sortSwatches(list) {
 		function key(sw) { return rgbToHsl(hexToRgb(sw.color)); }
@@ -659,55 +865,297 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 
 	root.PalColor = {
 		normHex: normHex, hexToRgb: hexToRgb, rgbToHex: rgbToHex, rgbToHsb: rgbToHsb, hsbToRgb: hsbToRgb,
-		luminance: luminance, ink: ink, format: format, parse: parse, sortSwatches: sortSwatches, clamp: clamp
+		luminance: luminance, ink: ink, rgbToLab: rgbToLab, labToRgb: labToRgb, deltaE: deltaE, format: format, parse: parse, sortSwatches: sortSwatches, clamp: clamp
 	};
 })(window);
 
-/* "After Effects de mentira" para o mockup: uma composição com layers selecionáveis
-   e dois projetos, para testar o painel no navegador sem o After Effects. */
+/* O PALETTERO · nomes automáticos de cor (pt-BR, evocativos)
+   Escolhe o nome da referência mais próxima em CIELAB e evita repetir nomes na mesma paleta. */
+(function (root) {
+	'use strict';
+	var C = root.PalColor;
+
+	var LIST = [
+		// vermelhos e rosas
+		['vermelho', '#E53935'], ['tomate', '#FF6347'], ['cereja', '#9B111E'], ['carmim', '#960018'], ['sangue', '#6E0B0B'],
+		['morango', '#FC5A8D'], ['melancia', '#FD4659'], ['framboesa', '#C72C48'], ['coral', '#FF7F50'], ['salmão', '#FA8072'],
+		['goiaba', '#F1707B'], ['chiclete', '#FF8CCD'], ['rosa', '#FF9EC4'], ['algodão-doce', '#F8C8DC'], ['magenta', '#E4007C'],
+		['pink', '#FF1493'], ['vinho', '#5E1224'], ['bordô', '#800020'], ['rubi', '#C41E3A'], ['rosa-antigo', '#C08081'],
+		// terrosos e laranjas
+		['ferrugem', '#B7410E'], ['tijolo', '#B5503C'], ['terracota', '#E2725B'], ['telha', '#C8553D'], ['argila', '#B66A50'],
+		['laranja', '#FF8C1A'], ['tangerina', '#F28500'], ['abóbora', '#FF7518'], ['pêssego', '#FFCBA4'], ['damasco', '#FBCEB1'],
+		['mamão', '#FFA66B'], ['caramelo', '#C68E17'], ['canela', '#9C5A3C'], ['chocolate', '#5C3317'], ['café', '#4B2E20'],
+		['cacau', '#6B4226'], ['castanha', '#8B5A2B'], ['areia', '#D8C39A'], ['bege', '#E8D9B5'], ['camelo', '#C19A6B'],
+		['cobre', '#B87333'], ['bronze', '#CD7F32'], ['cáqui', '#C3B091'], ['taupe', '#8B7D6B'],
+		// amarelos
+		['âmbar', '#FFBF00'], ['mel', '#E8A33D'], ['ocre', '#CC7722'], ['mostarda', '#E1AD01'], ['açafrão', '#F4C430'],
+		['amarelo', '#FFE01B'], ['limão-siciliano', '#FFF44F'], ['gema', '#FFC72C'], ['banana', '#FFE135'], ['manteiga', '#FFF1A8'],
+		['palha', '#E4D96F'], ['baunilha', '#F3E5AB'], ['creme', '#FFFDD0'], ['champanhe', '#F7E7CE'], ['ouro', '#D4AF37'],
+		// verdes
+		['lima', '#BFFF00'], ['limão', '#9ACD32'], ['pistache', '#93C572'], ['menta', '#5DE6A2'], ['hortelã', '#98FF98'],
+		['sálvia', '#9CAF88'], ['oliva', '#708238'], ['musgo', '#4A5D23'], ['folha', '#3A7D2C'], ['bandeira', '#009C3B'],
+		['esmeralda', '#50C878'], ['jade', '#00A86B'], ['garrafa', '#006A4E'], ['floresta', '#1F4D2B'], ['abacate', '#568203'],
+		['chá-verde', '#C5E1A5'], ['eucalipto', '#5F8575'], ['pinho', '#01796F'], ['aspargo', '#87A96B'],
+		// cianos
+		['turquesa', '#40E0D0'], ['piscina', '#3BC4E2'], ['água-marinha', '#7FFFD4'], ['petróleo', '#005F6A'], ['ciano', '#00B7EB'],
+		['caribe', '#00B2A9'], ['lagoa', '#2A9D8F'], ['gelo', '#DDF3F5'],
+		// azuis
+		['céu', '#80C0FE'], ['celeste', '#87CEEB'], ['azul', '#1E6FFF'], ['cobalto', '#0047AB'], ['royal', '#4169E1'],
+		['marinho', '#0B1F4B'], ['jeans', '#4F6D99'], ['denim', '#1560BD'], ['oceano', '#1B4F72'], ['safira', '#0F52BA'],
+		['noite', '#1E2A44'], ['meia-noite', '#121A33'], ['aço', '#4682B4'], ['ardósia', '#6A7B8C'], ['nuvem', '#DCE6F0'],
+		['azul-bebê', '#A7C7E7'], ['índigo', '#3F3FA8'],
+		// roxos
+		['lavanda', '#B5ADFF'], ['lilás', '#C8A2C8'], ['violeta', '#7F00FF'], ['roxo', '#6A0DAD'], ['uva', '#6F2DA8'],
+		['ameixa', '#673147'], ['berinjela', '#3D0C45'], ['orquídea', '#DA70D6'], ['malva', '#E0B0FF'], ['púrpura', '#800080'],
+		['açaí', '#4A1942'], ['ametista', '#9966CC'], ['glicínia', '#C9A0DC'], ['fúcsia', '#FF00FF'],
+		// neutros
+		['branco', '#FFFFFF'], ['papel', '#F5F3EE'], ['marfim', '#FFFFF0'], ['osso', '#E3DAC9'], ['névoa', '#D9DCE1'],
+		['prata', '#C0C0C0'], ['concreto', '#A6A6A6'], ['cimento', '#8D8D8D'], ['cinza', '#808080'], ['fumaça', '#6E6E6E'],
+		['chumbo', '#4A4A4A'], ['grafite', '#383838'], ['carvão', '#2B2B2B'], ['asfalto', '#1F1F1F'], ['nanquim', '#111111'],
+		['preto', '#000000']
+	].map(function (e) { return { name: e[0], lab: C.rgbToLab(C.hexToRgb(e[1])) }; });
+
+	var cache = {};
+	function ranked(hex) {
+		hex = C.normHex(hex) || '#000000';
+		if (cache[hex]) return cache[hex];
+		var lab = C.rgbToLab(C.hexToRgb(hex));
+		var list = LIST.map(function (e) {
+			// peso menor na luminosidade: o matiz importa mais para o nome
+			var d = Math.pow((lab[0] - e.lab[0]) * 0.7, 2) + Math.pow(lab[1] - e.lab[1], 2) + Math.pow(lab[2] - e.lab[2], 2);
+			return { name: e.name, lab: e.lab, d: d };
+		}).sort(function (a, b) { return a.d - b.d; });
+		return (cache[hex] = { lab: lab, list: list });
+	}
+
+	function nearest(hex) { return ranked(hex).list[0].name; }
+
+	function unique(base, taken) {
+		if (taken.indexOf(base) < 0) return base;
+		for (var n = 2; ; n++) if (taken.indexOf(base + ' ' + n) < 0) return base + ' ' + n;
+	}
+
+	// nome livre dentro da paleta: o mais próximo; se já existe, um vizinho parecido;
+	// depois "suave"/"forte" conforme a luminosidade; por último, um número
+	function pick(hex, taken) {
+		var r = ranked(hex), best = r.list[0];
+		if (taken.indexOf(best.name) < 0) return best.name;
+		for (var i = 1; i < 4; i++) {
+			var alt = r.list[i];
+			if (alt.d <= Math.max(best.d * 2.5, 220) && taken.indexOf(alt.name) < 0) return alt.name;
+		}
+		var mod = best.name + (r.lab[0] >= best.lab[0] ? ' suave' : ' forte');
+		if (taken.indexOf(mod) < 0) return mod;
+		return unique(best.name, taken);
+	}
+
+	// rótulos do script antigo ("cor 3", vazio ou o próprio hex) contam como automáticos
+	function isGeneric(label, hex) {
+		var l = String(label || '').trim();
+		return !l || /^cor \d+$/i.test(l) || l.toUpperCase() === String(hex).toUpperCase();
+	}
+
+	root.PalNames = { nearest: nearest, pick: pick, unique: unique, isGeneric: isGeneric };
+})(window);
+
+/* O PALETTERO · extração de cores de uma imagem (k-means em CIELAB, sem dependências) */
+(function (root) {
+	'use strict';
+	var C = root.PalColor;
+
+	// lê os pixels de uma imagem já carregada, reduzida para ~maxSide px
+	function sample(img, maxSide) {
+		maxSide = maxSide || 120;
+		var s = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+		var w = Math.max(1, Math.round(img.naturalWidth * s)), h = Math.max(1, Math.round(img.naturalHeight * s));
+		var cv = document.createElement('canvas');
+		cv.width = w; cv.height = h;
+		var ctx = cv.getContext('2d');
+		ctx.drawImage(img, 0, 0, w, h);
+		var d = ctx.getImageData(0, 0, w, h).data, px = [];
+		for (var i = 0, p = 0; i < d.length; i += 4, p++) {
+			if (d[i + 3] < 128) continue; // ignora transparência
+			px.push({ lab: C.rgbToLab([d[i], d[i + 1], d[i + 2]]), x: (p % w) / w, y: Math.floor(p / w) / h });
+		}
+		return { px: px, w: w, h: h, ctx: ctx };
+	}
+
+	// gerador previsível: a mesma imagem sempre dá o mesmo resultado
+	function rng(seed) { return function () { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }; }
+
+	function kmeans(px, k) {
+		var rand = rng(7), cents = [px[Math.floor(rand() * px.length)].lab.slice()], i, j;
+		// k-means++
+		while (cents.length < k) {
+			var dist = px.map(function (p) {
+				var m = Infinity;
+				for (j = 0; j < cents.length; j++) m = Math.min(m, C.deltaE(p.lab, cents[j]));
+				return m * m;
+			});
+			var sum = dist.reduce(function (a, b) { return a + b; }, 0), r = rand() * sum;
+			for (i = 0; i < px.length && (r -= dist[i]) > 0; i++);
+			cents.push(px[Math.min(i, px.length - 1)].lab.slice());
+		}
+		var assign = new Array(px.length);
+		for (var it = 0; it < 12; it++) {
+			var acc = cents.map(function () { return [0, 0, 0, 0]; });
+			for (i = 0; i < px.length; i++) {
+				var best = 0, bd = Infinity;
+				for (j = 0; j < k; j++) { var d = C.deltaE(px[i].lab, cents[j]); if (d < bd) { bd = d; best = j; } }
+				assign[i] = best;
+				var a = acc[best]; a[0] += px[i].lab[0]; a[1] += px[i].lab[1]; a[2] += px[i].lab[2]; a[3]++;
+			}
+			cents = acc.map(function (a, n) { return a[3] ? [a[0] / a[3], a[1] / a[3], a[2] / a[3]] : cents[n]; });
+		}
+		return cents.map(function (c, n) {
+			// marcador: pixel parecido com a cor do grupo e perto do "meio" da região onde ela aparece
+			var count = 0, mx = 0, my = 0;
+			for (i = 0; i < px.length; i++) if (assign[i] === n) { count++; mx += px[i].x; my += px[i].y; }
+			mx /= count || 1; my /= count || 1;
+			var best = null, bd = Infinity;
+			for (i = 0; i < px.length; i++) {
+				if (assign[i] !== n) continue;
+				var dx = px[i].x - mx, dy = px[i].y - my;
+				var d = C.deltaE(px[i].lab, c) + 40 * Math.sqrt(dx * dx + dy * dy);
+				if (d < bd) { bd = d; best = px[i]; }
+			}
+			return { lab: c, count: count, x: best ? best.x : 0.5, y: best ? best.y : 0.5 };
+		}).filter(function (c) { return c.count > 0; });
+	}
+
+	// paleta com "count" cores bem distintas, das mais presentes para as menos
+	function palette(data, count) {
+		if (!data.px.length) return [];
+		var groups = kmeans(data.px, Math.min(data.px.length, count * 2 + 2)).sort(function (a, b) { return b.count - a.count; });
+		var out = [];
+		[18, 12, 7, 0].forEach(function (minDist) {
+			groups.forEach(function (g) {
+				if (out.length >= count || out.indexOf(g) >= 0) return;
+				if (out.every(function (o) { return C.deltaE(o.lab, g.lab) >= minDist; })) out.push(g);
+			});
+		});
+		return out.map(function (g) {
+			return { color: C.rgbToHex(C.labToRgb(g.lab)), x: g.x, y: g.y, share: g.count / data.px.length };
+		});
+	}
+
+	function pixel(data, fx, fy) {
+		var x = Math.min(data.w - 1, Math.max(0, Math.floor(fx * data.w)));
+		var y = Math.min(data.h - 1, Math.max(0, Math.floor(fy * data.h)));
+		var d = data.ctx.getImageData(x, y, 1, 1).data;
+		return C.rgbToHex([d[0], d[1], d[2]]);
+	}
+
+	root.PalExtract = { sample: sample, palette: palette, pixel: pixel };
+})(window);
+
+/* "After Effects de mentira" para o mockup: uma composição com layers selecionáveis,
+   dois projetos, presets em duas pastas e frames gerados por canvas. */
 (function (root) {
 	'use strict';
 
-	var DEFAULTS = ['#F13333', '#FF4D4D', '#FE674C', '#FF8F4D', '#FFC44E', '#5DE6A2', '#80C0FE', '#B5ADFF', '#FF8CCD', '#FF739A', '#FF5A68']
-		.map(function (c, i) { return { color: c, label: 'cor ' + (i + 1) }; });
+	var BUILTIN = ['#F13333', '#FF4D4D', '#FE674C', '#FF8F4D', '#FFC44E', '#5DE6A2', '#80C0FE', '#B5ADFF', '#FF8CCD', '#FF739A', '#FF5A68']
+		.map(function (c) { return { color: c, label: '', auto: true }; });
+
+	function sw(list) { return list.map(function (c) { return { color: c, label: '', auto: true }; }); }
 
 	var projects = {
 		'abertura_v3.aep': {
-			palette: [
-				{ color: '#FF4D4D', label: 'vermelho' }, { color: '#FFC44E', label: 'mostarda' }, { color: '#5DE6A2', label: 'menta' },
-				{ color: '#80C0FE', label: 'céu' }, { color: '#B5ADFF', label: 'lavanda' }, { color: '#FF8CCD', label: 'chiclete' },
-				{ color: '#1E2A44', label: 'noite' }, { color: '#F2F2F2', label: 'papel' }
-			],
+			palette: { preset: 'Abertura', swatches: sw(['#FF4D4D', '#FFC44E', '#5DE6A2', '#80C0FE', '#B5ADFF', '#FF8CCD', '#1E2A44', '#F2F2F2']) },
 			layers: [
 				{ id: 'title', name: 'TÍTULO', kind: 'text', color: '#F2F2F2' },
 				{ id: 'circle', name: 'círculo', kind: 'shape', color: '#FF4D4D' },
 				{ id: 'bar', name: 'faixa', kind: 'shape', color: '#5DE6A2', stroke: '#0E1424' },
+				{ id: 'photo', name: 'praia_entardecer.jpg', kind: 'image', scene: 'sunset' },
 				{ id: 'bg', name: 'fundo', kind: 'solid', color: '#1E2A44' }
 			]
 		},
 		'vinheta_final.aep': {
-			palette: null, // sem paleta salva → usa a paleta padrão
+			palette: null, // sem paleta salva → usa o preset padrão
 			layers: [
 				{ id: 'title', name: 'TÍTULO', kind: 'text', color: '#121316' },
 				{ id: 'circle', name: 'círculo', kind: 'shape', color: '#FF8F4D' },
 				{ id: 'bar', name: 'faixa', kind: 'shape', color: '#2E5BFF', stroke: '#F7E8D0' },
+				{ id: 'photo', name: 'floresta_drone.mp4', kind: 'video', scene: 'forest' },
 				{ id: 'bg', name: 'fundo', kind: 'solid', color: '#F7E8D0' }
 			]
 		}
 	};
 
-	var prefs = { showColorLabels: false, showColorInfo: true, labelType: '#HEX', swatches: DEFAULTS };
+	var folders = {
+		'/Users/voce/Library/Application Support/O PALETTERO script/presets': [
+			{ id: 'o-palettero', name: 'O PALETTERO', swatches: BUILTIN },
+			{ id: 'abertura', name: 'Abertura', swatches: sw(['#FF4D4D', '#FFC44E', '#5DE6A2', '#80C0FE', '#B5ADFF', '#FF8CCD', '#1E2A44', '#F2F2F2']) },
+			{ id: 'neutros', name: 'Neutros', swatches: sw(['#111111', '#2B2B2B', '#4A4A4A', '#8D8D8D', '#C0C0C0', '#E3DAC9', '#F5F3EE']) },
+			{ id: 'verao', name: 'Verão', swatches: sw(['#FF7518', '#FFC72C', '#40E0D0', '#00B2A9', '#FA8072', '#FFF1A8']) }
+		],
+		'/Volumes/equipe/design/paletas': [
+			{ id: 'jornal', name: 'Jornal da noite', swatches: sw(['#0B1F4B', '#1560BD', '#80C0FE', '#E53935', '#FFFFFF']) },
+			{ id: 'esporte', name: 'Esporte', swatches: sw(['#009C3B', '#FFE01B', '#0047AB', '#FFFFFF', '#111111']) }
+		]
+	};
+	var folderNames = Object.keys(folders);
+
+	var prefs = { showColorLabels: true, showColorInfo: true, labelType: '#HEX', defaultPreset: 'o-palettero', presetFolder: folderNames[0] };
 	var current = 'abertura_v3.aep';
 	var listeners = [];
 
 	function proj() { return projects[current]; }
 	function emit() { listeners.forEach(function (f) { f(); }); }
+	function presets() { return folders[prefs.presetFolder]; }
+
+	// ---------------------------------------------------------------- cenas desenhadas (o "frame" da imagem/vídeo)
+	function scene(kind, w, h) {
+		var cv = document.createElement('canvas');
+		cv.width = w; cv.height = h;
+		var g = cv.getContext('2d'), gr;
+		if (kind === 'sunset') {
+			gr = g.createLinearGradient(0, 0, 0, h * 0.62);
+			gr.addColorStop(0, '#2B1B4A'); gr.addColorStop(0.45, '#C2456B'); gr.addColorStop(0.8, '#FF8A4C'); gr.addColorStop(1, '#FFD27A');
+			g.fillStyle = gr; g.fillRect(0, 0, w, h);
+			g.fillStyle = '#FFE9A8'; g.beginPath(); g.arc(w * 0.62, h * 0.6, h * 0.13, 0, 7); g.fill();
+			gr = g.createLinearGradient(0, h * 0.62, 0, h);
+			gr.addColorStop(0, '#2E4C7A'); gr.addColorStop(1, '#0E1A33');
+			g.fillStyle = gr; g.fillRect(0, h * 0.62, w, h);
+			g.fillStyle = 'rgba(255,190,120,.55)';
+			for (var i = 0; i < 9; i++) g.fillRect(w * 0.62 - (60 - i * 6) * w / 640, h * (0.65 + i * 0.03), (120 - i * 12) * w / 640, 2);
+			g.fillStyle = '#E8C9A0'; g.beginPath(); g.moveTo(0, h * 0.86); g.quadraticCurveTo(w * 0.3, h * 0.78, w * 0.55, h); g.lineTo(0, h); g.fill();
+			g.fillStyle = '#1B1420'; g.beginPath(); g.moveTo(w * 0.05, h); g.lineTo(w * 0.12, h * 0.55); g.lineTo(w * 0.14, h); g.fill();
+			g.beginPath(); g.ellipse(w * 0.12, h * 0.52, w * 0.07, h * 0.05, -0.4, 0, 7); g.fill();
+		} else if (kind === 'forest') {
+			gr = g.createLinearGradient(0, 0, 0, h);
+			gr.addColorStop(0, '#CFE3D1'); gr.addColorStop(1, '#8FB59A');
+			g.fillStyle = gr; g.fillRect(0, 0, w, h);
+			var rows = [['#5F8575', 0.42], ['#3A6B4A', 0.55], ['#1F4D2B', 0.7], ['#12301C', 0.86]];
+			rows.forEach(function (r, k) {
+				g.fillStyle = r[0];
+				for (var x = -20; x < w + 20; x += w / (10 + k * 3)) {
+					var th = h * (0.18 + ((x * 7 + k * 13) % 9) / 60);
+					g.beginPath(); g.moveTo(x, h * r[1]); g.lineTo(x + w / 28, h * r[1] - th); g.lineTo(x + w / 14, h * r[1]); g.fill();
+				}
+				g.fillRect(0, h * r[1] - 1, w, h);
+			});
+			g.fillStyle = '#C68E17'; g.fillRect(w * 0.47, h * 0.62, w * 0.06, h * 0.38);
+			g.fillStyle = '#E8A33D'; g.fillRect(w * 0.49, h * 0.62, w * 0.02, h * 0.38);
+		} else {
+			var L = proj().layers, by = {};
+			L.forEach(function (l) { by[l.id] = l; });
+			g.fillStyle = by.bg.color; g.fillRect(0, 0, w, h);
+			g.fillStyle = by.bar.color; g.strokeStyle = by.bar.stroke; g.lineWidth = h * 0.02;
+			g.beginPath(); g.rect(-10, h * 0.69, w * 0.68, h * 0.15); g.fill(); g.stroke();
+			g.fillStyle = by.circle.color; g.beginPath(); g.arc(w * 0.76, h * 0.38, h * 0.27, 0, 7); g.fill();
+			g.fillStyle = by.title.color; g.font = '800 ' + Math.round(h * 0.19) + 'px sans-serif';
+			g.fillText('ABER', w * 0.07, h * 0.43); g.fillText('TURA', w * 0.07, h * 0.62);
+		}
+		return cv.toDataURL('image/png');
+	}
 
 	var AE = root.MockAE = {
 		get project() { return current; },
 		projects: Object.keys(projects),
 		layers: function () { return proj().layers; },
 		selected: {},
+		thumb: function (l) { return scene(l.scene, 64, 36); },
 		switchProject: function (name) { current = name; AE.selected = {}; emit(); },
 		select: function (id, additive) {
 			if (!additive) { var was = AE.selected[id] && Object.keys(AE.selected).length === 1; AE.selected = {}; if (!was) AE.selected[id] = true; }
@@ -719,29 +1167,66 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	};
 
 	function selLayers() { return proj().layers.filter(function (l) { return AE.selected[l.id]; }); }
+	function defaultPreset() {
+		var p = presets().filter(function (x) { return x.id === prefs.defaultPreset; })[0];
+		return p || { name: '', swatches: BUILTIN };
+	}
 
 	root.PalMockHost = {
 		projectKey: function () { return current; },
 		loadPalette: function () {
-			var p = proj().palette;
-			return p && p.length ? { source: 'project', swatches: p } : { source: 'default', swatches: prefs.swatches };
+			var name = current.replace(/\.aep$/, ''), p = proj().palette;
+			if (p) return { source: 'project', project: name, preset: p.preset || '', swatches: p.swatches };
+			var d = defaultPreset();
+			return { source: 'default', project: name, preset: d.name, swatches: d.swatches };
 		},
-		savePalette: function (json) { proj().palette = JSON.parse(json); return { ok: true }; },
+		savePalette: function (json, preset) {
+			var p = proj().palette || (proj().palette = {});
+			p.swatches = JSON.parse(json);
+			if (preset !== undefined) p.preset = preset;
+			return { ok: true };
+		},
 		loadPrefs: function () { return prefs; },
 		savePrefs: function (json) {
 			var n = JSON.parse(json);
 			for (var k in n) prefs[k] = n[k];
 			return { ok: true };
 		},
+		listPresets: function () {
+			return { folder: prefs.presetFolder, presets: presets().slice().sort(function (a, b) { return a.name.localeCompare(b.name); }) };
+		},
+		savePreset: function (json) {
+			var p = JSON.parse(json), list = presets();
+			var id = p.id || p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now().toString(36);
+			var cur = list.filter(function (x) { return x.id === id; })[0];
+			if (cur) { cur.name = p.name; cur.swatches = p.swatches; } else list.push({ id: id, name: p.name, swatches: p.swatches });
+			return { ok: true, id: id };
+		},
+		deletePreset: function (id) {
+			folders[prefs.presetFolder] = presets().filter(function (x) { return x.id !== id; });
+			return { ok: true };
+		},
+		choosePresetFolder: function () {
+			// no mockup, "escolher pasta" alterna entre a pasta pessoal e uma pasta de rede da equipe
+			prefs.presetFolder = folderNames[(folderNames.indexOf(prefs.presetFolder) + 1) % folderNames.length];
+			return { ok: true, folder: prefs.presetFolder };
+		},
+		revealPresetFolder: function () { return { ok: true }; },
+		grabFrame: function () {
+			var l = selLayers()[0];
+			if (l && l.scene) return { ok: true, url: scene(l.scene, 640, 360), label: l.name, kind: l.kind };
+			return { ok: true, url: scene('comp', 640, 360), label: 'MAIN_COMP', kind: 'comp' };
+		},
+		releaseFrame: function () { return { ok: true }; },
 		apply: function (hex) {
-			var sel = selLayers();
+			var sel = selLayers().filter(function (l) { return !l.scene; });
 			if (!sel.length) return { ok: false, reason: 'nosel' };
 			sel.forEach(function (l) { l.color = hex; l.flash = Date.now(); });
 			emit();
 			return { ok: true, mode: 'fill', count: sel.length };
 		},
 		capture: function (scope) {
-			var src = scope === 'project' ? [].concat.apply([], Object.keys(projects).map(function (k) { return k === current ? projects[k].layers : []; })) : selLayers();
+			var src = scope === 'project' ? proj().layers : selLayers();
 			if (scope !== 'project' && !src.length) return { ok: false, reason: 'nosel', colors: [] };
 			var out = [];
 			src.forEach(function (l) {
@@ -760,7 +1245,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	var cep = root.__adobe_cep__;
 
 	function evalScript(fn, args) {
-		var script = fn + '(' + (args || []).map(function (a) { return JSON.stringify(a); }).join(',') + ')';
+		var script = fn + '(' + (args || []).map(function (a) { return a === undefined ? 'undefined' : JSON.stringify(a); }).join(',') + ')';
 		return new Promise(function (resolve, reject) {
 			cep.evalScript(script, function (res) {
 				if (res === 'EvalScript error.') return reject(new Error(fn + ' falhou'));
@@ -785,15 +1270,55 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		else root.open(url, '_blank', 'noopener');
 	}
 
+	// carrega a imagem do frame. No CEP lê o arquivo pelo Node (data: URL não "suja" o canvas);
+	// o PNG pode demorar um pouco para existir, então tenta de novo por alguns segundos.
+	function loadImage(r) {
+		return new Promise(function (resolve, reject) {
+			var tries = 0;
+			function attempt() {
+				var src = r.url;
+				if (!src && r.path) {
+					var fs = root.require ? root.require('fs') : null;
+					if (fs) {
+						try {
+							var ext = (r.path.match(/\.(\w+)$/) || [, 'png'])[1].toLowerCase().replace('jpg', 'jpeg');
+							src = 'data:image/' + ext + ';base64,' + fs.readFileSync(r.path).toString('base64');
+						} catch (e) { src = null; }
+					} else {
+						src = encodeURI('file:///' + r.path.replace(/\\/g, '/').replace(/^\/+/, '')) + '?t=' + Date.now();
+					}
+				}
+				if (!src) return retry();
+				var img = new Image();
+				img.onload = function () { resolve(img); };
+				img.onerror = retry;
+				img.src = src;
+			}
+			function retry() {
+				if (++tries > 30) return reject(new Error('frame não encontrado'));
+				setTimeout(attempt, 200);
+			}
+			attempt();
+		});
+	}
+
 	root.PalHost = {
 		isCEP: !!cep,
 		projectKey: function () { return call('projectKey'); },
 		loadPalette: function () { return call('loadPalette'); },
-		savePalette: function (swatches) { return call('savePalette', JSON.stringify(swatches)); },
+		savePalette: function (swatches, preset) { return call('savePalette', JSON.stringify(swatches), preset); },
 		loadPrefs: function () { return call('loadPrefs'); },
 		savePrefs: function (prefs) { return call('savePrefs', JSON.stringify(prefs)); },
 		apply: function (hex, opts) { return call('apply', hex, JSON.stringify(opts || {})); },
 		capture: function (scope) { return call('capture', scope); },
+		listPresets: function () { return call('listPresets'); },
+		savePreset: function (preset) { return call('savePreset', JSON.stringify(preset)); },
+		deletePreset: function (id) { return call('deletePreset', id); },
+		choosePresetFolder: function () { return call('choosePresetFolder'); },
+		revealPresetFolder: function () { return call('revealPresetFolder'); },
+		grabFrame: function () { return call('grabFrame'); },
+		releaseFrame: function (r) { return r && r.temp ? call('releaseFrame', r.tmpId || 0, r.path) : Promise.resolve(); },
+		loadImage: loadImage,
 		openURL: openURL
 	};
 })(window);
@@ -805,7 +1330,9 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 
 	var C = root.PalColor;
 	var Host = root.PalHost;
-	var VERSION = 'v1.0';
+	var N = root.PalNames;
+	var X = root.PalExtract;
+	var VERSION = 'v1.1';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 	var SPRING = 'cubic-bezier(.34,1.56,.64,1)';
@@ -829,7 +1356,14 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		reset: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
 		help: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
 		undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
-		alert: '<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>'
+		alert: '<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
+		image: '<rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"/>',
+		library: '<path d="M11 17a4 4 0 0 1-8 0V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2Z"/><path d="M16.7 13H19a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H7"/><path d="M7 17h.01"/><path d="m11 8 2.3-2.3a2.4 2.4 0 0 1 3.4 0l1.9 1.9a2.4 2.4 0 0 1 0 3.4L9.9 19.8"/>',
+		star: '<path d="M11.5 2.3a.5.5 0 0 1 .9 0l2.3 4.7a2 2 0 0 0 1.5 1.1l5.2.8a.5.5 0 0 1 .3.9l-3.8 3.7a2 2 0 0 0-.6 1.8l.9 5.2a.5.5 0 0 1-.7.5l-4.6-2.4a2 2 0 0 0-1.9 0l-4.6 2.4a.5.5 0 0 1-.7-.5l.9-5.2a2 2 0 0 0-.6-1.8L2.2 9.8a.5.5 0 0 1 .3-.9l5.2-.8a2 2 0 0 0 1.5-1.1z"/>',
+		folder: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
+		sparkle: '<path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.13-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.13a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.13 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.13a.5.5 0 0 1-.96 0z"/>',
+		minus: '<path d="M5 12h14"/>',
+		file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>'
 	};
 
 	function ic(name, cls) {
@@ -855,7 +1389,11 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	function mount(el) {
 		var S = {
 			swatches: [],
-			prefs: { format: 'HEX', names: false, info: true, defaults: [] },
+			prefs: { format: 'HEX', names: true, info: true, defaultPreset: '' },
+			project: '',
+			preset: '',       // preset de origem da paleta do projeto
+			presets: [],
+			folder: '',
 			last: null,
 			undo: [],
 			key: null
@@ -868,6 +1406,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			'<div class="dock dock-a">',
 			'  <button class="tool" data-act="add" aria-label="Nova cor">' + ic('plus') + '</button>',
 			'  <button class="tool" data-act="capture" aria-label="Capturar cores"><span class="swap">' + ic('pipette') + ic('layers') + '</span></button>',
+			'  <button class="tool" data-act="frame" aria-label="Extrair cores de imagem">' + ic('image') + '</button>',
 			'</div>',
 			'<div class="strip" role="list" aria-label="Paleta"></div>',
 			'<div class="empty" hidden><span class="empty-dots"><i></i><i></i><i></i></span><span>Paleta vazia</span>',
@@ -875,7 +1414,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			'  <button class="row-btn" data-act="add">' + ic('plus') + '<span class="lbl">Nova cor</span></button>',
 			'</div>',
 			'<div class="dock dock-b">',
-			'  <button class="tool" data-act="sort" aria-label="Ordenar">' + ic('sort') + '</button>',
+			'  <button class="tool" data-act="library" aria-label="Presets"><span class="swap">' + ic('library') + ic('x') + '</span></button>',
 			'  <button class="tool" data-act="menu" aria-label="Ajustes"><span class="swap">' + ic('more') + ic('x') + '</span></button>',
 			'</div>',
 			'<div class="sheet settings" hidden>',
@@ -887,17 +1426,33 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			'  </div>',
 			'  <span class="vr"></span>',
 			'  <div class="grp"><span class="grp-title">Paleta</span>',
-			'    <button class="row-btn" data-act="save-default" data-tip="Salvar como paleta padrão">' + ic('bookmark') + '<span class="lbl">Salvar como padrão</span></button>',
-			'    <button class="row-btn" data-act="load-default" data-tip="Usar a paleta padrão">' + ic('reset') + '<span class="lbl">Usar paleta padrão</span></button>',
+			'    <button class="row-btn" data-act="sort" data-tip="Ordenar por matiz">' + ic('sort') + '<span class="lbl">Ordenar por matiz</span></button>',
 			'    <button class="row-btn danger" data-act="clear" data-tip="Segure para limpar">' + ic('trash') + '<span class="lbl">Segure para limpar</span><i class="hold"></i></button>',
 			'  </div>',
 			'  <span class="vr"></span>',
 			'  <div class="grp"><button class="row-btn" data-act="help" data-tip="Ajuda e documentação">' + ic('help') + '<span class="lbl">Ajuda</span></button><span class="ver">' + VERSION + '</span></div>',
 			'</div>',
+			'<div class="sheet library" hidden>',
+			'  <div class="lib-list" role="list"></div>',
+			'  <button class="lib-folder" data-act="folder">' + ic('folder') + '<span class="lib-path"></span></button>',
+			'</div>',
+			'<div class="sheet extract" hidden tabindex="-1" role="dialog" aria-label="Extrair cores">',
+			'  <div class="ed-flood"></div>',
+			'  <div class="ex-img"><div class="ex-stage"><img alt=""><div class="ex-marks"></div><span class="ex-loupe"><i></i></span></div><span class="ex-wait"></span></div>',
+			'  <div class="ex-side">',
+			'    <div class="ex-head">' + ic('image') + '<span class="ex-label"></span></div>',
+			'    <div class="ex-chips"></div>',
+			'    <div class="ex-ctrl">',
+			'      <div class="ex-count"><button class="ex-step" data-d="-1" data-tip="Menos cores">' + ic('minus') + '</button><span class="ex-n">6</span><button class="ex-step" data-d="1" data-tip="Mais cores">' + ic('plus') + '</button></div>',
+			'      <button class="ed-btn cancel" data-tip="Cancelar" data-kbd="Esc">' + ic('x') + '</button>',
+			'      <button class="ed-btn ok" data-tip="Adicionar à paleta" data-kbd="Enter">' + ic('check') + '</button>',
+			'    </div>',
+			'  </div>',
+			'</div>',
 			'<div class="sheet editor" hidden tabindex="-1" role="dialog" aria-label="Editor de cor">',
 			'  <div class="ed-flood"></div>',
 			'  <div class="ed-prev"><button class="ed-old" data-tip="Voltar à cor original">' + ic('undo') + '</button>',
-			'    <div class="ed-new"><input class="ed-name" id="pal-ed-name" placeholder="nome da cor" maxlength="40" spellcheck="false" autocomplete="off"></div></div>',
+			'    <div class="ed-new"><input class="ed-name" id="pal-ed-name" placeholder="nome da cor" maxlength="40" spellcheck="false" autocomplete="off"><button class="ed-auto" type="button" data-tip="Nome automático">' + ic('sparkle') + '</button></div></div>',
 			'  <div class="ed-sv" tabindex="0" aria-label="Saturação e brilho"><span class="knob"></span></div>',
 			'  <div class="ed-hue" tabindex="0" aria-label="Matiz"><span class="knob"></span></div>',
 			'  <div class="ed-ctrl">',
@@ -917,6 +1472,8 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		var strip = q('.strip');
 		var empty = q('.empty');
 		var settings = q('.settings');
+		var library = q('.library');
+		var exSheet = q('.extract');
 		var ed = q('.editor');
 		var toastEl = q('.toast');
 		var tipEl = q('.tip');
@@ -929,9 +1486,11 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			el.dataset.orient = orient;
 			el.dataset.thin = h < 70 ? '1' : '0';
 			el.dataset.narrow = w < 160 ? '1' : '0';
+			el.dataset.short = h < 110 ? '1' : '0';
 			el.dataset.shape = (h < 220 && w > h) ? 'wide' : 'tall';
 			roomy();
 			if (!settings.hidden) placePill(false);
+			if (!exSheet.hidden) fitStage();
 		}
 
 		function roomy() {
@@ -958,6 +1517,21 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			return n;
 		}
 
+		// rótulos automáticos: nome mais próximo, sem repetir dentro da paleta
+		function nameAll() {
+			var taken = S.swatches.filter(function (s) { return !s.auto; }).map(function (s) { return s.label; });
+			S.swatches.forEach(function (s) {
+				if (!s.auto) return;
+				s.label = N.pick(s.color, taken);
+				taken.push(s.label);
+			});
+		}
+		function autoNameFor(hex, exceptId) {
+			var taken = [];
+			S.swatches.forEach(function (s) { if (s.id !== exceptId) taken.push(s.label); });
+			return N.pick(hex, taken);
+		}
+
 		function paint(n, sw) {
 			n.style.setProperty('--c', sw.color);
 			n.style.setProperty('--ink', C.ink(sw.color));
@@ -974,6 +1548,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		function render(opts) {
 			opts = opts || {};
 			var first = {}, id;
+			nameAll();
 			for (id in nodes) first[id] = rect(nodes[id]);
 
 			var keep = {};
@@ -1063,27 +1638,44 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		function save() {
 			clearTimeout(saveTimer);
 			saveTimer = setTimeout(function () {
-				Host.savePalette(S.swatches.map(function (s) { return { color: s.color, label: s.label }; }))
+				Host.savePalette(plain(S.swatches), S.preset)
 					.catch(function () { toast('Não foi possível salvar no projeto', { icon: 'alert' }); });
 			}, 200);
 		}
 
-		function snapshot() { return S.swatches.map(function (s) { return { id: s.id, color: s.color, label: s.label }; }); }
-		function pushUndo() {
-			S.undo.push(snapshot());
+		function plain(list) { return list.map(function (s) { return { color: s.color, label: s.label, auto: !!s.auto }; }); }
+		function snapshot() { return S.swatches.map(function (s) { return { id: s.id, color: s.color, label: s.label, auto: s.auto }; }); }
+		function pushUndo(entry) {
+			S.undo.push(entry || { palette: snapshot(), preset: S.preset });
 			if (S.undo.length > 40) S.undo.shift();
 		}
 		function undo() {
 			var prev = S.undo.pop();
 			if (!prev) return toast('Nada para desfazer');
-			S.swatches = prev;
+			if (prev.restorePreset) {
+				return Host.savePreset(prev.restorePreset).then(function () {
+					loadPresets(prev.restorePreset.id);
+					toast('Preset restaurado', { icon: 'undo' });
+				});
+			}
+			S.swatches = prev.palette;
+			S.preset = prev.preset;
 			render({ slow: true });
 			save();
+			if (!library.hidden) renderLibrary();
 			toast('Desfeito', { icon: 'undo' });
 		}
 
+		function toSwatches(list) {
+			return (list || []).map(function (s) {
+				var hex = C.normHex(s.color) || '#000000';
+				var auto = s.auto !== undefined ? !!s.auto : N.isGeneric(s.label, hex);
+				return { id: newId(), color: hex, label: auto ? '' : s.label, auto: auto };
+			});
+		}
+
 		function setSwatches(list, opts) {
-			S.swatches = list.map(function (s) { return { id: newId(), color: C.normHex(s.color) || '#000000', label: s.label || '' }; });
+			S.swatches = toSwatches(list);
 			render(opts);
 		}
 
@@ -1129,8 +1721,14 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			if (act === 'capture' && t.classList.contains('tool')) {
 				return mods.shift ? '<b>Capturar do projeto inteiro</b>' : '<b>Capturar da seleção</b>' + kbd('Shift', 'projeto inteiro');
 			}
-			if (act === 'sort') return '<b>Ordenar por matiz</b>';
+			if (act === 'frame') return '<b>Extrair cores de imagem</b><span>do layer selecionado (ou da comp)</span>';
 			if (act === 'menu') return el.classList.contains('menu-open') ? '<b>Fechar ajustes</b>' : '<b>Ajustes</b>';
+			if (act === 'library') return el.classList.contains('lib-open') ? '<b>Fechar presets</b>' : '<b>Presets</b>';
+			if (act === 'folder') return '<b>' + esc(S.folder) + '</b>' + kbd('clique', 'trocar pasta') + kbd('Alt', 'abrir');
+			if (t.dataset.pid) {
+				var pr = presetById(t.dataset.pid);
+				return '<b>' + esc(pr ? pr.name : '') + '</b>' + kbd('clique', 'substituir', !mods.shift) + kbd('Shift', 'adicionar', mods.shift);
+			}
 			if (t.dataset.tip) {
 				// em layouts largos os rótulos estão escondidos: a dica assume o papel
 				var lbl = t.querySelector('.lbl');
@@ -1164,7 +1762,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		function hideTip() { clearTimeout(tipTimer); tipEl.classList.remove('on'); }
 
 		el.addEventListener('pointerover', function (e) {
-			var t = e.target.closest('.sw, .tool, [data-tip]');
+			var t = e.target.closest('.sw, .tool, [data-tip], [data-pid], [data-act="folder"]');
 			if (t === tipTarget) return;
 			hideTip();
 			tipTarget = t;
@@ -1345,7 +1943,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			var order = liveNodes().map(function (x) { return x.dataset.id; });
 			var changed = order.join() !== d.before.map(function (s) { return s.id; }).join();
 			if (changed) {
-				S.undo.push(d.before);
+				pushUndo({ palette: d.before, preset: S.preset });
 				S.swatches = order.map(find);
 				save();
 			}
@@ -1391,7 +1989,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 					return toast(r && r.ok ? 'Nenhuma cor nova encontrada' : 'Selecione layers ou propriedades com cor', { icon: 'pipette' });
 				}
 				pushUndo();
-				fresh.forEach(function (c) { S.swatches.push({ id: newId(), color: C.normHex(c), label: '' }); });
+				fresh.forEach(function (c) { S.swatches.push({ id: newId(), color: C.normHex(c), label: '', auto: true }); });
 				render({ from: rect(btn) });
 				save();
 				toast('+' + fresh.length + (fresh.length > 1 ? ' cores' : ' cor') + (scope === 'project' ? ' do projeto' : ''), { color: C.normHex(fresh[0]), undo: true });
@@ -1415,34 +2013,45 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			if (act === 'add') openEditor(null, b);
 			else if (act === 'capture') capture(b, e);
 			else if (act === 'sort') { closeSettings(); sortPalette(); }
-			else if (act === 'menu') toggleSettings();
+			else if (act === 'menu') toggleSide('settings');
+			else if (act === 'library') toggleSide('library');
+			else if (act === 'frame') openExtract(b);
+			else if (act === 'save-preset') savePreset();
+			else if (act === 'folder') chooseFolder(e);
 			else if (act === 'toggle-info') setPref('info', !S.prefs.info);
 			else if (act === 'toggle-names') setPref('names', !S.prefs.names);
-			else if (act === 'save-default') saveDefault(b);
-			else if (act === 'load-default') loadDefault();
 			else if (act === 'help') Host.openURL(DOCS);
 		});
 
 		// ------------------------------------------------------------------ ajustes
-		function isSheetOpen() { return !settings.hidden || !ed.hidden; }
+		function isSheetOpen() { return !settings.hidden || !library.hidden || !ed.hidden || !exSheet.hidden; }
+		function anyFull() { return !ed.hidden || !exSheet.hidden; }
 
-		function toggleSettings() { if (settings.hidden) openSettings(); else closeSettings(); }
-		function openSettings() {
-			if (!ed.hidden) return;
-			settings.hidden = false;
-			el.classList.add('menu-open', 'sheet-open');
-			syncSettings();
-			placePill(false);
-			settings.animate([{ opacity: 0, transform: 'translateY(6px) scale(.98)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: EASE });
+		// ajustes e presets ocupam a faixa; as docas continuam visíveis e o ícone vira ×
+		var SIDES = { settings: [settings, 'menu-open'], library: [library, 'lib-open'] };
+		function openSide(name) {
+			if (anyFull()) return;
+			closeSide(name === 'settings' ? 'library' : 'settings', true);
+			var sh = SIDES[name][0];
+			sh.hidden = false;
+			el.classList.add(SIDES[name][1], 'sheet-open');
+			if (name === 'settings') { syncSettings(); placePill(false); }
+			else { renderLibrary(); loadPresets(); }
+			sh.animate([{ opacity: 0, transform: 'translateY(6px) scale(.98)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: EASE });
 		}
-		function closeSettings() {
-			if (settings.hidden) return;
-			el.classList.remove('menu-open');
-			if (ed.hidden) el.classList.remove('sheet-open');
-			settings.animate([{ opacity: 1 }, { opacity: 0, transform: 'translateY(6px) scale(.98)' }], { duration: 180, easing: EASE }).onfinish = function () {
-				settings.hidden = true;
+		function closeSide(name, instant) {
+			var sh = SIDES[name][0];
+			if (sh.hidden) return;
+			el.classList.remove(SIDES[name][1]);
+			var other = SIDES[name === 'settings' ? 'library' : 'settings'][0];
+			if (!anyFull() && other.hidden) el.classList.remove('sheet-open');
+			if (instant) { sh.hidden = true; return; }
+			sh.animate([{ opacity: 1 }, { opacity: 0, transform: 'translateY(6px) scale(.98)' }], { duration: 180, easing: EASE }).onfinish = function () {
+				if (!el.classList.contains(SIDES[name][1])) sh.hidden = true;
 			};
 		}
+		function toggleSide(name) { if (SIDES[name][0].hidden) openSide(name); else closeSide(name); }
+		function closeSettings() { closeSide('settings'); closeSide('library'); }
 
 		function syncSettings() {
 			q('[data-act="toggle-info"]').setAttribute('aria-pressed', S.prefs.info);
@@ -1482,23 +2091,6 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			}).catch(function () {});
 		}
 
-		function saveDefault(b) {
-			var list = S.swatches.map(function (s) { return { color: s.color, label: s.label }; });
-			Host.savePrefs({ swatches: list }).then(function () {
-				S.prefs.defaults = list;
-				b.animate([{ transform: 'scale(.9)' }, { transform: 'none' }], { duration: 380, easing: SPRING });
-				toast('Paleta padrão salva · ' + list.length + ' cores', { icon: 'bookmark' });
-			}).catch(function () { toast('Não foi possível salvar a paleta padrão', { icon: 'alert' }); });
-		}
-
-		function loadDefault() {
-			closeSettings();
-			pushUndo();
-			setSwatches(S.prefs.defaults);
-			save();
-			toast('Paleta padrão carregada', { icon: 'reset', undo: true });
-		}
-
 		// segurar para limpar
 		(function () {
 			var btn = q('[data-act="clear"]'), t;
@@ -1521,10 +2113,364 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			btn.addEventListener('pointerleave', cancel);
 		})();
 
+		// ------------------------------------------------------------------ presets
+		var libList = q('.lib-list');
+
+		function presetById(id) {
+			for (var i = 0; i < S.presets.length; i++) if (S.presets[i].id === id) return S.presets[i];
+			return null;
+		}
+		function cardOf(id) {
+			return Array.prototype.filter.call(libList.querySelectorAll('[data-pid]'), function (c) { return c.dataset.pid === id; })[0];
+		}
+		function shortPath(p) {
+			p = String(p || '');
+			var parts = p.split(/[\\/]/).filter(Boolean);
+			return parts.length > 2 ? '…/' + parts.slice(-2).join('/') : p;
+		}
+		function bars(list) {
+			return '<span class="pc-bars">' + (list || []).slice(0, 18).map(function (c) {
+				return '<i style="background:' + esc(c.color) + '"></i>';
+			}).join('') + '</span>';
+		}
+
+		function loadPresets(focusId, rename) {
+			return Host.listPresets().then(function (r) {
+				S.presets = (r && r.presets) || [];
+				S.folder = (r && r.folder) || S.folder;
+				if (!library.hidden) renderLibrary(focusId, rename);
+			}).catch(function () { toast('Não foi possível ler a pasta de presets', { icon: 'alert' }); });
+		}
+
+		function renderLibrary(focusId, rename) {
+			var html = '<div class="pcard is-project" role="listitem" data-tip="Paleta deste projeto · salva no .aep">' + bars(S.swatches) +
+				'<span class="pc-name">' + ic('file') + '<span>' + esc(S.project || 'projeto') + '</span></span></div>' +
+				'<button class="pcard add" data-act="save-preset" data-tip="Salvar a paleta do projeto como preset">' + ic('plus') + '<span class="pc-name">Salvar preset</span></button>';
+			S.presets.forEach(function (p, i) {
+				var cls = 'pcard' + (p.id === S.prefs.defaultPreset ? ' is-default' : '') + (p.name === S.preset ? ' is-origin' : '');
+				html += '<div class="' + cls + '" role="listitem" tabindex="0" data-pid="' + esc(p.id) + '" style="--i:' + i + '">' + bars(p.swatches) +
+					'<span class="pc-name">' + esc(p.name) + '</span>' +
+					'<span class="pc-acts"><button class="pc-btn pc-ren" data-tip="Renomear">' + ic('pencil') + '</button>' +
+					'<button class="pc-btn pc-star" data-tip="Padrão para projetos sem paleta">' + ic('star') + '</button>' +
+					'<button class="pc-btn pc-del" data-tip="Excluir preset">' + ic('trash') + '</button></span></div>';
+			});
+			libList.innerHTML = html;
+			q('.lib-path').textContent = shortPath(S.folder);
+			if (focusId) {
+				var c = cardOf(focusId);
+				if (!c) return;
+				c.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+				c.animate([{ transform: 'scale(.85)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 420, easing: SPRING });
+				if (rename) startRename(c);
+			}
+		}
+
+		function applyPreset(p, merge, card) {
+			var from = rect(card.querySelector('.pc-bars'));
+			pushUndo();
+			var added = 0;
+			if (merge) {
+				var have = {};
+				S.swatches.forEach(function (s) { have[s.color] = true; });
+				toSwatches(p.swatches).forEach(function (s) { if (!have[s.color]) { have[s.color] = true; S.swatches.push(s); added++; } });
+			} else {
+				S.swatches = toSwatches(p.swatches);
+				S.preset = p.name;
+			}
+			closeSettings();
+			render({ from: from });
+			save();
+			toast(merge ? '+' + added + (added === 1 ? ' cor de ' : ' cores de ') + p.name : p.name + ' aplicado ao projeto', { color: (p.swatches[0] || {}).color, undo: true });
+		}
+
+		function savePreset() {
+			if (!S.swatches.length) return toast('A paleta do projeto está vazia', { icon: 'alert' });
+			var name = N.unique(S.project && S.project !== 'sem título' ? S.project : 'minha paleta', S.presets.map(function (p) { return p.name; }));
+			Host.savePreset({ name: name, swatches: plain(S.swatches) }).then(function (r) {
+				if (!r || !r.ok) return toast('A pasta de presets não aceita gravação', { icon: 'alert' });
+				S.preset = name;
+				save();
+				loadPresets(r.id, true);
+			});
+		}
+
+		// renomear no próprio cartão
+		function startRename(card) {
+			var p = presetById(card.dataset.pid), nameEl = card.querySelector('.pc-name');
+			if (!p || card.querySelector('.pc-input')) return;
+			var input = document.createElement('input');
+			input.className = 'pc-input';
+			input.value = p.name;
+			input.maxLength = 48;
+			input.spellcheck = false;
+			nameEl.replaceWith(input);
+			input.focus();
+			input.select();
+			var done = false;
+			function finishRename(ok) {
+				if (done) return;
+				done = true;
+				var v = input.value.trim();
+				if (ok && v && v !== p.name) {
+					if (S.preset === p.name) { S.preset = v; save(); }
+					p.name = v;
+					Host.savePreset({ id: p.id, name: v, swatches: p.swatches });
+				}
+				nameEl.textContent = p.name;
+				input.replaceWith(nameEl);
+				nameEl.animate([{ opacity: 0, transform: 'translateY(3px)' }, { opacity: 1, transform: 'none' }], { duration: 240, easing: EASE });
+			}
+			input.addEventListener('keydown', function (e) {
+				e.stopPropagation();
+				if (e.key === 'Enter') finishRename(true);
+				else if (e.key === 'Escape') finishRename(false);
+			});
+			input.addEventListener('blur', function () { finishRename(true); });
+		}
+
+		function toggleDefault(p, card) {
+			var on = S.prefs.defaultPreset !== p.id;
+			S.prefs.defaultPreset = on ? p.id : '';
+			Array.prototype.forEach.call(libList.querySelectorAll('[data-pid]'), function (c) {
+				c.classList.toggle('is-default', c.dataset.pid === S.prefs.defaultPreset);
+			});
+			card.querySelector('.pc-star').animate([{ transform: 'scale(.4) rotate(-72deg)' }, { transform: 'none' }], { duration: 480, easing: SPRING });
+			Host.savePrefs({ defaultPreset: S.prefs.defaultPreset }).catch(function () {});
+			toast(on ? p.name + ' é o padrão para projetos sem paleta' : 'Sem preset padrão', { icon: 'star' });
+		}
+
+		function deletePreset(p, card) {
+			Host.deletePreset(p.id).then(function (r) {
+				if (!r || !r.ok) return toast('Não foi possível excluir o preset', { icon: 'alert' });
+				pushUndo({ restorePreset: { id: p.id, name: p.name, swatches: p.swatches } });
+				S.presets = S.presets.filter(function (x) { return x !== p; });
+				if (S.prefs.defaultPreset === p.id) { S.prefs.defaultPreset = ''; Host.savePrefs({ defaultPreset: '' }); }
+				var r0 = rect(card), vertical = el.dataset.orient !== 'row';
+				card.style.pointerEvents = 'none';
+				card.animate(vertical ?
+					[{ opacity: 1, height: r0.height + 'px' }, { opacity: 0, height: '0px', marginTop: '-6px', transform: 'scale(.9)' }] :
+					[{ opacity: 1, width: r0.width + 'px' }, { opacity: 0, width: '0px', marginLeft: '-6px', transform: 'scale(.9)' }],
+					{ duration: 300, easing: EASE }).onfinish = function () { card.remove(); };
+				toast(p.name + ' excluído', { icon: 'trash', undo: true });
+			});
+		}
+
+		function chooseFolder(e) {
+			if (e.altKey) return Host.revealPresetFolder();
+			Host.choosePresetFolder().then(function (r) {
+				if (!r || !r.ok) return;
+				S.folder = r.folder;
+				q('.lib-path').textContent = shortPath(S.folder);
+				loadPresets();
+				toast('Presets de ' + shortPath(r.folder), { icon: 'folder' });
+			});
+		}
+
+		libList.addEventListener('click', function (e) {
+			if (e.target.closest('.pc-input')) return;
+			var card = e.target.closest('[data-pid]');
+			if (!card) { if (e.target.closest('.is-project')) closeSettings(); return; }
+			var p = presetById(card.dataset.pid);
+			if (!p) return;
+			if (e.target.closest('.pc-ren')) startRename(card);
+			else if (e.target.closest('.pc-star')) toggleDefault(p, card);
+			else if (e.target.closest('.pc-del')) deletePreset(p, card);
+			else applyPreset(p, e.shiftKey, card);
+		});
+		libList.addEventListener('keydown', function (e) {
+			var card = e.target.closest('[data-pid]');
+			if (!card || e.target !== card) return;
+			var p = presetById(card.dataset.pid);
+			if (e.key === 'Enter') applyPreset(p, e.shiftKey, card);
+			else if (e.key === 'F2') startRename(card);
+			else if (e.key === 'Delete') deletePreset(p, card);
+		});
+		// rolar com a roda do mouse na faixa horizontal
+		libList.addEventListener('wheel', function (e) {
+			if (el.dataset.orient !== 'row' || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+			libList.scrollLeft += e.deltaY;
+			e.preventDefault();
+		}, { passive: false });
+
+		// ------------------------------------------------------------------ extrair cores de uma imagem
+		var XS = null;
+		var exStage = q('.ex-stage'), exImg = exSheet.querySelector('img'), exMarks = q('.ex-marks'), exChips = q('.ex-chips');
+		var exLoupe = q('.ex-loupe'), exFlood = exSheet.querySelector('.ed-flood');
+		var exCount = parseInt(store('pal.excount') || '6', 10) || 6;
+
+		function openExtract(btn) {
+			if (anyFull()) return;
+			closeSettings();
+			hideTip();
+			var tool = q('.tool[data-act="frame"]');
+			busy(tool, true);
+			Host.grabFrame().then(function (r) {
+				if (!r || !r.ok) {
+					busy(tool, false);
+					flash(tool, 'nope', 420);
+					return toast(REASONS[r && r.reason] || 'Não foi possível ler o frame', { icon: 'alert' });
+				}
+				XS = { grab: r, chips: [], data: null };
+				q('.ex-label').textContent = r.label || 'frame';
+				exSheet.classList.add('loading');
+				exImg.removeAttribute('src');
+				exMarks.innerHTML = exChips.innerHTML = '';
+				exSheet.hidden = false;
+				el.classList.add('sheet-open');
+				el.classList.remove('alt', 'ctrl');
+				var rr = relRect(rect(btn));
+				exSheet.animate([{ clipPath: clip(rr, 8) }, { clipPath: 'inset(0px 0px 0px 0px round 0px)' }], { duration: 420, easing: EASE });
+				exFlood.animate([{ opacity: 1 }, { opacity: 1, offset: 0.35 }, { opacity: 0 }], { duration: 520, easing: 'ease-out', fill: 'forwards' });
+				exSheet.focus({ preventScroll: true });
+				return Host.loadImage(r).then(function (img) {
+					busy(tool, false);
+					Host.releaseFrame(r);
+					if (!XS) return;
+					XS.data = X.sample(img, 160);
+					XS.ratio = img.naturalWidth / img.naturalHeight;
+					exImg.src = img.src;
+					exSheet.classList.remove('loading');
+					fitStage();
+					exStage.animate([{ opacity: 0, transform: 'scale(.96)' }, { opacity: 1, transform: 'none' }], { duration: 360, easing: EASE });
+					computeChips();
+				});
+			}).catch(function () {
+				busy(tool, false);
+				if (XS) closeExtract();
+				toast('Não foi possível ler o frame', { icon: 'alert' });
+			});
+		}
+
+		function fitStage() {
+			if (!XS || !XS.ratio) return;
+			var box = q('.ex-img'), w = box.clientWidth, h = box.clientHeight;
+			if (w / h > XS.ratio) w = h * XS.ratio; else h = w / XS.ratio;
+			exStage.style.width = Math.floor(w) + 'px';
+			exStage.style.height = Math.floor(h) + 'px';
+		}
+
+		function computeChips() {
+			var custom = XS.chips.filter(function (c) { return c.custom; });
+			var auto = X.palette(XS.data, exCount).map(function (c) { return { color: c.color, x: c.x, y: c.y, on: true }; });
+			XS.chips = auto.concat(custom);
+			q('.ex-n').textContent = exCount;
+			renderChips(true);
+		}
+
+		function renderChips(animate, popIndex) {
+			exChips.innerHTML = XS.chips.map(function (c, i) {
+				return '<button class="ex-chip' + (c.on ? ' on' : '') + '" data-i="' + i + '" data-tip="' + esc(N.nearest(c.color) + ' · ' + c.color) + '" style="--c:' + c.color + ';--ink:' + C.ink(c.color) + ';--i:' + i + '">' + ic('check') + '</button>';
+			}).join('');
+			exMarks.innerHTML = XS.chips.map(function (c, i) {
+				return '<span class="ex-mark' + (c.on ? ' on' : '') + '" data-i="' + i + '" style="left:' + (c.x * 100) + '%;top:' + (c.y * 100) + '%;--c:' + c.color + ';--i:' + i + '"></span>';
+			}).join('');
+			exSheet.classList.toggle('enter', !!animate);
+			if (popIndex != null) {
+				var ch = exChips.children[popIndex], mk = exMarks.children[popIndex];
+				if (ch) ch.animate([{ transform: 'scale(0)' }, { transform: 'none' }], { duration: 420, easing: SPRING });
+				if (mk) mk.animate([{ transform: 'translate(-50%,-50%) scale(2.4)', opacity: 0 }, { transform: 'translate(-50%,-50%)', opacity: 1 }], { duration: 420, easing: EASE });
+			}
+		}
+
+		function toggleChip(i) {
+			var c = XS.chips[i];
+			c.on = !c.on;
+			exChips.children[i].classList.toggle('on', c.on);
+			exMarks.children[i].classList.toggle('on', c.on);
+		}
+
+		function hot(i, on) {
+			if (exChips.children[i]) exChips.children[i].classList.toggle('hot', on);
+			if (exMarks.children[i]) exMarks.children[i].classList.toggle('hot', on);
+		}
+
+		exChips.addEventListener('click', function (e) {
+			var b = e.target.closest('.ex-chip');
+			if (b) toggleChip(+b.dataset.i);
+		});
+		[exChips, exMarks].forEach(function (box) {
+			box.addEventListener('pointerover', function (e) { var t = e.target.closest('[data-i]'); if (t) hot(+t.dataset.i, true); });
+			box.addEventListener('pointerout', function (e) { var t = e.target.closest('[data-i]'); if (t) hot(+t.dataset.i, false); });
+		});
+
+		// lupa: mostra a cor sob o cursor; clique adiciona
+		exStage.addEventListener('pointermove', function (e) {
+			if (!XS || !XS.data) return;
+			if (e.target.closest('.ex-mark')) { exLoupe.classList.remove('on'); return; }
+			var r = rect(exStage), fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
+			var hex = X.pixel(XS.data, fx, fy);
+			exLoupe.style.left = (fx * 100) + '%';
+			exLoupe.style.top = (fy * 100) + '%';
+			exLoupe.style.setProperty('--c', hex);
+			exLoupe.classList.add('on');
+		});
+		exStage.addEventListener('pointerleave', function () { exLoupe.classList.remove('on'); });
+		exStage.addEventListener('click', function (e) {
+			if (!XS || !XS.data) return;
+			var m = e.target.closest('.ex-mark');
+			if (m) return toggleChip(+m.dataset.i);
+			var r = rect(exStage), fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
+			var hex = X.pixel(XS.data, fx, fy);
+			for (var i = 0; i < XS.chips.length; i++) {
+				if (XS.chips[i].color === hex) { XS.chips[i].on = true; renderChips(false, i); return; }
+			}
+			XS.chips.push({ color: hex, x: fx, y: fy, on: true, custom: true });
+			renderChips(false, XS.chips.length - 1);
+		});
+
+		Array.prototype.forEach.call(exSheet.querySelectorAll('.ex-step'), function (b) {
+			b.addEventListener('click', function () {
+				if (!XS || !XS.data) return;
+				var n = C.clamp(exCount + parseInt(b.dataset.d, 10), 2, 12);
+				if (n === exCount) return flash(b, 'nope', 420);
+				exCount = n;
+				store('pal.excount', String(n));
+				computeChips();
+			});
+		});
+
+		function confirmExtract() {
+			if (!XS || !XS.data) return;
+			var have = {}, fresh = [];
+			S.swatches.forEach(function (s) { have[s.color] = true; });
+			XS.chips.forEach(function (c) { if (c.on && !have[c.color]) { have[c.color] = true; fresh.push(c.color); } });
+			if (!fresh.length) return toast('Nenhuma cor nova selecionada', { icon: 'image' });
+			var from = rect(exStage), label = XS.grab.label;
+			closeExtract();
+			pushUndo();
+			fresh.forEach(function (c) { S.swatches.push({ id: newId(), color: c, label: '', auto: true }); });
+			setTimeout(function () {
+				render({ from: from });
+				save();
+			}, 120);
+			toast('+' + fresh.length + (fresh.length > 1 ? ' cores de ' : ' cor de ') + label, { color: fresh[0], undo: true });
+		}
+
+		function closeExtract() {
+			if (!XS) return;
+			XS = null;
+			exLoupe.classList.remove('on');
+			exSheet.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.97)' }], { duration: 220, easing: EASE }).onfinish = function () {
+				exSheet.hidden = true;
+				exSheet.getAnimations().forEach(function (a) { a.cancel(); });
+				exFlood.getAnimations().forEach(function (a) { a.cancel(); });
+				if (!isSheetOpen()) el.classList.remove('sheet-open');
+				el.focus({ preventScroll: true });
+			};
+		}
+
+		exSheet.querySelector('.ed-btn.ok').addEventListener('click', confirmExtract);
+		exSheet.querySelector('.ed-btn.cancel').addEventListener('click', closeExtract);
+		exSheet.addEventListener('keydown', function (e) {
+			if (e.key === 'Enter') { e.preventDefault(); confirmExtract(); }
+			else if (e.key === 'Escape') { e.preventDefault(); closeExtract(); }
+		});
+
 		// ------------------------------------------------------------------ editor de cor
 		var E = null;
 		var edName = q('.ed-name'), edVal = q('.ed-val'), edFmt = q('.ed-fmt'), sv = q('.ed-sv'), hue = q('.ed-hue');
-		var flood = q('.ed-flood');
+		var flood = ed.querySelector('.ed-flood');
+		var edAuto = q('.ed-auto');
 
 		function relRect(r) {
 			var p = rect(el);
@@ -1546,9 +2492,9 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			closeSettings();
 			hideTip();
 			var hex = sw ? sw.color : suggestColor();
-			E = { id: sw ? sw.id : null, old: hex, fmt: S.prefs.format, hsb: C.rgbToHsb(C.hexToRgb(hex)) };
+			E = { id: sw ? sw.id : null, old: hex, fmt: S.prefs.format, hsb: C.rgbToHsb(C.hexToRgb(hex)), auto: sw ? !!sw.auto : true };
 			edName.value = sw ? sw.label : '';
-			q('.ed-btn.del').hidden = !sw;
+			ed.querySelector('.ed-btn.del').hidden = !sw;
 			q('.ed-prev').classList.toggle('is-new', !sw);
 			ed.style.setProperty('--old', hex);
 			ed.style.setProperty('--old-ink', C.ink(hex));
@@ -1578,13 +2524,14 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			}
 			if (commit) {
 				var label = edName.value.trim();
+				var auto = E.auto || !label;
 				pushUndo();
 				if (E.id) {
 					var sw = find(E.id);
-					if (sw) { sw.color = hex; sw.label = label; }
+					if (sw) { sw.color = hex; sw.label = auto ? '' : label; sw.auto = auto; }
 					render({ noEnter: E.id });
 				} else {
-					var nsw = { id: newId(), color: hex, label: label };
+					var nsw = { id: newId(), color: hex, label: auto ? '' : label, auto: auto };
 					S.swatches.push(nsw);
 					render({ noEnter: nsw.id });
 					E.id = nsw.id;
@@ -1613,7 +2560,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			ed.getAnimations().forEach(function (a) { a.cancel(); });
 			flood.getAnimations().forEach(function (a) { a.cancel(); });
 			flood.style.background = '';
-			if (settings.hidden) el.classList.remove('sheet-open');
+			if (!isSheetOpen()) el.classList.remove('sheet-open');
 			el.classList.remove('editing');
 			el.focus({ preventScroll: true });
 		}
@@ -1632,6 +2579,14 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			if (o === 'tall') { hk.style.left = (E.hsb[0] / 360 * 100) + '%'; hk.style.top = '50%'; }
 			else { hk.style.top = (E.hsb[0] / 360 * 100) + '%'; hk.style.left = '50%'; }
 			edFmt.textContent = E.fmt;
+			ed.classList.toggle('is-auto', E.auto);
+			if (E.auto) {
+				var nm = autoNameFor(hex, E.id);
+				if (nm !== edName.value) {
+					edName.value = nm;
+					if (!ed.getAnimations().length) edName.animate([{ opacity: .3, transform: 'translateY(3px)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: EASE });
+				}
+			}
 			if (!skipVal) edVal.value = C.format(hex, E.fmt);
 			edVal.parentNode.classList.remove('bad');
 		}
@@ -1717,9 +2672,22 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			q('.ed-new').animate([{ filter: 'brightness(1.6)' }, { filter: 'none' }], { duration: 300 });
 			updateEditor();
 		});
-		q('.ed-btn.ok').addEventListener('click', function () { closeEditor(true); });
-		q('.ed-btn.cancel').addEventListener('click', function () { closeEditor(false); });
-		q('.ed-btn.del').addEventListener('click', function () { closeEditor('delete'); });
+		ed.querySelector('.ed-btn.ok').addEventListener('click', function () { closeEditor(true); });
+		ed.querySelector('.ed-btn.cancel').addEventListener('click', function () { closeEditor(false); });
+		ed.querySelector('.ed-btn.del').addEventListener('click', function () { closeEditor('delete'); });
+
+		// nome automático: acompanha a cor até você digitar um nome seu
+		edName.addEventListener('input', function () {
+			if (!E) return;
+			E.auto = false;
+			ed.classList.remove('is-auto');
+		});
+		edAuto.addEventListener('click', function () {
+			if (!E) return;
+			E.auto = true;
+			edAuto.animate([{ transform: 'rotate(-90deg) scale(.6)' }, { transform: 'none' }], { duration: 420, easing: SPRING });
+			updateEditor();
+		});
 
 		ed.addEventListener('keydown', function (e) {
 			if (e.key === 'Enter') {
@@ -1741,7 +2709,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 
 		// ------------------------------------------------------------------ teclado global
 		root.addEventListener('keydown', function (e) {
-			if (!ed.hidden) return;
+			if (!ed.hidden || !exSheet.hidden) return;
 			if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
 			else if (e.key === 'Escape') closeSettings();
 		});
@@ -1751,7 +2719,10 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			return Host.loadPalette().then(function (r) {
 				S.undo = [];
 				S.last = null;
+				S.project = (r && r.project) || '';
+				S.preset = (r && r.preset) || '';
 				setSwatches((r && r.swatches) || [], { stagger: stagger });
+				if (!library.hidden) renderLibrary();
 			});
 		}
 
@@ -1761,6 +2732,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 					S.key = k;
 					closeSettings();
 					if (E) closeEditor(false);
+					if (XS) closeExtract();
 					loadProject(true);
 				}
 				S.key = k;
@@ -1771,8 +2743,9 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			p = p || {};
 			S.prefs.format = String(p.labelType || '#HEX').replace('#', '');
 			S.prefs.info = p.showColorInfo !== false;
-			S.prefs.names = !!p.showColorLabels;
-			S.prefs.defaults = p.swatches || [];
+			S.prefs.names = p.showColorLabels !== false;
+			S.prefs.defaultPreset = p.defaultPreset || '';
+			S.folder = p.presetFolder || '';
 			syncSettings();
 		}).catch(function () {}).then(function () {
 			measure();
@@ -1800,7 +2773,8 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	var list = document.getElementById('layers');
 	var sel = document.getElementById('proj');
 	var ws = document.querySelector('.ws');
-	var KIND = { text: 'T', shape: '★', solid: '■' };
+	var KIND = { text: 'T', shape: '★', solid: '■', image: '▣', video: '▶' };
+	var thumbs = {};
 
 	AE.projects.forEach(function (p) { var o = document.createElement('option'); o.value = o.textContent = p; sel.appendChild(o); });
 	sel.addEventListener('change', function () { AE.switchProject(sel.value); });
@@ -1809,7 +2783,8 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		var layers = AE.layers();
 		list.innerHTML = '<div class="pane-title">Layers</div>' + layers.map(function (l) {
 			return '<button class="layer" data-id="' + l.id + '" aria-pressed="' + !!AE.selected[l.id] + '"><span class="k">' + KIND[l.kind] + '</span>' + l.name +
-				'<span class="chips"><i style="background:' + l.color + '"></i>' + (l.stroke ? '<i style="background:' + l.stroke + '"></i>' : '') + '</span></button>';
+				(l.scene ? '<img class="thumb" alt="" src="' + (thumbs[l.name] || (thumbs[l.name] = AE.thumb(l))) + '">' :
+				'<span class="chips"><i style="background:' + l.color + '"></i>' + (l.stroke ? '<i style="background:' + l.stroke + '"></i>' : '') + '</span>') + '</button>';
 		}).join('') + '<p class="hint">Ctrl ou Shift para selecionar vários.</p>';
 
 		if (!comp.children.length) {
@@ -1817,6 +2792,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		}
 		layers.forEach(function (l) {
 			var n = comp.querySelector('[data-id="' + l.id + '"]');
+			if (!n) return;
 			if (l.kind === 'text') n.style.color = l.color; else n.style.backgroundColor = l.color;
 			if (l.stroke) n.style.borderColor = l.stroke;
 			n.classList.toggle('sel', !!AE.selected[l.id]);

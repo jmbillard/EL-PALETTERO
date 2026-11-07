@@ -65,6 +65,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 .layer[aria-pressed="true"] { background: rgba(76,194,255,.16); box-shadow: inset 2px 0 0 var(--sel); }
 .layer .k { width: 18px; font: 600 10px var(--mono); color: var(--dim); text-align: center; }
 .layer .chips { margin-left: auto; display: flex; gap: 3px; }
+.layer .thumb { margin-left: auto; width: 32px; height: 18px; border-radius: 3px; object-fit: cover; box-shadow: inset 0 0 0 1px rgba(255,255,255,.15); }
 .layer .chips i { width: 12px; height: 12px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.15); transition: background .4s; }
 .hint { margin-top: auto; padding: 8px 6px 2px; color: var(--dim); font-size: 11px; line-height: 1.4; }
 
@@ -146,7 +147,10 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		<div class="tile"><kbd>Alt</kbd><p><b>Modo excluir.</b> As amostras tremem; clique para remover. Tudo tem desfazer (Ctrl+Z).</p></div>
 		<div class="tile"><kbd>Ctrl</kbd><p><b>Copia o valor</b> no formato escolhido (HEX, RGB ou HSB).</p></div>
 		<div class="tile"><kbd>Shift</kbd><p>O <b>conta-gotas</b> vira <b>projeto inteiro</b> enquanto a tecla estiver pressionada.</p></div>
-		<div class="tile"><kbd>projeto</kbd><p><b>Troque de projeto</b> no topo: a paleta acompanha, salva nos metadados do .aep.</p></div>
+		<div class="tile"><kbd>nomes</kbd><p><b>Cada cor ganha um nome</b> (menta, tijolo, céu…) que acompanha a cor no editor até você digitar o seu. A ✦ devolve o automático.</p></div>
+		<div class="tile"><kbd>imagem</kbd><p>Selecione <b>praia_entardecer.jpg</b> e use o botão de imagem: as cores principais do frame aparecem. Clique na imagem para pegar outras.</p></div>
+		<div class="tile"><kbd>presets</kbd><p><b>Biblioteca de presets</b> numa pasta que você escolhe (pode ser da equipe). Clique substitui, Shift adiciona, ★ vira o padrão.</p></div>
+		<div class="tile"><kbd>projeto</kbd><p><b>Troque de projeto</b> no topo: cada .aep guarda a própria paleta num grupo de metadados O PALETTERO.</p></div>
 		<div class="tile"><kbd>formato</kbd><p><b>Faixa, coluna ou grade:</b> o painel se reorganiza sozinho. Arraste o canto para redimensionar.</p></div>
 	</section>
 </div>
@@ -162,7 +166,8 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	var list = document.getElementById('layers');
 	var sel = document.getElementById('proj');
 	var ws = document.querySelector('.ws');
-	var KIND = { text: 'T', shape: '★', solid: '■' };
+	var KIND = { text: 'T', shape: '★', solid: '■', image: '▣', video: '▶' };
+	var thumbs = {};
 
 	AE.projects.forEach(function (p) { var o = document.createElement('option'); o.value = o.textContent = p; sel.appendChild(o); });
 	sel.addEventListener('change', function () { AE.switchProject(sel.value); });
@@ -171,7 +176,8 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		var layers = AE.layers();
 		list.innerHTML = '<div class="pane-title">Layers</div>' + layers.map(function (l) {
 			return '<button class="layer" data-id="' + l.id + '" aria-pressed="' + !!AE.selected[l.id] + '"><span class="k">' + KIND[l.kind] + '</span>' + l.name +
-				'<span class="chips"><i style="background:' + l.color + '"></i>' + (l.stroke ? '<i style="background:' + l.stroke + '"></i>' : '') + '</span></button>';
+				(l.scene ? '<img class="thumb" alt="" src="' + (thumbs[l.name] || (thumbs[l.name] = AE.thumb(l))) + '">' :
+				'<span class="chips"><i style="background:' + l.color + '"></i>' + (l.stroke ? '<i style="background:' + l.stroke + '"></i>' : '') + '</span>') + '</button>';
 		}).join('') + '<p class="hint">Ctrl ou Shift para selecionar vários.</p>';
 
 		if (!comp.children.length) {
@@ -179,6 +185,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		}
 		layers.forEach(function (l) {
 			var n = comp.querySelector('[data-id="' + l.id + '"]');
+			if (!n) return;
 			if (l.kind === 'text') n.style.color = l.color; else n.style.backgroundColor = l.color;
 			if (l.stroke) n.style.borderColor = l.stroke;
 			n.classList.toggle('sel', !!AE.selected[l.id]);

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ExtensionManifest Version="7.0" ExtensionBundleId="com.jmbillard.opalettero" ExtensionBundleVersion="1.0.0" ExtensionBundleName="O PALETTERO"
+<ExtensionManifest Version="7.0" ExtensionBundleId="com.jmbillard.opalettero" ExtensionBundleVersion="1.1.0" ExtensionBundleName="O PALETTERO"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<ExtensionList>
-		<Extension Id="com.jmbillard.opalettero.panel" Version="1.0.0" />
+		<Extension Id="com.jmbillard.opalettero.panel" Version="1.1.0" />
 	</ExtensionList>
 	<ExecutionEnvironment>
 		<HostList>
@@ -21,6 +21,10 @@
 				<Resources>
 					<MainPath>./index.html</MainPath>
 					<ScriptPath>./jsx/host.jsx</ScriptPath>
+					<CEFCommandLine>
+						<Parameter>--enable-nodejs</Parameter>
+						<Parameter>--mixed-context</Parameter>
+					</CEFCommandLine>
 				</Resources>
 				<Lifecycle>
 					<AutoVisible>true</AutoVisible>

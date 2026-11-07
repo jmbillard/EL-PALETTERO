@@ -81,6 +81,11 @@ function PAL_writeFile(path, content) {
 }
 
 // ---------------------------------------------------------------- projeto
+// A paleta do projeto vive num grupo de metadados próprio (namespace O PALETTERO).
+// O xmp:Label do script antigo só é lido, para migrar paletas existentes.
+
+var PAL_NS = 'https://github.com/jmbillard/O-PALETTERO/ns/1.0/';
+try { XMPMeta.registerNamespace(PAL_NS, 'opalettero'); } catch (e) {}
 
 function PAL_projectKey() {
 	if (!app.project) return PAL_json('');
@@ -88,40 +93,50 @@ function PAL_projectKey() {
 	return PAL_json(f ? f.fsName : 'sem título');
 }
 
-// nomes não podem conter '-' nem ':' (separadores do formato legado)
-function PAL_cleanLabel(s) {
-	return String(s || '').replace(/-/g, '‐').replace(/:/g, '∶');
+function PAL_projectName() {
+	var f = app.project.file;
+	return f ? decodeURI(f.name).replace(/\.aep[x]?$/i, '') : 'sem título';
+}
+
+function PAL_legacyPalette(meta) {
+	var out = [];
+	var ns = XMPMeta.getNamespaceURI('xmp');
+	if (!meta.doesPropertyExist(ns, 'xmp:Label')) return out;
+	var items = meta.getProperty(ns, 'xmp:Label').toString().split('-');
+	for (var i = 0; i < items.length; i++) {
+		var p = items[i].split(':');
+		if (!/^#[0-9A-F]{6}$/i.test(p[0])) continue;
+		out.push({ color: p[0].toUpperCase(), label: p.length > 1 ? p[1] : '' });
+	}
+	return out;
 }
 
 function PAL_loadPalette() {
-	var swatches = [];
+	var name = PAL_projectName();
 	try {
 		var meta = new XMPMeta(app.project.xmpPacket);
-		var ns = XMPMeta.getNamespaceURI('xmp');
-		if (meta.doesPropertyExist(ns, 'xmp:Label')) {
-			var items = meta.getProperty(ns, 'xmp:Label').toString().split('-');
-			for (var i = 0; i < items.length; i++) {
-				var p = items[i].split(':');
-				if (!/^#[0-9A-F]{6}$/i.test(p[0])) continue;
-				swatches.push({ color: p[0].toUpperCase(), label: p.length > 1 ? p[1] : '' });
-			}
+		if (meta.doesPropertyExist(PAL_NS, 'palette')) {
+			var data = PAL_parse(meta.getProperty(PAL_NS, 'palette').toString());
+			var from = meta.doesPropertyExist(PAL_NS, 'preset') ? meta.getProperty(PAL_NS, 'preset').toString() : '';
+			return PAL_json({ source: 'project', project: name, preset: from, swatches: data });
 		}
+		var legacy = PAL_legacyPalette(meta);
+		if (legacy.length) return PAL_json({ source: 'legacy', project: name, swatches: legacy });
 	} catch (e) {}
-
-	if (swatches.length) return PAL_json({ source: 'project', swatches: swatches });
-	return PAL_json({ source: 'default', swatches: PAL_defaultSwatches() });
+	var def = PAL_defaultPreset();
+	return PAL_json({ source: 'default', project: name, preset: def.name, swatches: def.swatches });
 }
 
-function PAL_savePalette(json) {
-	var swatches = PAL_parse(json);
+// swatchesJson: [{color, label, auto}] · preset: nome do preset de origem (opcional)
+function PAL_savePalette(swatchesJson, preset) {
 	var meta = new XMPMeta(app.project.xmpPacket);
-	var ns = XMPMeta.getNamespaceURI('xmp');
-	var parts = [];
-	for (var i = 0; i < swatches.length; i++) {
-		parts.push(swatches[i].color + ':' + PAL_cleanLabel(swatches[i].label));
+	meta.setProperty(PAL_NS, 'version', '1');
+	meta.setProperty(PAL_NS, 'palette', swatchesJson);
+	meta.setProperty(PAL_NS, 'updated', new Date().toUTCString());
+	if (preset !== undefined) {
+		if (preset) meta.setProperty(PAL_NS, 'preset', preset);
+		else meta.deleteProperty(PAL_NS, 'preset');
 	}
-	meta.deleteProperty(ns, 'xmp:Label');
-	if (parts.length) meta.setProperty(ns, 'xmp:Label', parts.join('-'));
 	app.project.xmpPacket = meta.serialize();
 	return PAL_json({ ok: true });
 }
@@ -134,28 +149,14 @@ function PAL_readPrefs() {
 	try { return PAL_parse(raw); } catch (e) { return {}; }
 }
 
-function PAL_defaultSwatches() {
-	var prefs = PAL_readPrefs();
-	var list = [];
-	if (prefs.swatches instanceof Array) {
-		for (var i = 0; i < prefs.swatches.length; i++) {
-			var s = prefs.swatches[i];
-			if (s && s.color) list.push({ color: String(s.color).toUpperCase(), label: s.label || '' });
-		}
-	}
-	if (!list.length) {
-		for (var d = 0; d < PAL_DEFAULT_SWATCHES.length; d++) list.push({ color: PAL_DEFAULT_SWATCHES[d], label: 'cor ' + (d + 1) });
-	}
-	return list;
-}
-
 function PAL_loadPrefs() {
 	var p = PAL_readPrefs();
 	return PAL_json({
-		showColorLabels: p.showColorLabels === true,
+		showColorLabels: p.showColorLabels !== false,
 		showColorInfo: p.showColorInfo !== false,
 		labelType: p.labelType || '#HEX',
-		swatches: PAL_defaultSwatches()
+		defaultPreset: p.defaultPreset || '',
+		presetFolder: PAL_presetFolder().fsName
 	});
 }
 
@@ -165,6 +166,144 @@ function PAL_savePrefs(json) {
 	for (var k in next) if (next.hasOwnProperty(k)) cur[k] = next[k];
 	PAL_writeFile(PAL_PREFS_FOLDER + '/preferences.json', PAL_json(cur));
 	return PAL_json({ ok: true });
+}
+
+// ---------------------------------------------------------------- presets (um .json por preset)
+
+function PAL_presetFolder() {
+	var p = PAL_readPrefs();
+	var f = new Folder(p.presetFolder || (PAL_PREFS_FOLDER + '/presets'));
+	if (!f.exists) f.create();
+	return f;
+}
+
+function PAL_builtinSwatches() {
+	var list = [];
+	for (var d = 0; d < PAL_DEFAULT_SWATCHES.length; d++) list.push({ color: PAL_DEFAULT_SWATCHES[d], label: '', auto: true });
+	return list;
+}
+
+function PAL_readPresets() {
+	var files = PAL_presetFolder().getFiles('*.json'), out = [];
+	for (var i = 0; i < files.length; i++) {
+		try {
+			var data = PAL_parse(PAL_readFile(files[i].fsName));
+			if (!data || !(data.swatches instanceof Array)) continue;
+			out.push({ id: decodeURI(files[i].name).replace(/\.json$/i, ''), name: data.name || decodeURI(files[i].name), swatches: data.swatches, updated: data.updated || 0 });
+		} catch (e) {}
+	}
+	out.sort(function (a, b) { return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1; });
+	return out;
+}
+
+function PAL_defaultPreset() {
+	var id = PAL_readPrefs().defaultPreset;
+	if (id) {
+		var all = PAL_readPresets();
+		for (var i = 0; i < all.length; i++) if (all[i].id == id) return all[i];
+	}
+	// o "preferences.json" do script antigo podia guardar uma paleta padrão
+	var old = PAL_readPrefs().swatches;
+	if (old instanceof Array && old.length) return { name: '', swatches: old };
+	return { name: '', swatches: PAL_builtinSwatches() };
+}
+
+function PAL_listPresets() {
+	// cria um primeiro preset para a biblioteca nunca começar vazia
+	var list = PAL_readPresets();
+	if (!list.length && !PAL_readPrefs().presetsSeeded) {
+		PAL_savePreset(PAL_json({ name: 'O PALETTERO', swatches: PAL_builtinSwatches() }));
+		PAL_savePrefs(PAL_json({ presetsSeeded: true }));
+		list = PAL_readPresets();
+	}
+	return PAL_json({ folder: PAL_presetFolder().fsName, presets: list });
+}
+
+function PAL_slug(s) {
+	s = String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+	return (s || 'paleta').substr(0, 32);
+}
+
+// presetJson: {id?, name, swatches}
+function PAL_savePreset(presetJson) {
+	var p = PAL_parse(presetJson);
+	var id = p.id || (PAL_slug(p.name) + '-' + new Date().getTime().toString(36));
+	var f = new File(PAL_presetFolder().fsName + '/' + id + '.json');
+	f.encoding = 'UTF-8';
+	if (!f.open('w')) return PAL_json({ ok: false, reason: 'readonly' });
+	f.write(PAL_json({ name: p.name, swatches: p.swatches, updated: new Date().getTime() }));
+	f.close();
+	return PAL_json({ ok: true, id: id });
+}
+
+function PAL_deletePreset(id) {
+	var f = new File(PAL_presetFolder().fsName + '/' + id + '.json');
+	return PAL_json({ ok: f.exists ? f.remove() : false });
+}
+
+function PAL_choosePresetFolder() {
+	var f = Folder.selectDialog('Pasta de presets do O PALETTERO', PAL_presetFolder());
+	if (!f) return PAL_json({ ok: false });
+	PAL_savePrefs(PAL_json({ presetFolder: f.fsName }));
+	return PAL_json({ ok: true, folder: f.fsName });
+}
+
+function PAL_revealPresetFolder() {
+	PAL_presetFolder().execute();
+	return PAL_json({ ok: true });
+}
+
+// ---------------------------------------------------------------- frame do layer selecionado
+
+function PAL_releaseFrame(tmpId, path) {
+	try {
+		if (tmpId) {
+			var item = app.project.itemByID(tmpId);
+			if (item) { app.beginUndoGroup('O PALETTERO · extrair frame'); item.remove(); app.endUndoGroup(); }
+		}
+		if (path) { var f = new File(path); if (f.exists) f.remove(); }
+	} catch (e) {}
+	return PAL_json({ ok: true });
+}
+
+var PAL_IMAGE_EXT = /\.(png|jpe?g|gif|bmp|webp)$/i;
+
+// devolve o caminho de um PNG (ou da própria imagem) para o painel ler as cores
+function PAL_grabFrame() {
+	var comp = app.project.activeItem;
+	if (!(comp instanceof CompItem)) return PAL_json({ ok: false, reason: 'nocomp' });
+	var layer = comp.selectedLayers.length ? comp.selectedLayers[0] : null;
+	var out = new File(Folder.temp.fsName + '/opalettero_' + new Date().getTime() + '.png');
+	var src = layer && layer.source ? layer.source : null;
+
+	try {
+		if (src instanceof FootageItem && src.mainSource instanceof FileSource && src.mainSource.isStill && src.file && PAL_IMAGE_EXT.test(src.file.name)) {
+			// imagem comum: lê direto do arquivo, sem renderizar
+			return PAL_json({ ok: true, path: src.file.fsName, temp: false, label: src.name, kind: 'image' });
+		}
+		if (src instanceof CompItem) {
+			src.saveFrameToPng(layer.sourceTime(comp.time), out);
+			return PAL_json({ ok: true, path: out.fsName, temp: true, label: src.name, kind: 'comp' });
+		}
+		if (src instanceof FootageItem && !(src.mainSource instanceof SolidSource)) {
+			// vídeo, PSD, sequência…: renderiza o frame numa comp temporária
+			app.beginUndoGroup('O PALETTERO · extrair frame');
+			var fps = src.frameRate || comp.frameRate;
+			var dur = Math.max(src.duration || 0, 1 / fps);
+			var tmp = app.project.items.addComp('O PALETTERO tmp', src.width, src.height, src.pixelAspect || 1, dur, fps);
+			tmp.layers.add(src);
+			var t = src.mainSource.isStill ? 0 : Math.max(0, Math.min(dur - 1 / fps, layer.sourceTime(comp.time)));
+			tmp.saveFrameToPng(t, out);
+			app.endUndoGroup();
+			// a comp temporária só sai depois que o painel ler o PNG (PAL_releaseFrame)
+			return PAL_json({ ok: true, path: out.fsName, temp: true, tmpId: tmp.id, label: src.name, kind: src.mainSource.isStill ? 'image' : 'video' });
+		}
+		// sem fonte de imagem (shape, texto, sólido) ou nada selecionado: frame atual da composição
+		comp.saveFrameToPng(comp.time, out);
+		return PAL_json({ ok: true, path: out.fsName, temp: true, label: comp.name, kind: 'comp' });
+	} catch (e) {
+		return PAL_json({ ok: false, reason: 'error', message: e.message });
+	}
 }
 
 // ---------------------------------------------------------------- aplicar cor

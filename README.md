@@ -18,13 +18,21 @@ Mesma ideia, interface nova: menos texto, mais ícones, animações em cada muda
 | `Ctrl` + clique | copia o valor (HEX, RGB ou HSB). |
 | ➕ | nova cor. |
 | conta-gotas | captura as cores da seleção (propriedades → layers). Com `Shift`, do **projeto inteiro**. |
-| ⇅ | ordena por matiz → luminosidade → saturação (cinzas no fim). |
-| ⋯ | ajustes: formato dos valores, nomes, valores sempre visíveis, salvar/usar paleta padrão, **segurar** para limpar. |
+| 🖼️ imagem | extrai as cores principais do **frame atual do layer selecionado** (imagem, vídeo ou precomp; sem layer, usa a comp). Clique nas amostras para ligar/desligar, `−`/`+` muda a quantidade e clicar na imagem pega a cor daquele ponto. |
+| 📚 presets | biblioteca de paletas. Clique **substitui** a paleta do projeto, `Shift` + clique **adiciona**; ✏️ renomeia, ★ define o preset usado em projetos sem paleta, 🗑️ exclui (com desfazer). O botão de pasta troca a pasta dos presets (`Alt` abre no sistema). |
+| ⋯ | ajustes: formato dos valores, nomes, valores sempre visíveis, ordenar por matiz, **segurar** para limpar. |
 | `Ctrl + Z` | desfaz qualquer mudança na paleta. Toda ação destrutiva mostra um "desfazer". |
 
 O painel se reorganiza sozinho: **faixa** (largo e baixo), **lista** (estreito e alto) ou **grade** (espaçoso).
-A paleta continua salva nos metadados do projeto (`xmp:Label`) e as preferências no mesmo `preferences.json` do script, então os dois convivem.
 Ao trocar de projeto, o painel recarrega a paleta automaticamente.
+
+**nomes automáticos** → cada cor recebe um nome em português (*menta*, *tijolo*, *céu*, *berinjela*…), escolhido pela cor de referência mais próxima. Nomes repetidos viram um vizinho parecido ou ganham *suave*/*forte*. No editor, o nome acompanha a cor enquanto você mexe; ao digitar um nome seu ele fica fixo, e o ✦ devolve o automático.
+
+**paleta do projeto × presets**
+
+- a **paleta do projeto** fica num grupo de metadados próprio dentro do `.aep` (namespace `https://github.com/jmbillard/O-PALETTERO/ns/1.0/`, propriedades `palette`, `preset`, `version`, `updated`). Paletas antigas salvas pelo script em `xmp:Label` são lidas uma vez e migram no primeiro salvamento; o painel não grava mais em `xmp:Label`.
+- os **presets** são arquivos `.json` (um por preset) numa pasta configurável, por padrão `O PALETTERO script/presets` dentro da pasta de dados do usuário. Apontar para uma pasta de rede deixa a equipe inteira com a mesma biblioteca.
+- projetos sem paleta mostram o preset marcado com ★ (ou a paleta embutida).
 
 ### instalação
 
@@ -36,6 +44,7 @@ Ao trocar de projeto, o painel recarrega a paleta automaticamente.
    - **macOS:** `defaults write com.adobe.CSXS.11 PlayerDebugMode 1` (repita com `com.adobe.CSXS.12`)
 3. reinicie o After Effects e abra **Janela → Extensões → O PALETTERO**.
 
+> 🧩 o painel usa o Node.js do CEP (`--enable-nodejs`) só para ler o PNG do frame. O frame é gerado com `saveFrameToPng`, um método que existe no After Effects mas não está na documentação oficial.\
 > 🛠️ depuração: com o painel aberto, acesse `http://localhost:8099` no Chrome.\
 > 🔁 depois de mudar o código do painel, rode `node tools/build-mockup.js` para atualizar o mockup.
 
@@ -44,10 +53,12 @@ cep/com.jmbillard.opalettero/
 ├── CSXS/manifest.xml   → registro da extensão (AEFT 22+)
 ├── index.html          → painel
 ├── css/panel.css       → visual + animações
-├── js/color.js         → conversões de cor
+├── js/color.js         → conversões de cor (HSB, CIELAB…)
+├── js/names.js         → nomes automáticos
+├── js/extract.js       → extração de cores (k-means em CIELAB)
 ├── js/bridge.js        → ponte painel ↔ ExtendScript (ou mock no navegador)
 ├── js/panel.js         → estado, interações e animações
-└── jsx/host.jsx        → lado After Effects: paleta no XMP, aplicar, capturar
+└── jsx/host.jsx        → lado After Effects: metadados, presets, aplicar, capturar, frames
 ```
 
 <br>

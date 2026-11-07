@@ -92,6 +92,36 @@
 		return hex;
 	}
 
+
+	// CIELAB (D65) — distâncias que batem com a percepção
+	function rgbToLab(rgb) {
+		var c = rgb.map(function (v) { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+		var x = (c[0] * 0.4124 + c[1] * 0.3576 + c[2] * 0.1805) / 0.95047;
+		var y = (c[0] * 0.2126 + c[1] * 0.7152 + c[2] * 0.0722);
+		var z = (c[0] * 0.0193 + c[1] * 0.1192 + c[2] * 0.9505) / 1.08883;
+		function f(t) { return t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116; }
+		var fx = f(x), fy = f(y), fz = f(z);
+		return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
+	}
+
+	function labToRgb(lab) {
+		var fy = (lab[0] + 16) / 116, fx = lab[1] / 500 + fy, fz = fy - lab[2] / 200;
+		function g(t) { return t * t * t > 0.008856 ? t * t * t : (t - 16 / 116) / 7.787; }
+		var x = g(fx) * 0.95047, y = g(fy), z = g(fz) * 1.08883;
+		var r = x * 3.2406 + y * -1.5372 + z * -0.4986;
+		var gg = x * -0.9689 + y * 1.8758 + z * 0.0415;
+		var b = x * 0.0557 + y * -0.2040 + z * 1.0570;
+		return [r, gg, b].map(function (v) {
+			v = v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055;
+			return clamp(v * 255, 0, 255);
+		});
+	}
+
+	function deltaE(a, b) {
+		var d0 = a[0] - b[0], d1 = a[1] - b[1], d2 = a[2] - b[2];
+		return Math.sqrt(d0 * d0 + d1 * d1 + d2 * d2);
+	}
+
 	// mesmo critério do script: cores por matiz → luminosidade → saturação; cinzas no fim
 	function sortSwatches(list) {
 		function key(sw) { return rgbToHsl(hexToRgb(sw.color)); }
@@ -106,6 +136,6 @@
 
 	root.PalColor = {
 		normHex: normHex, hexToRgb: hexToRgb, rgbToHex: rgbToHex, rgbToHsb: rgbToHsb, hsbToRgb: hsbToRgb,
-		luminance: luminance, ink: ink, format: format, parse: parse, sortSwatches: sortSwatches, clamp: clamp
+		luminance: luminance, ink: ink, rgbToLab: rgbToLab, labToRgb: labToRgb, deltaE: deltaE, format: format, parse: parse, sortSwatches: sortSwatches, clamp: clamp
 	};
 })(window);

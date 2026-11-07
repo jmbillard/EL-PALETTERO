@@ -5,7 +5,9 @@
 
 	var C = root.PalColor;
 	var Host = root.PalHost;
-	var VERSION = 'v1.0';
+	var N = root.PalNames;
+	var X = root.PalExtract;
+	var VERSION = 'v1.1';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 	var SPRING = 'cubic-bezier(.34,1.56,.64,1)';
@@ -29,7 +31,14 @@
 		reset: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
 		help: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
 		undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
-		alert: '<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>'
+		alert: '<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
+		image: '<rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"/>',
+		library: '<path d="M11 17a4 4 0 0 1-8 0V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2Z"/><path d="M16.7 13H19a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H7"/><path d="M7 17h.01"/><path d="m11 8 2.3-2.3a2.4 2.4 0 0 1 3.4 0l1.9 1.9a2.4 2.4 0 0 1 0 3.4L9.9 19.8"/>',
+		star: '<path d="M11.5 2.3a.5.5 0 0 1 .9 0l2.3 4.7a2 2 0 0 0 1.5 1.1l5.2.8a.5.5 0 0 1 .3.9l-3.8 3.7a2 2 0 0 0-.6 1.8l.9 5.2a.5.5 0 0 1-.7.5l-4.6-2.4a2 2 0 0 0-1.9 0l-4.6 2.4a.5.5 0 0 1-.7-.5l.9-5.2a2 2 0 0 0-.6-1.8L2.2 9.8a.5.5 0 0 1 .3-.9l5.2-.8a2 2 0 0 0 1.5-1.1z"/>',
+		folder: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
+		sparkle: '<path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.13-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.13a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.13 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.13a.5.5 0 0 1-.96 0z"/>',
+		minus: '<path d="M5 12h14"/>',
+		file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>'
 	};
 
 	function ic(name, cls) {
@@ -55,7 +64,11 @@
 	function mount(el) {
 		var S = {
 			swatches: [],
-			prefs: { format: 'HEX', names: false, info: true, defaults: [] },
+			prefs: { format: 'HEX', names: true, info: true, defaultPreset: '' },
+			project: '',
+			preset: '',       // preset de origem da paleta do projeto
+			presets: [],
+			folder: '',
 			last: null,
 			undo: [],
 			key: null
@@ -68,6 +81,7 @@
 			'<div class="dock dock-a">',
 			'  <button class="tool" data-act="add" aria-label="Nova cor">' + ic('plus') + '</button>',
 			'  <button class="tool" data-act="capture" aria-label="Capturar cores"><span class="swap">' + ic('pipette') + ic('layers') + '</span></button>',
+			'  <button class="tool" data-act="frame" aria-label="Extrair cores de imagem">' + ic('image') + '</button>',
 			'</div>',
 			'<div class="strip" role="list" aria-label="Paleta"></div>',
 			'<div class="empty" hidden><span class="empty-dots"><i></i><i></i><i></i></span><span>Paleta vazia</span>',
@@ -75,7 +89,7 @@
 			'  <button class="row-btn" data-act="add">' + ic('plus') + '<span class="lbl">Nova cor</span></button>',
 			'</div>',
 			'<div class="dock dock-b">',
-			'  <button class="tool" data-act="sort" aria-label="Ordenar">' + ic('sort') + '</button>',
+			'  <button class="tool" data-act="library" aria-label="Presets"><span class="swap">' + ic('library') + ic('x') + '</span></button>',
 			'  <button class="tool" data-act="menu" aria-label="Ajustes"><span class="swap">' + ic('more') + ic('x') + '</span></button>',
 			'</div>',
 			'<div class="sheet settings" hidden>',
@@ -87,17 +101,33 @@
 			'  </div>',
 			'  <span class="vr"></span>',
 			'  <div class="grp"><span class="grp-title">Paleta</span>',
-			'    <button class="row-btn" data-act="save-default" data-tip="Salvar como paleta padrão">' + ic('bookmark') + '<span class="lbl">Salvar como padrão</span></button>',
-			'    <button class="row-btn" data-act="load-default" data-tip="Usar a paleta padrão">' + ic('reset') + '<span class="lbl">Usar paleta padrão</span></button>',
+			'    <button class="row-btn" data-act="sort" data-tip="Ordenar por matiz">' + ic('sort') + '<span class="lbl">Ordenar por matiz</span></button>',
 			'    <button class="row-btn danger" data-act="clear" data-tip="Segure para limpar">' + ic('trash') + '<span class="lbl">Segure para limpar</span><i class="hold"></i></button>',
 			'  </div>',
 			'  <span class="vr"></span>',
 			'  <div class="grp"><button class="row-btn" data-act="help" data-tip="Ajuda e documentação">' + ic('help') + '<span class="lbl">Ajuda</span></button><span class="ver">' + VERSION + '</span></div>',
 			'</div>',
+			'<div class="sheet library" hidden>',
+			'  <div class="lib-list" role="list"></div>',
+			'  <button class="lib-folder" data-act="folder">' + ic('folder') + '<span class="lib-path"></span></button>',
+			'</div>',
+			'<div class="sheet extract" hidden tabindex="-1" role="dialog" aria-label="Extrair cores">',
+			'  <div class="ed-flood"></div>',
+			'  <div class="ex-img"><div class="ex-stage"><img alt=""><div class="ex-marks"></div><span class="ex-loupe"><i></i></span></div><span class="ex-wait"></span></div>',
+			'  <div class="ex-side">',
+			'    <div class="ex-head">' + ic('image') + '<span class="ex-label"></span></div>',
+			'    <div class="ex-chips"></div>',
+			'    <div class="ex-ctrl">',
+			'      <div class="ex-count"><button class="ex-step" data-d="-1" data-tip="Menos cores">' + ic('minus') + '</button><span class="ex-n">6</span><button class="ex-step" data-d="1" data-tip="Mais cores">' + ic('plus') + '</button></div>',
+			'      <button class="ed-btn cancel" data-tip="Cancelar" data-kbd="Esc">' + ic('x') + '</button>',
+			'      <button class="ed-btn ok" data-tip="Adicionar à paleta" data-kbd="Enter">' + ic('check') + '</button>',
+			'    </div>',
+			'  </div>',
+			'</div>',
 			'<div class="sheet editor" hidden tabindex="-1" role="dialog" aria-label="Editor de cor">',
 			'  <div class="ed-flood"></div>',
 			'  <div class="ed-prev"><button class="ed-old" data-tip="Voltar à cor original">' + ic('undo') + '</button>',
-			'    <div class="ed-new"><input class="ed-name" id="pal-ed-name" placeholder="nome da cor" maxlength="40" spellcheck="false" autocomplete="off"></div></div>',
+			'    <div class="ed-new"><input class="ed-name" id="pal-ed-name" placeholder="nome da cor" maxlength="40" spellcheck="false" autocomplete="off"><button class="ed-auto" type="button" data-tip="Nome automático">' + ic('sparkle') + '</button></div></div>',
 			'  <div class="ed-sv" tabindex="0" aria-label="Saturação e brilho"><span class="knob"></span></div>',
 			'  <div class="ed-hue" tabindex="0" aria-label="Matiz"><span class="knob"></span></div>',
 			'  <div class="ed-ctrl">',
@@ -117,6 +147,8 @@
 		var strip = q('.strip');
 		var empty = q('.empty');
 		var settings = q('.settings');
+		var library = q('.library');
+		var exSheet = q('.extract');
 		var ed = q('.editor');
 		var toastEl = q('.toast');
 		var tipEl = q('.tip');
@@ -129,9 +161,11 @@
 			el.dataset.orient = orient;
 			el.dataset.thin = h < 70 ? '1' : '0';
 			el.dataset.narrow = w < 160 ? '1' : '0';
+			el.dataset.short = h < 110 ? '1' : '0';
 			el.dataset.shape = (h < 220 && w > h) ? 'wide' : 'tall';
 			roomy();
 			if (!settings.hidden) placePill(false);
+			if (!exSheet.hidden) fitStage();
 		}
 
 		function roomy() {
@@ -158,6 +192,21 @@
 			return n;
 		}
 
+		// rótulos automáticos: nome mais próximo, sem repetir dentro da paleta
+		function nameAll() {
+			var taken = S.swatches.filter(function (s) { return !s.auto; }).map(function (s) { return s.label; });
+			S.swatches.forEach(function (s) {
+				if (!s.auto) return;
+				s.label = N.pick(s.color, taken);
+				taken.push(s.label);
+			});
+		}
+		function autoNameFor(hex, exceptId) {
+			var taken = [];
+			S.swatches.forEach(function (s) { if (s.id !== exceptId) taken.push(s.label); });
+			return N.pick(hex, taken);
+		}
+
 		function paint(n, sw) {
 			n.style.setProperty('--c', sw.color);
 			n.style.setProperty('--ink', C.ink(sw.color));
@@ -174,6 +223,7 @@
 		function render(opts) {
 			opts = opts || {};
 			var first = {}, id;
+			nameAll();
 			for (id in nodes) first[id] = rect(nodes[id]);
 
 			var keep = {};
@@ -263,27 +313,44 @@
 		function save() {
 			clearTimeout(saveTimer);
 			saveTimer = setTimeout(function () {
-				Host.savePalette(S.swatches.map(function (s) { return { color: s.color, label: s.label }; }))
+				Host.savePalette(plain(S.swatches), S.preset)
 					.catch(function () { toast('Não foi possível salvar no projeto', { icon: 'alert' }); });
 			}, 200);
 		}
 
-		function snapshot() { return S.swatches.map(function (s) { return { id: s.id, color: s.color, label: s.label }; }); }
-		function pushUndo() {
-			S.undo.push(snapshot());
+		function plain(list) { return list.map(function (s) { return { color: s.color, label: s.label, auto: !!s.auto }; }); }
+		function snapshot() { return S.swatches.map(function (s) { return { id: s.id, color: s.color, label: s.label, auto: s.auto }; }); }
+		function pushUndo(entry) {
+			S.undo.push(entry || { palette: snapshot(), preset: S.preset });
 			if (S.undo.length > 40) S.undo.shift();
 		}
 		function undo() {
 			var prev = S.undo.pop();
 			if (!prev) return toast('Nada para desfazer');
-			S.swatches = prev;
+			if (prev.restorePreset) {
+				return Host.savePreset(prev.restorePreset).then(function () {
+					loadPresets(prev.restorePreset.id);
+					toast('Preset restaurado', { icon: 'undo' });
+				});
+			}
+			S.swatches = prev.palette;
+			S.preset = prev.preset;
 			render({ slow: true });
 			save();
+			if (!library.hidden) renderLibrary();
 			toast('Desfeito', { icon: 'undo' });
 		}
 
+		function toSwatches(list) {
+			return (list || []).map(function (s) {
+				var hex = C.normHex(s.color) || '#000000';
+				var auto = s.auto !== undefined ? !!s.auto : N.isGeneric(s.label, hex);
+				return { id: newId(), color: hex, label: auto ? '' : s.label, auto: auto };
+			});
+		}
+
 		function setSwatches(list, opts) {
-			S.swatches = list.map(function (s) { return { id: newId(), color: C.normHex(s.color) || '#000000', label: s.label || '' }; });
+			S.swatches = toSwatches(list);
 			render(opts);
 		}
 
@@ -329,8 +396,14 @@
 			if (act === 'capture' && t.classList.contains('tool')) {
 				return mods.shift ? '<b>Capturar do projeto inteiro</b>' : '<b>Capturar da seleção</b>' + kbd('Shift', 'projeto inteiro');
 			}
-			if (act === 'sort') return '<b>Ordenar por matiz</b>';
+			if (act === 'frame') return '<b>Extrair cores de imagem</b><span>do layer selecionado (ou da comp)</span>';
 			if (act === 'menu') return el.classList.contains('menu-open') ? '<b>Fechar ajustes</b>' : '<b>Ajustes</b>';
+			if (act === 'library') return el.classList.contains('lib-open') ? '<b>Fechar presets</b>' : '<b>Presets</b>';
+			if (act === 'folder') return '<b>' + esc(S.folder) + '</b>' + kbd('clique', 'trocar pasta') + kbd('Alt', 'abrir');
+			if (t.dataset.pid) {
+				var pr = presetById(t.dataset.pid);
+				return '<b>' + esc(pr ? pr.name : '') + '</b>' + kbd('clique', 'substituir', !mods.shift) + kbd('Shift', 'adicionar', mods.shift);
+			}
 			if (t.dataset.tip) {
 				// em layouts largos os rótulos estão escondidos: a dica assume o papel
 				var lbl = t.querySelector('.lbl');
@@ -364,7 +437,7 @@
 		function hideTip() { clearTimeout(tipTimer); tipEl.classList.remove('on'); }
 
 		el.addEventListener('pointerover', function (e) {
-			var t = e.target.closest('.sw, .tool, [data-tip]');
+			var t = e.target.closest('.sw, .tool, [data-tip], [data-pid], [data-act="folder"]');
 			if (t === tipTarget) return;
 			hideTip();
 			tipTarget = t;
@@ -545,7 +618,7 @@
 			var order = liveNodes().map(function (x) { return x.dataset.id; });
 			var changed = order.join() !== d.before.map(function (s) { return s.id; }).join();
 			if (changed) {
-				S.undo.push(d.before);
+				pushUndo({ palette: d.before, preset: S.preset });
 				S.swatches = order.map(find);
 				save();
 			}
@@ -591,7 +664,7 @@
 					return toast(r && r.ok ? 'Nenhuma cor nova encontrada' : 'Selecione layers ou propriedades com cor', { icon: 'pipette' });
 				}
 				pushUndo();
-				fresh.forEach(function (c) { S.swatches.push({ id: newId(), color: C.normHex(c), label: '' }); });
+				fresh.forEach(function (c) { S.swatches.push({ id: newId(), color: C.normHex(c), label: '', auto: true }); });
 				render({ from: rect(btn) });
 				save();
 				toast('+' + fresh.length + (fresh.length > 1 ? ' cores' : ' cor') + (scope === 'project' ? ' do projeto' : ''), { color: C.normHex(fresh[0]), undo: true });
@@ -615,34 +688,45 @@
 			if (act === 'add') openEditor(null, b);
 			else if (act === 'capture') capture(b, e);
 			else if (act === 'sort') { closeSettings(); sortPalette(); }
-			else if (act === 'menu') toggleSettings();
+			else if (act === 'menu') toggleSide('settings');
+			else if (act === 'library') toggleSide('library');
+			else if (act === 'frame') openExtract(b);
+			else if (act === 'save-preset') savePreset();
+			else if (act === 'folder') chooseFolder(e);
 			else if (act === 'toggle-info') setPref('info', !S.prefs.info);
 			else if (act === 'toggle-names') setPref('names', !S.prefs.names);
-			else if (act === 'save-default') saveDefault(b);
-			else if (act === 'load-default') loadDefault();
 			else if (act === 'help') Host.openURL(DOCS);
 		});
 
 		// ------------------------------------------------------------------ ajustes
-		function isSheetOpen() { return !settings.hidden || !ed.hidden; }
+		function isSheetOpen() { return !settings.hidden || !library.hidden || !ed.hidden || !exSheet.hidden; }
+		function anyFull() { return !ed.hidden || !exSheet.hidden; }
 
-		function toggleSettings() { if (settings.hidden) openSettings(); else closeSettings(); }
-		function openSettings() {
-			if (!ed.hidden) return;
-			settings.hidden = false;
-			el.classList.add('menu-open', 'sheet-open');
-			syncSettings();
-			placePill(false);
-			settings.animate([{ opacity: 0, transform: 'translateY(6px) scale(.98)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: EASE });
+		// ajustes e presets ocupam a faixa; as docas continuam visíveis e o ícone vira ×
+		var SIDES = { settings: [settings, 'menu-open'], library: [library, 'lib-open'] };
+		function openSide(name) {
+			if (anyFull()) return;
+			closeSide(name === 'settings' ? 'library' : 'settings', true);
+			var sh = SIDES[name][0];
+			sh.hidden = false;
+			el.classList.add(SIDES[name][1], 'sheet-open');
+			if (name === 'settings') { syncSettings(); placePill(false); }
+			else { renderLibrary(); loadPresets(); }
+			sh.animate([{ opacity: 0, transform: 'translateY(6px) scale(.98)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: EASE });
 		}
-		function closeSettings() {
-			if (settings.hidden) return;
-			el.classList.remove('menu-open');
-			if (ed.hidden) el.classList.remove('sheet-open');
-			settings.animate([{ opacity: 1 }, { opacity: 0, transform: 'translateY(6px) scale(.98)' }], { duration: 180, easing: EASE }).onfinish = function () {
-				settings.hidden = true;
+		function closeSide(name, instant) {
+			var sh = SIDES[name][0];
+			if (sh.hidden) return;
+			el.classList.remove(SIDES[name][1]);
+			var other = SIDES[name === 'settings' ? 'library' : 'settings'][0];
+			if (!anyFull() && other.hidden) el.classList.remove('sheet-open');
+			if (instant) { sh.hidden = true; return; }
+			sh.animate([{ opacity: 1 }, { opacity: 0, transform: 'translateY(6px) scale(.98)' }], { duration: 180, easing: EASE }).onfinish = function () {
+				if (!el.classList.contains(SIDES[name][1])) sh.hidden = true;
 			};
 		}
+		function toggleSide(name) { if (SIDES[name][0].hidden) openSide(name); else closeSide(name); }
+		function closeSettings() { closeSide('settings'); closeSide('library'); }
 
 		function syncSettings() {
 			q('[data-act="toggle-info"]').setAttribute('aria-pressed', S.prefs.info);
@@ -682,23 +766,6 @@
 			}).catch(function () {});
 		}
 
-		function saveDefault(b) {
-			var list = S.swatches.map(function (s) { return { color: s.color, label: s.label }; });
-			Host.savePrefs({ swatches: list }).then(function () {
-				S.prefs.defaults = list;
-				b.animate([{ transform: 'scale(.9)' }, { transform: 'none' }], { duration: 380, easing: SPRING });
-				toast('Paleta padrão salva · ' + list.length + ' cores', { icon: 'bookmark' });
-			}).catch(function () { toast('Não foi possível salvar a paleta padrão', { icon: 'alert' }); });
-		}
-
-		function loadDefault() {
-			closeSettings();
-			pushUndo();
-			setSwatches(S.prefs.defaults);
-			save();
-			toast('Paleta padrão carregada', { icon: 'reset', undo: true });
-		}
-
 		// segurar para limpar
 		(function () {
 			var btn = q('[data-act="clear"]'), t;
@@ -721,10 +788,364 @@
 			btn.addEventListener('pointerleave', cancel);
 		})();
 
+		// ------------------------------------------------------------------ presets
+		var libList = q('.lib-list');
+
+		function presetById(id) {
+			for (var i = 0; i < S.presets.length; i++) if (S.presets[i].id === id) return S.presets[i];
+			return null;
+		}
+		function cardOf(id) {
+			return Array.prototype.filter.call(libList.querySelectorAll('[data-pid]'), function (c) { return c.dataset.pid === id; })[0];
+		}
+		function shortPath(p) {
+			p = String(p || '');
+			var parts = p.split(/[\\/]/).filter(Boolean);
+			return parts.length > 2 ? '…/' + parts.slice(-2).join('/') : p;
+		}
+		function bars(list) {
+			return '<span class="pc-bars">' + (list || []).slice(0, 18).map(function (c) {
+				return '<i style="background:' + esc(c.color) + '"></i>';
+			}).join('') + '</span>';
+		}
+
+		function loadPresets(focusId, rename) {
+			return Host.listPresets().then(function (r) {
+				S.presets = (r && r.presets) || [];
+				S.folder = (r && r.folder) || S.folder;
+				if (!library.hidden) renderLibrary(focusId, rename);
+			}).catch(function () { toast('Não foi possível ler a pasta de presets', { icon: 'alert' }); });
+		}
+
+		function renderLibrary(focusId, rename) {
+			var html = '<div class="pcard is-project" role="listitem" data-tip="Paleta deste projeto · salva no .aep">' + bars(S.swatches) +
+				'<span class="pc-name">' + ic('file') + '<span>' + esc(S.project || 'projeto') + '</span></span></div>' +
+				'<button class="pcard add" data-act="save-preset" data-tip="Salvar a paleta do projeto como preset">' + ic('plus') + '<span class="pc-name">Salvar preset</span></button>';
+			S.presets.forEach(function (p, i) {
+				var cls = 'pcard' + (p.id === S.prefs.defaultPreset ? ' is-default' : '') + (p.name === S.preset ? ' is-origin' : '');
+				html += '<div class="' + cls + '" role="listitem" tabindex="0" data-pid="' + esc(p.id) + '" style="--i:' + i + '">' + bars(p.swatches) +
+					'<span class="pc-name">' + esc(p.name) + '</span>' +
+					'<span class="pc-acts"><button class="pc-btn pc-ren" data-tip="Renomear">' + ic('pencil') + '</button>' +
+					'<button class="pc-btn pc-star" data-tip="Padrão para projetos sem paleta">' + ic('star') + '</button>' +
+					'<button class="pc-btn pc-del" data-tip="Excluir preset">' + ic('trash') + '</button></span></div>';
+			});
+			libList.innerHTML = html;
+			q('.lib-path').textContent = shortPath(S.folder);
+			if (focusId) {
+				var c = cardOf(focusId);
+				if (!c) return;
+				c.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+				c.animate([{ transform: 'scale(.85)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 420, easing: SPRING });
+				if (rename) startRename(c);
+			}
+		}
+
+		function applyPreset(p, merge, card) {
+			var from = rect(card.querySelector('.pc-bars'));
+			pushUndo();
+			var added = 0;
+			if (merge) {
+				var have = {};
+				S.swatches.forEach(function (s) { have[s.color] = true; });
+				toSwatches(p.swatches).forEach(function (s) { if (!have[s.color]) { have[s.color] = true; S.swatches.push(s); added++; } });
+			} else {
+				S.swatches = toSwatches(p.swatches);
+				S.preset = p.name;
+			}
+			closeSettings();
+			render({ from: from });
+			save();
+			toast(merge ? '+' + added + (added === 1 ? ' cor de ' : ' cores de ') + p.name : p.name + ' aplicado ao projeto', { color: (p.swatches[0] || {}).color, undo: true });
+		}
+
+		function savePreset() {
+			if (!S.swatches.length) return toast('A paleta do projeto está vazia', { icon: 'alert' });
+			var name = N.unique(S.project && S.project !== 'sem título' ? S.project : 'minha paleta', S.presets.map(function (p) { return p.name; }));
+			Host.savePreset({ name: name, swatches: plain(S.swatches) }).then(function (r) {
+				if (!r || !r.ok) return toast('A pasta de presets não aceita gravação', { icon: 'alert' });
+				S.preset = name;
+				save();
+				loadPresets(r.id, true);
+			});
+		}
+
+		// renomear no próprio cartão
+		function startRename(card) {
+			var p = presetById(card.dataset.pid), nameEl = card.querySelector('.pc-name');
+			if (!p || card.querySelector('.pc-input')) return;
+			var input = document.createElement('input');
+			input.className = 'pc-input';
+			input.value = p.name;
+			input.maxLength = 48;
+			input.spellcheck = false;
+			nameEl.replaceWith(input);
+			input.focus();
+			input.select();
+			var done = false;
+			function finishRename(ok) {
+				if (done) return;
+				done = true;
+				var v = input.value.trim();
+				if (ok && v && v !== p.name) {
+					if (S.preset === p.name) { S.preset = v; save(); }
+					p.name = v;
+					Host.savePreset({ id: p.id, name: v, swatches: p.swatches });
+				}
+				nameEl.textContent = p.name;
+				input.replaceWith(nameEl);
+				nameEl.animate([{ opacity: 0, transform: 'translateY(3px)' }, { opacity: 1, transform: 'none' }], { duration: 240, easing: EASE });
+			}
+			input.addEventListener('keydown', function (e) {
+				e.stopPropagation();
+				if (e.key === 'Enter') finishRename(true);
+				else if (e.key === 'Escape') finishRename(false);
+			});
+			input.addEventListener('blur', function () { finishRename(true); });
+		}
+
+		function toggleDefault(p, card) {
+			var on = S.prefs.defaultPreset !== p.id;
+			S.prefs.defaultPreset = on ? p.id : '';
+			Array.prototype.forEach.call(libList.querySelectorAll('[data-pid]'), function (c) {
+				c.classList.toggle('is-default', c.dataset.pid === S.prefs.defaultPreset);
+			});
+			card.querySelector('.pc-star').animate([{ transform: 'scale(.4) rotate(-72deg)' }, { transform: 'none' }], { duration: 480, easing: SPRING });
+			Host.savePrefs({ defaultPreset: S.prefs.defaultPreset }).catch(function () {});
+			toast(on ? p.name + ' é o padrão para projetos sem paleta' : 'Sem preset padrão', { icon: 'star' });
+		}
+
+		function deletePreset(p, card) {
+			Host.deletePreset(p.id).then(function (r) {
+				if (!r || !r.ok) return toast('Não foi possível excluir o preset', { icon: 'alert' });
+				pushUndo({ restorePreset: { id: p.id, name: p.name, swatches: p.swatches } });
+				S.presets = S.presets.filter(function (x) { return x !== p; });
+				if (S.prefs.defaultPreset === p.id) { S.prefs.defaultPreset = ''; Host.savePrefs({ defaultPreset: '' }); }
+				var r0 = rect(card), vertical = el.dataset.orient !== 'row';
+				card.style.pointerEvents = 'none';
+				card.animate(vertical ?
+					[{ opacity: 1, height: r0.height + 'px' }, { opacity: 0, height: '0px', marginTop: '-6px', transform: 'scale(.9)' }] :
+					[{ opacity: 1, width: r0.width + 'px' }, { opacity: 0, width: '0px', marginLeft: '-6px', transform: 'scale(.9)' }],
+					{ duration: 300, easing: EASE }).onfinish = function () { card.remove(); };
+				toast(p.name + ' excluído', { icon: 'trash', undo: true });
+			});
+		}
+
+		function chooseFolder(e) {
+			if (e.altKey) return Host.revealPresetFolder();
+			Host.choosePresetFolder().then(function (r) {
+				if (!r || !r.ok) return;
+				S.folder = r.folder;
+				q('.lib-path').textContent = shortPath(S.folder);
+				loadPresets();
+				toast('Presets de ' + shortPath(r.folder), { icon: 'folder' });
+			});
+		}
+
+		libList.addEventListener('click', function (e) {
+			if (e.target.closest('.pc-input')) return;
+			var card = e.target.closest('[data-pid]');
+			if (!card) { if (e.target.closest('.is-project')) closeSettings(); return; }
+			var p = presetById(card.dataset.pid);
+			if (!p) return;
+			if (e.target.closest('.pc-ren')) startRename(card);
+			else if (e.target.closest('.pc-star')) toggleDefault(p, card);
+			else if (e.target.closest('.pc-del')) deletePreset(p, card);
+			else applyPreset(p, e.shiftKey, card);
+		});
+		libList.addEventListener('keydown', function (e) {
+			var card = e.target.closest('[data-pid]');
+			if (!card || e.target !== card) return;
+			var p = presetById(card.dataset.pid);
+			if (e.key === 'Enter') applyPreset(p, e.shiftKey, card);
+			else if (e.key === 'F2') startRename(card);
+			else if (e.key === 'Delete') deletePreset(p, card);
+		});
+		// rolar com a roda do mouse na faixa horizontal
+		libList.addEventListener('wheel', function (e) {
+			if (el.dataset.orient !== 'row' || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+			libList.scrollLeft += e.deltaY;
+			e.preventDefault();
+		}, { passive: false });
+
+		// ------------------------------------------------------------------ extrair cores de uma imagem
+		var XS = null;
+		var exStage = q('.ex-stage'), exImg = exSheet.querySelector('img'), exMarks = q('.ex-marks'), exChips = q('.ex-chips');
+		var exLoupe = q('.ex-loupe'), exFlood = exSheet.querySelector('.ed-flood');
+		var exCount = parseInt(store('pal.excount') || '6', 10) || 6;
+
+		function openExtract(btn) {
+			if (anyFull()) return;
+			closeSettings();
+			hideTip();
+			var tool = q('.tool[data-act="frame"]');
+			busy(tool, true);
+			Host.grabFrame().then(function (r) {
+				if (!r || !r.ok) {
+					busy(tool, false);
+					flash(tool, 'nope', 420);
+					return toast(REASONS[r && r.reason] || 'Não foi possível ler o frame', { icon: 'alert' });
+				}
+				XS = { grab: r, chips: [], data: null };
+				q('.ex-label').textContent = r.label || 'frame';
+				exSheet.classList.add('loading');
+				exImg.removeAttribute('src');
+				exMarks.innerHTML = exChips.innerHTML = '';
+				exSheet.hidden = false;
+				el.classList.add('sheet-open');
+				el.classList.remove('alt', 'ctrl');
+				var rr = relRect(rect(btn));
+				exSheet.animate([{ clipPath: clip(rr, 8) }, { clipPath: 'inset(0px 0px 0px 0px round 0px)' }], { duration: 420, easing: EASE });
+				exFlood.animate([{ opacity: 1 }, { opacity: 1, offset: 0.35 }, { opacity: 0 }], { duration: 520, easing: 'ease-out', fill: 'forwards' });
+				exSheet.focus({ preventScroll: true });
+				return Host.loadImage(r).then(function (img) {
+					busy(tool, false);
+					Host.releaseFrame(r);
+					if (!XS) return;
+					XS.data = X.sample(img, 160);
+					XS.ratio = img.naturalWidth / img.naturalHeight;
+					exImg.src = img.src;
+					exSheet.classList.remove('loading');
+					fitStage();
+					exStage.animate([{ opacity: 0, transform: 'scale(.96)' }, { opacity: 1, transform: 'none' }], { duration: 360, easing: EASE });
+					computeChips();
+				});
+			}).catch(function () {
+				busy(tool, false);
+				if (XS) closeExtract();
+				toast('Não foi possível ler o frame', { icon: 'alert' });
+			});
+		}
+
+		function fitStage() {
+			if (!XS || !XS.ratio) return;
+			var box = q('.ex-img'), w = box.clientWidth, h = box.clientHeight;
+			if (w / h > XS.ratio) w = h * XS.ratio; else h = w / XS.ratio;
+			exStage.style.width = Math.floor(w) + 'px';
+			exStage.style.height = Math.floor(h) + 'px';
+		}
+
+		function computeChips() {
+			var custom = XS.chips.filter(function (c) { return c.custom; });
+			var auto = X.palette(XS.data, exCount).map(function (c) { return { color: c.color, x: c.x, y: c.y, on: true }; });
+			XS.chips = auto.concat(custom);
+			q('.ex-n').textContent = exCount;
+			renderChips(true);
+		}
+
+		function renderChips(animate, popIndex) {
+			exChips.innerHTML = XS.chips.map(function (c, i) {
+				return '<button class="ex-chip' + (c.on ? ' on' : '') + '" data-i="' + i + '" data-tip="' + esc(N.nearest(c.color) + ' · ' + c.color) + '" style="--c:' + c.color + ';--ink:' + C.ink(c.color) + ';--i:' + i + '">' + ic('check') + '</button>';
+			}).join('');
+			exMarks.innerHTML = XS.chips.map(function (c, i) {
+				return '<span class="ex-mark' + (c.on ? ' on' : '') + '" data-i="' + i + '" style="left:' + (c.x * 100) + '%;top:' + (c.y * 100) + '%;--c:' + c.color + ';--i:' + i + '"></span>';
+			}).join('');
+			exSheet.classList.toggle('enter', !!animate);
+			if (popIndex != null) {
+				var ch = exChips.children[popIndex], mk = exMarks.children[popIndex];
+				if (ch) ch.animate([{ transform: 'scale(0)' }, { transform: 'none' }], { duration: 420, easing: SPRING });
+				if (mk) mk.animate([{ transform: 'translate(-50%,-50%) scale(2.4)', opacity: 0 }, { transform: 'translate(-50%,-50%)', opacity: 1 }], { duration: 420, easing: EASE });
+			}
+		}
+
+		function toggleChip(i) {
+			var c = XS.chips[i];
+			c.on = !c.on;
+			exChips.children[i].classList.toggle('on', c.on);
+			exMarks.children[i].classList.toggle('on', c.on);
+		}
+
+		function hot(i, on) {
+			if (exChips.children[i]) exChips.children[i].classList.toggle('hot', on);
+			if (exMarks.children[i]) exMarks.children[i].classList.toggle('hot', on);
+		}
+
+		exChips.addEventListener('click', function (e) {
+			var b = e.target.closest('.ex-chip');
+			if (b) toggleChip(+b.dataset.i);
+		});
+		[exChips, exMarks].forEach(function (box) {
+			box.addEventListener('pointerover', function (e) { var t = e.target.closest('[data-i]'); if (t) hot(+t.dataset.i, true); });
+			box.addEventListener('pointerout', function (e) { var t = e.target.closest('[data-i]'); if (t) hot(+t.dataset.i, false); });
+		});
+
+		// lupa: mostra a cor sob o cursor; clique adiciona
+		exStage.addEventListener('pointermove', function (e) {
+			if (!XS || !XS.data) return;
+			if (e.target.closest('.ex-mark')) { exLoupe.classList.remove('on'); return; }
+			var r = rect(exStage), fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
+			var hex = X.pixel(XS.data, fx, fy);
+			exLoupe.style.left = (fx * 100) + '%';
+			exLoupe.style.top = (fy * 100) + '%';
+			exLoupe.style.setProperty('--c', hex);
+			exLoupe.classList.add('on');
+		});
+		exStage.addEventListener('pointerleave', function () { exLoupe.classList.remove('on'); });
+		exStage.addEventListener('click', function (e) {
+			if (!XS || !XS.data) return;
+			var m = e.target.closest('.ex-mark');
+			if (m) return toggleChip(+m.dataset.i);
+			var r = rect(exStage), fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
+			var hex = X.pixel(XS.data, fx, fy);
+			for (var i = 0; i < XS.chips.length; i++) {
+				if (XS.chips[i].color === hex) { XS.chips[i].on = true; renderChips(false, i); return; }
+			}
+			XS.chips.push({ color: hex, x: fx, y: fy, on: true, custom: true });
+			renderChips(false, XS.chips.length - 1);
+		});
+
+		Array.prototype.forEach.call(exSheet.querySelectorAll('.ex-step'), function (b) {
+			b.addEventListener('click', function () {
+				if (!XS || !XS.data) return;
+				var n = C.clamp(exCount + parseInt(b.dataset.d, 10), 2, 12);
+				if (n === exCount) return flash(b, 'nope', 420);
+				exCount = n;
+				store('pal.excount', String(n));
+				computeChips();
+			});
+		});
+
+		function confirmExtract() {
+			if (!XS || !XS.data) return;
+			var have = {}, fresh = [];
+			S.swatches.forEach(function (s) { have[s.color] = true; });
+			XS.chips.forEach(function (c) { if (c.on && !have[c.color]) { have[c.color] = true; fresh.push(c.color); } });
+			if (!fresh.length) return toast('Nenhuma cor nova selecionada', { icon: 'image' });
+			var from = rect(exStage), label = XS.grab.label;
+			closeExtract();
+			pushUndo();
+			fresh.forEach(function (c) { S.swatches.push({ id: newId(), color: c, label: '', auto: true }); });
+			setTimeout(function () {
+				render({ from: from });
+				save();
+			}, 120);
+			toast('+' + fresh.length + (fresh.length > 1 ? ' cores de ' : ' cor de ') + label, { color: fresh[0], undo: true });
+		}
+
+		function closeExtract() {
+			if (!XS) return;
+			XS = null;
+			exLoupe.classList.remove('on');
+			exSheet.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.97)' }], { duration: 220, easing: EASE }).onfinish = function () {
+				exSheet.hidden = true;
+				exSheet.getAnimations().forEach(function (a) { a.cancel(); });
+				exFlood.getAnimations().forEach(function (a) { a.cancel(); });
+				if (!isSheetOpen()) el.classList.remove('sheet-open');
+				el.focus({ preventScroll: true });
+			};
+		}
+
+		exSheet.querySelector('.ed-btn.ok').addEventListener('click', confirmExtract);
+		exSheet.querySelector('.ed-btn.cancel').addEventListener('click', closeExtract);
+		exSheet.addEventListener('keydown', function (e) {
+			if (e.key === 'Enter') { e.preventDefault(); confirmExtract(); }
+			else if (e.key === 'Escape') { e.preventDefault(); closeExtract(); }
+		});
+
 		// ------------------------------------------------------------------ editor de cor
 		var E = null;
 		var edName = q('.ed-name'), edVal = q('.ed-val'), edFmt = q('.ed-fmt'), sv = q('.ed-sv'), hue = q('.ed-hue');
-		var flood = q('.ed-flood');
+		var flood = ed.querySelector('.ed-flood');
+		var edAuto = q('.ed-auto');
 
 		function relRect(r) {
 			var p = rect(el);
@@ -746,9 +1167,9 @@
 			closeSettings();
 			hideTip();
 			var hex = sw ? sw.color : suggestColor();
-			E = { id: sw ? sw.id : null, old: hex, fmt: S.prefs.format, hsb: C.rgbToHsb(C.hexToRgb(hex)) };
+			E = { id: sw ? sw.id : null, old: hex, fmt: S.prefs.format, hsb: C.rgbToHsb(C.hexToRgb(hex)), auto: sw ? !!sw.auto : true };
 			edName.value = sw ? sw.label : '';
-			q('.ed-btn.del').hidden = !sw;
+			ed.querySelector('.ed-btn.del').hidden = !sw;
 			q('.ed-prev').classList.toggle('is-new', !sw);
 			ed.style.setProperty('--old', hex);
 			ed.style.setProperty('--old-ink', C.ink(hex));
@@ -778,13 +1199,14 @@
 			}
 			if (commit) {
 				var label = edName.value.trim();
+				var auto = E.auto || !label;
 				pushUndo();
 				if (E.id) {
 					var sw = find(E.id);
-					if (sw) { sw.color = hex; sw.label = label; }
+					if (sw) { sw.color = hex; sw.label = auto ? '' : label; sw.auto = auto; }
 					render({ noEnter: E.id });
 				} else {
-					var nsw = { id: newId(), color: hex, label: label };
+					var nsw = { id: newId(), color: hex, label: auto ? '' : label, auto: auto };
 					S.swatches.push(nsw);
 					render({ noEnter: nsw.id });
 					E.id = nsw.id;
@@ -813,7 +1235,7 @@
 			ed.getAnimations().forEach(function (a) { a.cancel(); });
 			flood.getAnimations().forEach(function (a) { a.cancel(); });
 			flood.style.background = '';
-			if (settings.hidden) el.classList.remove('sheet-open');
+			if (!isSheetOpen()) el.classList.remove('sheet-open');
 			el.classList.remove('editing');
 			el.focus({ preventScroll: true });
 		}
@@ -832,6 +1254,14 @@
 			if (o === 'tall') { hk.style.left = (E.hsb[0] / 360 * 100) + '%'; hk.style.top = '50%'; }
 			else { hk.style.top = (E.hsb[0] / 360 * 100) + '%'; hk.style.left = '50%'; }
 			edFmt.textContent = E.fmt;
+			ed.classList.toggle('is-auto', E.auto);
+			if (E.auto) {
+				var nm = autoNameFor(hex, E.id);
+				if (nm !== edName.value) {
+					edName.value = nm;
+					if (!ed.getAnimations().length) edName.animate([{ opacity: .3, transform: 'translateY(3px)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: EASE });
+				}
+			}
 			if (!skipVal) edVal.value = C.format(hex, E.fmt);
 			edVal.parentNode.classList.remove('bad');
 		}
@@ -917,9 +1347,22 @@
 			q('.ed-new').animate([{ filter: 'brightness(1.6)' }, { filter: 'none' }], { duration: 300 });
 			updateEditor();
 		});
-		q('.ed-btn.ok').addEventListener('click', function () { closeEditor(true); });
-		q('.ed-btn.cancel').addEventListener('click', function () { closeEditor(false); });
-		q('.ed-btn.del').addEventListener('click', function () { closeEditor('delete'); });
+		ed.querySelector('.ed-btn.ok').addEventListener('click', function () { closeEditor(true); });
+		ed.querySelector('.ed-btn.cancel').addEventListener('click', function () { closeEditor(false); });
+		ed.querySelector('.ed-btn.del').addEventListener('click', function () { closeEditor('delete'); });
+
+		// nome automático: acompanha a cor até você digitar um nome seu
+		edName.addEventListener('input', function () {
+			if (!E) return;
+			E.auto = false;
+			ed.classList.remove('is-auto');
+		});
+		edAuto.addEventListener('click', function () {
+			if (!E) return;
+			E.auto = true;
+			edAuto.animate([{ transform: 'rotate(-90deg) scale(.6)' }, { transform: 'none' }], { duration: 420, easing: SPRING });
+			updateEditor();
+		});
 
 		ed.addEventListener('keydown', function (e) {
 			if (e.key === 'Enter') {
@@ -941,7 +1384,7 @@
 
 		// ------------------------------------------------------------------ teclado global
 		root.addEventListener('keydown', function (e) {
-			if (!ed.hidden) return;
+			if (!ed.hidden || !exSheet.hidden) return;
 			if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
 			else if (e.key === 'Escape') closeSettings();
 		});
@@ -951,7 +1394,10 @@
 			return Host.loadPalette().then(function (r) {
 				S.undo = [];
 				S.last = null;
+				S.project = (r && r.project) || '';
+				S.preset = (r && r.preset) || '';
 				setSwatches((r && r.swatches) || [], { stagger: stagger });
+				if (!library.hidden) renderLibrary();
 			});
 		}
 
@@ -961,6 +1407,7 @@
 					S.key = k;
 					closeSettings();
 					if (E) closeEditor(false);
+					if (XS) closeExtract();
 					loadProject(true);
 				}
 				S.key = k;
@@ -971,8 +1418,9 @@
 			p = p || {};
 			S.prefs.format = String(p.labelType || '#HEX').replace('#', '');
 			S.prefs.info = p.showColorInfo !== false;
-			S.prefs.names = !!p.showColorLabels;
-			S.prefs.defaults = p.swatches || [];
+			S.prefs.names = p.showColorLabels !== false;
+			S.prefs.defaultPreset = p.defaultPreset || '';
+			S.folder = p.presetFolder || '';
 			syncSettings();
 		}).catch(function () {}).then(function () {
 			measure();
