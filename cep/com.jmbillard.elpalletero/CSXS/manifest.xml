@@ -42,6 +42,12 @@
 							<Width>120</Width>
 						</MinSize>
 					</Geometry>
+					<Icons>
+						<Icon Type="Normal">./icons/icon.png</Icon>
+						<Icon Type="RollOver">./icons/icon.png</Icon>
+						<Icon Type="DarkNormal">./icons/icon.png</Icon>
+						<Icon Type="DarkRollOver">./icons/icon.png</Icon>
+					</Icons>
 				</UI>
 			</DispatchInfo>
 		</Extension>

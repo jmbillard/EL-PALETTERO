@@ -49,6 +49,9 @@
 		file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>'
 	};
 
+	// logo (picolé com mordida) para o estado de paleta vazia · mesmo desenho de docs/img/logo.svg
+	var LOGO = '<svg class="empty-logo" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="9.12 9.12 101.76 101.76"><defs><linearGradient id="pal-lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF4D4D"/><stop offset=".25" stop-color="#FF8F4D"/><stop offset=".5" stop-color="#FFC44E"/><stop offset=".75" stop-color="#5DE6A2"/><stop offset="1" stop-color="#80C0FE"/></linearGradient><mask id="pal-lm"><rect x="-20" y="-20" width="160" height="160" fill="#fff"/><g fill="#000"><circle cx="90.5" cy="32" r="13"/></g></mask></defs><rect x="53.0" y="80" width="14" height="28" rx="7.0" fill="#E9CFA0"/><g mask="url(#pal-lm)"><path d="M33.0,77 L37.0,21 Q37.0,12 46.0,12 L74.0,12 Q83.0,12 83.0,21 L87.0,77 Q87.0,86 78.0,86 L42.0,86 Q33.0,86 33.0,77 Z" fill="url(#pal-lg)"/><path d="M42.0,26 L41.0,58" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".35"/></g></svg>';
+
 	function ic(name, cls) {
 		return '<svg class="ic ' + (cls || '') + '" viewBox="0 0 24 24" aria-hidden="true">' + ICONS[name] + '</svg>';
 	}
@@ -92,7 +95,7 @@
 			'  <button class="tool" data-act="capture" aria-label="Capturar cores"><span class="swap">' + ic('pipette') + ic('image') + ic('layers') + '</span></button>',
 			'</div>',
 			'<div class="strip" role="list" aria-label="Paleta"></div>',
-			'<div class="empty" hidden><span class="empty-dots"><i></i><i></i><i></i></span><span>Paleta vazia</span>',
+			'<div class="empty" hidden>' + LOGO + '<span>Paleta vazia</span>',
 			'  <button class="row-btn" data-act="capture">' + ic('pipette') + '<span class="lbl">Capturar</span></button>',
 			'  <button class="row-btn" data-act="add">' + ic('plus') + '<span class="lbl">Nova cor</span></button>',
 			'</div>',

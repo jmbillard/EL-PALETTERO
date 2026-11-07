@@ -1,4 +1,5 @@
 <title>El PALLETERO</title>
+<link rel="icon" type="image/svg+xml" href="{{LOGO_URI}}">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=JetBrains+Mono:wght@500;600&display=swap">
@@ -31,10 +32,13 @@ body {
 .hero { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 32px; }
 .eyebrow { margin: 0 0 6px; font: 600 11px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
 h1 { margin: 0; font: 800 clamp(34px, 6vw, 58px)/.95 var(--display); letter-spacing: -.02em; }
-h1 .el { font-weight: 500; font-size: .5em; letter-spacing: 0; margin-right: .18em; vertical-align: .55em; color: var(--dim); }
-h1 .o { display: inline-block; width: .78em; height: .78em; border-radius: 50%; vertical-align: -.04em; margin-right: .06em;
-	background: conic-gradient(#FF4D4D, #FFC44E, #5DE6A2, #80C0FE, #B5ADFF, #FF8CCD, #FF4D4D); animation: spin 12s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+/* mesma composição do banner do instalador (360 × 84), em escala: tudo medido pelo tamanho do picolé (--s) */
+h1 { --s: 120px; position: relative; height: var(--s); width: calc(var(--s) * 4.35); margin-top: 8px; font-size: calc(var(--s) * .347); line-height: 1; }
+h1 .logo { position: absolute; left: calc(var(--s) * -.08); top: 0; width: var(--s); height: var(--s); transform-origin: 50% 85%; transition: transform .5s cubic-bezier(.34,1.56,.64,1); }
+h1:hover .logo { transform: rotate(-8deg); }
+h1 .el { position: absolute; left: calc(var(--s) * .837); top: calc(var(--s) * .111); font-size: calc(var(--s) * .18); font-weight: 800; letter-spacing: .03em; color: var(--dim); }
+h1 .word { position: absolute; left: calc(var(--s) * 1.1); top: calc(var(--s) * .069); }
+@media (max-width: 720px) { h1 { --s: 76px; } }
 .lede { margin: 0; max-width: 42ch; color: var(--dim); text-wrap: pretty; }
 
 /* ---------- janela falsa */
@@ -90,7 +94,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 .frame { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; border-radius: 6px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255,255,255,.07); resize: both; max-width: 100%; }
 .ws[data-layout="strip"] .frame { height: 102px; resize: vertical; min-height: 64px; }
 .tab { display: flex; align-items: center; gap: 8px; height: 24px; padding: 0 10px; background: var(--chrome-2); font: 600 10px var(--mono); letter-spacing: .08em; color: var(--dim); flex: none; }
-.tab::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-dot, #FFC44E); transition: background .4s; }
+.tab::before { content: ''; width: 14px; height: 14px; background: url("{{LOGO_URI}}") center / contain no-repeat; }
 .tab span { margin-left: auto; opacity: .7; }
 #pal { flex: 1; min-height: 0; }
 
@@ -110,8 +114,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	.pane-title, .hint { display: none; }
 	.layouts { margin-left: 0; }
 }
-@media (prefers-reduced-motion: reduce) { h1 .el { font-weight: 500; font-size: .5em; letter-spacing: 0; margin-right: .18em; vertical-align: .55em; color: var(--dim); }
-h1 .o { animation: none; } }
+@media (prefers-reduced-motion: reduce) { h1 .logo { transition: none; } }
 {{PANEL_CSS}}
 </style>
 
@@ -119,7 +122,7 @@ h1 .o { animation: none; } }
 	<header class="hero">
 		<div>
 			<p class="eyebrow">extensão CEP para After Effects · mockup interativo</p>
-			<h1><span class="o" aria-hidden="true"></span><span class="el">El</span>PALLETERO</h1>
+			<h1 aria-label="El PALLETERO"><img class="logo" src="{{LOGO_URI}}" alt=""><span class="el">EL</span><span class="word">PALLETERO</span></h1>
 		</div>
 		<p class="lede">O painel abaixo é o mesmo código da extensão, ligado a uma composição de mentira. Selecione um layer e clique numa cor.</p>
 	</header>
@@ -227,10 +230,5 @@ h1 .o { animation: none; } }
 	var pal = document.getElementById('pal');
 	draw();
 	window.PalApp.mount(pal);
-	// o pontinho da aba acompanha a última cor aplicada
-	new MutationObserver(function () {
-		var a = pal.style.getPropertyValue('--accent');
-		if (a) document.querySelector('.tab').style.setProperty('--accent-dot', a);
-	}).observe(pal, { attributes: true, attributeFilter: ['style'] });
 })();
 </script>
