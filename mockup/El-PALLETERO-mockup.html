@@ -1547,7 +1547,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	var Host = root.PalHost;
 	var N = root.PalNames;
 	var X = root.PalExtract;
-	var VERSION = 'v1.2.2';
+	var VERSION = 'v1.2.3';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
@@ -2098,24 +2098,43 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 
 		// arrastar para reordenar (pointer capture fica na faixa, que nunca se move)
 		var D = null;
-		// destaque da amostra sob o mouse: "preso" até entrar em outra amostra (o vão entre elas não conta)
-		// e com uma espera curta ao trocar, para uma passada rápida não sacudir a faixa inteira
-		var hot = null, hotTimer = null;
+		// destaque da amostra sob o mouse, decidido pela POSIÇÃO do mouse (não pelo elemento sob ele):
+		// - ignora os cantos arredondados e o vão entre amostras (o destaque fica "preso");
+		// - histerese: para trocar, o mouse precisa entrar HOT_IN px na outra amostra, então tremores
+		//   perto da fronteira não trocam nada (era o que fazia a faixa inteira sambar);
+		// - espera curta ao trocar, para uma passada rápida não sacudir tudo.
+		var hot = null, hotTimer = null, hotNext = null, HOT_IN = 6;
 		function setHot(n) {
+			hotNext = null;
 			if (hot === n) return;
 			if (hot) hot.classList.remove('hot');
 			hot = n;
 			if (n) n.classList.add('hot');
 		}
-		strip.addEventListener('pointerover', function (e) {
-			var n = e.target.closest('.sw');
-			if (!n || n.classList.contains('leaving') || el.classList.contains('dragging')) return;
+		function pickHot(e) {
+			if (el.classList.contains('dragging') || D) return;
+			var o = el.dataset.orient, x = e.clientX, y = e.clientY, cand = null, r = null;
+			var list = liveNodes();
+			for (var i = 0; i < list.length; i++) {
+				var b = rect(list[i]);
+				var inX = x >= b.left - 2 && x <= b.right + 2, inY = y >= b.top - 2 && y <= b.bottom + 2;
+				if ((o === 'row' && inX) || (o === 'col' && inY) || (o === 'grid' && inX && inY)) { cand = list[i]; r = b; break; }
+			}
+			if (!cand) return; // no vão: mantém o destaque atual
+			if (cand === hot) { clearTimeout(hotTimer); hotNext = null; return; }
+			if (!hot || !hot.isConnected) { clearTimeout(hotTimer); return setHot(cand); }
+			var depth = o === 'row' ? Math.min(x - r.left, r.right - x) : o === 'col' ? Math.min(y - r.top, r.bottom - y) : HOT_IN;
+			if (depth < Math.min(HOT_IN, (o === 'col' ? r.height : r.width) / 4)) return;
+			if (cand === hotNext) return; // já agendado
 			clearTimeout(hotTimer);
-			if (!hot || !hot.isConnected) setHot(n);
-			else if (n !== hot) hotTimer = setTimeout(function () { setHot(n); }, 45);
-		});
+			hotNext = cand;
+			hotTimer = setTimeout(function () { setHot(cand); }, 45);
+		}
+		strip.addEventListener('pointermove', pickHot);
+		strip.addEventListener('pointerover', pickHot);
 		strip.addEventListener('pointerleave', function () {
 			clearTimeout(hotTimer);
+			hotNext = null;
 			hotTimer = setTimeout(function () { setHot(null); }, 60);
 		});
 
