@@ -5,9 +5,9 @@ const { chromium } = require('playwright');
 const fs = require('fs'), os = require('os'), path = require('path'), { execFileSync } = require('child_process');
 const ROOT = path.join(__dirname, '..', '..');
 const OUT = path.join(ROOT, 'docs', 'gifs');
-const D = fs.mkdtempSync(path.join(os.tmpdir(), 'opalettero-gifs-'));
+const D = fs.mkdtempSync(path.join(os.tmpdir(), 'elpalletero-gifs-'));
 fs.mkdirSync(OUT, { recursive: true });
-const src = fs.readFileSync(path.join(ROOT, 'mockup', 'O-PALETTERO-mockup.html'), 'utf8');
+const src = fs.readFileSync(path.join(ROOT, 'mockup', 'El-PALLETERO-mockup.html'), 'utf8');
 fs.writeFileSync(D + '/page.html', '<!doctype html><html><head><meta charset="utf-8"><style>[hidden]{display:none!important}body{margin:0}</style></head><body>' + src + '</body></html>');
 
 // cursor falso + selo de teclas (o headless não desenha o ponteiro)

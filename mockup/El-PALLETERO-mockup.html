@@ -1,4 +1,4 @@
-<title>O PALETTERO</title>
+<title>El PALLETERO</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=JetBrains+Mono:wght@500;600&display=swap">
@@ -31,6 +31,7 @@ body {
 .hero { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 32px; }
 .eyebrow { margin: 0 0 6px; font: 600 11px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
 h1 { margin: 0; font: 800 clamp(34px, 6vw, 58px)/.95 var(--display); letter-spacing: -.02em; }
+h1 .el { font-weight: 500; font-size: .5em; letter-spacing: 0; margin-right: .18em; vertical-align: .55em; color: var(--dim); }
 h1 .o { display: inline-block; width: .78em; height: .78em; border-radius: 50%; vertical-align: -.04em; margin-right: .06em;
 	background: conic-gradient(#FF4D4D, #FFC44E, #5DE6A2, #80C0FE, #B5ADFF, #FF8CCD, #FF4D4D); animation: spin 12s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -109,8 +110,9 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	.pane-title, .hint { display: none; }
 	.layouts { margin-left: 0; }
 }
-@media (prefers-reduced-motion: reduce) { h1 .o { animation: none; } }
-/* O PALETTERO · painel
+@media (prefers-reduced-motion: reduce) { h1 .el { font-weight: 500; font-size: .5em; letter-spacing: 0; margin-right: .18em; vertical-align: .55em; color: var(--dim); }
+h1 .o { animation: none; } }
+/* El PALLETERO · painel
    layout: docas de ferramentas nas pontas + faixa de amostras que se adapta (faixa / lista / grade) */
 .pal {
 	--bg: #131418;
@@ -716,7 +718,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	<header class="hero">
 		<div>
 			<p class="eyebrow">extensão CEP para After Effects · mockup interativo</p>
-			<h1><span class="o" aria-hidden="true"></span>PALETTERO</h1>
+			<h1><span class="o" aria-hidden="true"></span><span class="el">El</span>PALLETERO</h1>
 		</div>
 		<p class="lede">O painel abaixo é o mesmo código da extensão, ligado a uma composição de mentira. Selecione um layer e clique numa cor.</p>
 	</header>
@@ -734,7 +736,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		<div class="ws-body">
 			<aside class="layers" id="layers" aria-label="Layers"></aside>
 			<div class="viewer"><div class="comp" id="comp"></div></div>
-			<div class="dockslot"><div class="frame"><div class="tab">O PALETTERO <span>≡</span></div><div id="pal"></div></div></div>
+			<div class="dockslot"><div class="frame"><div class="tab">El PALLETERO <span>≡</span></div><div id="pal"></div></div></div>
 		</div>
 	</section>
 
@@ -749,13 +751,13 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		<div class="tile"><kbd>nomes</kbd><p><b>Cada cor ganha um nome</b> (menta, tijolo, céu…) que acompanha a cor no editor até você digitar o seu. A ✦ devolve o automático.</p></div>
 		<div class="tile"><kbd>imagem</kbd><p>Selecione <b>praia_entardecer.jpg</b> e use o botão de imagem: as cores principais do frame aparecem. Clique na imagem para pegar outras.</p></div>
 		<div class="tile"><kbd>presets</kbd><p><b>Biblioteca de presets</b> numa pasta que você escolhe (pode ser da equipe). Clique substitui, Shift adiciona, ★ vira o padrão.</p></div>
-		<div class="tile"><kbd>projeto</kbd><p><b>Troque de projeto</b> no topo: cada .aep guarda a própria paleta num grupo de metadados O PALETTERO.</p></div>
+		<div class="tile"><kbd>projeto</kbd><p><b>Troque de projeto</b> no topo: cada .aep guarda a própria paleta num grupo de metadados El PALLETERO.</p></div>
 		<div class="tile"><kbd>formato</kbd><p><b>Faixa, coluna ou grade:</b> o painel se reorganiza sozinho. Arraste o canto para redimensionar.</p></div>
 	</section>
 </div>
 
 <script>
-/* O PALETTERO · conversões de cor (sem dependências) */
+/* El PALLETERO · conversões de cor (sem dependências) */
 (function (root) {
 	'use strict';
 
@@ -897,7 +899,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	};
 })(window);
 
-/* O PALETTERO · nomes automáticos de cor (pt-BR, evocativos)
+/* El PALLETERO · nomes automáticos de cor (pt-BR, evocativos)
    Escolhe o nome da referência mais próxima em CIELAB e evita repetir nomes na mesma paleta. */
 (function (root) {
 	'use strict';
@@ -986,7 +988,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	root.PalNames = { nearest: nearest, pick: pick, unique: unique, isGeneric: isGeneric };
 })(window);
 
-/* O PALETTERO · extração de cores de uma imagem (k-means em CIELAB, sem dependências) */
+/* El PALLETERO · extração de cores de uma imagem (k-means em CIELAB, sem dependências) */
 (function (root) {
 	'use strict';
 	var C = root.PalColor;
@@ -1111,8 +1113,8 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	};
 
 	var folders = {
-		'/Users/voce/Library/Application Support/O PALETTERO script/presets': [
-			{ id: 'o-palettero', name: 'O PALETTERO', swatches: BUILTIN },
+		'/Users/voce/Library/Application Support/El PALLETERO/presets': [
+			{ id: 'el-palletero', name: 'El PALLETERO', swatches: BUILTIN },
 			{ id: 'abertura', name: 'Abertura', swatches: sw(['#FF4D4D', '#FFC44E', '#5DE6A2', '#80C0FE', '#B5ADFF', '#FF8CCD', '#1E2A44', '#F2F2F2']) },
 			{ id: 'neutros', name: 'Neutros', swatches: sw(['#111111', '#2B2B2B', '#4A4A4A', '#8D8D8D', '#C0C0C0', '#E3DAC9', '#F5F3EE']) },
 			{ id: 'verao', name: 'Verão', swatches: sw(['#FF7518', '#FFC72C', '#40E0D0', '#00B2A9', '#FA8072', '#FFF1A8']) }
@@ -1130,7 +1132,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	];
 	var folderNames = Object.keys(folders);
 
-	var prefs = { showColorLabels: true, showColorInfo: true, labelType: '#HEX', defaultPreset: 'o-palettero', presetFolder: folderNames[0] };
+	var prefs = { showColorLabels: true, showColorInfo: true, labelType: '#HEX', defaultPreset: 'el-palletero', presetFolder: folderNames[0] };
 	var current = 'abertura_v3.aep';
 	var listeners = [];
 
@@ -1275,7 +1277,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	};
 })(window);
 
-/* O PALETTERO · ponte entre o painel (HTML) e o After Effects (ExtendScript).
+/* El PALLETERO · ponte entre o painel (HTML) e o After Effects (ExtendScript).
    Fora do After Effects (navegador), usa window.PalMockHost — o "AE de mentira" do mockup. */
 (function (root) {
 	'use strict';
@@ -1423,7 +1425,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	};
 })(window);
 
-/* O PALETTERO · painel
+/* El PALLETERO · painel
    Estado → render com animações FLIP. Tudo que muda de lugar, anima. */
 (function (root) {
 	'use strict';
@@ -1432,7 +1434,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	var Host = root.PalHost;
 	var N = root.PalNames;
 	var X = root.PalExtract;
-	var VERSION = 'v1.1';
+	var VERSION = 'v1.2';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 

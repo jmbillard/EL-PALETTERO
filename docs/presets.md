@@ -1,6 +1,6 @@
 # 📚 presets e pastas de rede
 
-[← O PALETTERO](../README.md)
+[← El PALLETERO](../README.md)
 
 a **paleta do projeto** e os **presets** são coisas separadas:
 
@@ -56,7 +56,7 @@ cada preset é um arquivo `.json` (UTF-8, nome do arquivo só com letras sem ace
 
 | | Windows | macOS |
 | --- | --- | --- |
-| pasta padrão | `%APPDATA%\O PALETTERO script\presets` | `~/Library/Application Support/O PALETTERO script/presets` |
+| pasta padrão | `%APPDATA%\El PALLETERO\presets` | `~/Library/Application Support/El PALLETERO/presets` |
 | pasta de rede | caminho UNC (`\\servidor\paletas`) ou unidade mapeada (`L:\paletas`) | volume montado (`/Volumes/paletas`) |
 
 <br>
@@ -107,11 +107,11 @@ a paleta do projeto fica no `.aep`, num grupo de metadados XMP próprio:
 
 | | |
 | --- | --- |
-| namespace | `https://github.com/jmbillard/O-PALETTERO/ns/1.0/` |
+| namespace | `https://github.com/jmbillard/El-PALLETERO/ns/1.0/` |
 | `palette` | a lista de cores (`color`, `label`, `auto`) |
 | `preset` | o nome do preset de onde a paleta veio (se houver) |
 | `version` · `updated` | versão do formato e data do último salvamento |
 
 > 🚩 *obs:*\
-> • projetos com paleta do [script clássico](script-classico.md) (`xmp:Label`) são lidos normalmente e migram para o grupo novo no primeiro salvamento.\
+> • projetos com paleta do [script clássico](script-classico.md) (`xmp:Label`) ou da extensão com o nome antigo (namespace `…/O-PALETTERO/ns/1.0/`) são lidos normalmente e migram para o grupo novo no primeiro salvamento.\
 > • nomes automáticos ficam marcados com `auto: true`: por isso continuam acompanhando a cor quando você a edita.

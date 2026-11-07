@@ -1,18 +1,19 @@
-# 🎨 O PALETTERO · v1.1 beta
+# 🎨 El PALLETERO · v1.2 beta
 
 🗨️ **pt-BR** ⚡ a paleta de cores do projeto, como painel do After Effects ⚡
 
-o paletero guarda as cores do projeto num painel que você acopla em qualquer lugar da interface. um clique aplica a cor nos layers selecionados. as cores podem vir do seletor, dos layers, do projeto inteiro, de uma imagem ou de uma biblioteca de presets compartilhada pela equipe.
+o palletero guarda as cores do projeto num painel que você acopla em qualquer lugar da interface. um clique aplica a cor nos layers selecionados. as cores podem vir do seletor, dos layers, do projeto inteiro, de uma imagem ou de uma biblioteca de presets compartilhada pela equipe.
 
 > <img src="docs/gifs/aplicar.gif" alt="aplicando cores da paleta nos layers" width="860">
 
-> 🧪 *quer experimentar sem instalar?* baixe [`mockup/O-PALETTERO-mockup.html`](mockup/O-PALETTERO-mockup.html) e abra no navegador: é o mesmo código do painel, ligado a uma composição de mentira. todos os GIFs desta página foram gravados nele.
+> 🧪 *quer experimentar sem instalar?* baixe [`mockup/El-PALLETERO-mockup.html`](mockup/El-PALLETERO-mockup.html) e abra no navegador: é o mesmo código do painel, ligado a uma composição de mentira. todos os GIFs desta página foram gravados nele.
 
 <br>
 
 ## 📍 sumário
 
 - [instalação](#-instalação)
+- [vindo do O PALETTERO](#-vindo-do-o-palettero)
 - [aplicar cores](#-aplicar-cores)
 - [organizar a paleta](#-organizar-a-paleta)
 - [editor de cor e nomes automáticos](#-editor-de-cor-e-nomes-automáticos)
@@ -35,18 +36,40 @@ o paletero guarda as cores do projeto num painel que você acopla em qualquer lu
 
 requer After Effects **2022 (22.0)** ou mais novo, no Windows ou no macOS.
 
-1. copie a pasta `cep/com.jmbillard.opalettero` para a pasta de extensões:
+1. copie a pasta `cep/com.jmbillard.elpalletero` para a pasta de extensões:
    - **Windows:** `%APPDATA%\Adobe\CEP\extensions\` (só o seu usuário) ou `C:\Program Files (x86)\Common Files\Adobe\CEP\extensions\` (todos)
    - **macOS:** `~/Library/Application Support/Adobe/CEP/extensions/` ou `/Library/Application Support/Adobe/CEP/extensions/`
 2. libere extensões sem assinatura (uma vez só):
    - **Windows:** `reg add HKCU\Software\Adobe\CSXS.11 /v PlayerDebugMode /t REG_SZ /d 1 /f` (repita com `CSXS.12` para o AE 2025 ou mais novo)
    - **macOS:** `defaults write com.adobe.CSXS.11 PlayerDebugMode 1` (repita com `com.adobe.CSXS.12`)
 3. **reinicie** o After Effects.
-4. abra o painel em `Window` > `Extensions` > `O PALETTERO` e acople onde preferir.
+4. abra o painel em `Window` > `Extensions` > `El PALLETERO` e acople onde preferir.
 
 > 🚩 *obs:*\
 > • no macOS, se o painel não aparecer, rode `killall cfprefsd` no Terminal (o sistema guarda as preferências em cache) e abra o After Effects de novo.\
-> • as preferências ficam em `%APPDATA%\O PALETTERO script\` (Windows) ou `~/Library/Application Support/O PALETTERO script/` (macOS), o mesmo lugar do script clássico.
+> • as preferências e os presets ficam em `%APPDATA%\El PALLETERO\` (Windows) ou `~/Library/Application Support/El PALLETERO/` (macOS).
+
+<br>
+
+---
+
+<br>
+
+## 📍 vindo do O PALETTERO
+
+o painel se chamava **O PALETTERO** até a v1.1. na primeira vez que o El PALLETERO abre, ele traz tudo do nome antigo:
+
+| o quê | de | para |
+| --- | --- | --- |
+| preferências | pasta `O PALETTERO script` | pasta `El PALLETERO` |
+| presets da pasta padrão | `O PALETTERO script/presets` | `El PALLETERO/presets` |
+| pasta de presets personalizada (rede) | continua a mesma | continua a mesma |
+| paleta de cada projeto | metadados do O PALETTERO | metadados do El PALLETERO, no primeiro salvamento |
+
+> 🚩 *obs:*\
+> • a pasta antiga **não é apagada**: o [script clássico](docs/script-classico.md) continua usando ela.\
+> • só abrir um projeto antigo não altera nada nele. a paleta passa para o formato novo na primeira mudança na paleta.\
+> • se a versão anterior da extensão estiver instalada, apague a pasta `com.jmbillard.opalettero` da pasta de extensões, para não ficarem dois painéis no menu.
 
 <br>
 
@@ -65,7 +88,7 @@ requer After Effects **2022 (22.0)** ou mais novo, no Windows ou no macOS.
 - a última cor aplicada ganha um pontinho e passa a ser a cor de destaque do painel.
 
 > 🚩 *obs:*\
-> • cada aplicação é **um passo** de desfazer no After Effects (`O PALETTERO · aplicar #HEX`).\
+> • cada aplicação é **um passo** de desfazer no After Effects (`El PALLETERO · aplicar #HEX`).\
 > • sem nada selecionado, a amostra balança e o aviso explica o que falta.
 
 <br>
@@ -247,7 +270,7 @@ o **⋯** (doca da direita) abre os ajustes no lugar das cores.
 ## 📍 desenvolvimento
 
 ```text
-cep/com.jmbillard.opalettero/
+cep/com.jmbillard.elpalletero/
 ├── CSXS/manifest.xml   → registro da extensão (AEFT 22+)
 ├── index.html          → painel
 ├── css/panel.css       → visual e animações
@@ -277,7 +300,7 @@ tools/                  → scripts que geram o mockup e os GIFs desta documenta
 
 ## 📍 script clássico
 
-a versão original em ScriptUI (`O PALETEIRO beta.jsx`) continua no repositório → [documentação do script clássico](docs/script-classico.md).
+a versão original em ScriptUI, com o nome antigo **O PALETTERO** (`O PALETEIRO beta.jsx`), continua no repositório → [documentação do script clássico](docs/script-classico.md).
 
 > 🚩 *obs:*\
 > • a extensão lê as paletas salvas pelo script e migra para o formato novo. o script não lê as paletas salvas pela extensão.

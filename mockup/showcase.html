@@ -1,4 +1,4 @@
-<title>O PALETTERO</title>
+<title>El PALLETERO</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=JetBrains+Mono:wght@500;600&display=swap">
@@ -31,6 +31,7 @@ body {
 .hero { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 32px; }
 .eyebrow { margin: 0 0 6px; font: 600 11px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
 h1 { margin: 0; font: 800 clamp(34px, 6vw, 58px)/.95 var(--display); letter-spacing: -.02em; }
+h1 .el { font-weight: 500; font-size: .5em; letter-spacing: 0; margin-right: .18em; vertical-align: .55em; color: var(--dim); }
 h1 .o { display: inline-block; width: .78em; height: .78em; border-radius: 50%; vertical-align: -.04em; margin-right: .06em;
 	background: conic-gradient(#FF4D4D, #FFC44E, #5DE6A2, #80C0FE, #B5ADFF, #FF8CCD, #FF4D4D); animation: spin 12s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -109,7 +110,8 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	.pane-title, .hint { display: none; }
 	.layouts { margin-left: 0; }
 }
-@media (prefers-reduced-motion: reduce) { h1 .o { animation: none; } }
+@media (prefers-reduced-motion: reduce) { h1 .el { font-weight: 500; font-size: .5em; letter-spacing: 0; margin-right: .18em; vertical-align: .55em; color: var(--dim); }
+h1 .o { animation: none; } }
 {{PANEL_CSS}}
 </style>
 
@@ -117,7 +119,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	<header class="hero">
 		<div>
 			<p class="eyebrow">extensão CEP para After Effects · mockup interativo</p>
-			<h1><span class="o" aria-hidden="true"></span>PALETTERO</h1>
+			<h1><span class="o" aria-hidden="true"></span><span class="el">El</span>PALLETERO</h1>
 		</div>
 		<p class="lede">O painel abaixo é o mesmo código da extensão, ligado a uma composição de mentira. Selecione um layer e clique numa cor.</p>
 	</header>
@@ -135,7 +137,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		<div class="ws-body">
 			<aside class="layers" id="layers" aria-label="Layers"></aside>
 			<div class="viewer"><div class="comp" id="comp"></div></div>
-			<div class="dockslot"><div class="frame"><div class="tab">O PALETTERO <span>≡</span></div><div id="pal"></div></div></div>
+			<div class="dockslot"><div class="frame"><div class="tab">El PALLETERO <span>≡</span></div><div id="pal"></div></div></div>
 		</div>
 	</section>
 
@@ -150,7 +152,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		<div class="tile"><kbd>nomes</kbd><p><b>Cada cor ganha um nome</b> (menta, tijolo, céu…) que acompanha a cor no editor até você digitar o seu. A ✦ devolve o automático.</p></div>
 		<div class="tile"><kbd>imagem</kbd><p>Selecione <b>praia_entardecer.jpg</b> e use o botão de imagem: as cores principais do frame aparecem. Clique na imagem para pegar outras.</p></div>
 		<div class="tile"><kbd>presets</kbd><p><b>Biblioteca de presets</b> numa pasta que você escolhe (pode ser da equipe). Clique substitui, Shift adiciona, ★ vira o padrão.</p></div>
-		<div class="tile"><kbd>projeto</kbd><p><b>Troque de projeto</b> no topo: cada .aep guarda a própria paleta num grupo de metadados O PALETTERO.</p></div>
+		<div class="tile"><kbd>projeto</kbd><p><b>Troque de projeto</b> no topo: cada .aep guarda a própria paleta num grupo de metadados El PALLETERO.</p></div>
 		<div class="tile"><kbd>formato</kbd><p><b>Faixa, coluna ou grade:</b> o painel se reorganiza sozinho. Arraste o canto para redimensionar.</p></div>
 	</section>
 </div>

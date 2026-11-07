@@ -1,4 +1,4 @@
-/* O PALETTERO · ponte entre o painel (HTML) e o After Effects (ExtendScript).
+/* El PALLETERO · ponte entre o painel (HTML) e o After Effects (ExtendScript).
    Fora do After Effects (navegador), usa window.PalMockHost — o "AE de mentira" do mockup. */
 (function (root) {
 	'use strict';

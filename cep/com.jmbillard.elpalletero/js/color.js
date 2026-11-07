@@ -1,4 +1,4 @@
-/* O PALETTERO · conversões de cor (sem dependências) */
+/* El PALLETERO · conversões de cor (sem dependências) */
 (function (root) {
 	'use strict';
 

@@ -1,4 +1,4 @@
-/* O PALETTERO · painel
+/* El PALLETERO · painel
    Estado → render com animações FLIP. Tudo que muda de lugar, anima. */
 (function (root) {
 	'use strict';
@@ -7,7 +7,7 @@
 	var Host = root.PalHost;
 	var N = root.PalNames;
 	var X = root.PalExtract;
-	var VERSION = 'v1.1';
+	var VERSION = 'v1.2';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 

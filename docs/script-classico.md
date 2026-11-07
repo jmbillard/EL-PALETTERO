@@ -1,8 +1,8 @@
-# 📜 script clássico
+# 📜 script clássico (O PALETTERO)
 
-[← O PALETTERO](../README.md)
+[← El PALLETERO](../README.md)
 
-a versão original do O PALETTERO, em ScriptUI (`.jsx`), anterior à extensão. continua funcionando, mas não recebe as novidades da extensão (nomes automáticos, presets, extração de imagem).
+a versão original, em ScriptUI (`.jsx`), anterior à extensão. ainda usa o nome antigo **O PALETTERO** e a pasta de preferências `O PALETTERO script`. continua funcionando, mas não recebe as novidades da extensão (nomes automáticos, presets, extração de imagem).
 
 > 🚩 *obs:*\
 > • a extensão **lê** as paletas salvas pelo script (`xmp:Label`) e migra para o grupo de metadados novo no primeiro salvamento.\

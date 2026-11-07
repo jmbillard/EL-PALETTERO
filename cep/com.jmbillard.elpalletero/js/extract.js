@@ -1,4 +1,4 @@
-/* O PALETTERO · extração de cores de uma imagem (k-means em CIELAB, sem dependências) */
+/* El PALLETERO · extração de cores de uma imagem (k-means em CIELAB, sem dependências) */
 (function (root) {
 	'use strict';
 	var C = root.PalColor;

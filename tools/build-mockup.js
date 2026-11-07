@@ -1,10 +1,10 @@
-// Gera mockup/O-PALETTERO-mockup.html: o painel real + o "After Effects de mentira", num arquivo só.
+// Gera mockup/El-PALLETERO-mockup.html: o painel real + o "After Effects de mentira", num arquivo só.
 // uso: node tools/build-mockup.js
 const fs = require('fs');
 const path = require('path');
 
 const root = path.join(__dirname, '..');
-const ext = path.join(root, 'cep', 'com.jmbillard.opalettero');
+const ext = path.join(root, 'cep', 'com.jmbillard.elpalletero');
 const read = (p) => fs.readFileSync(p, 'utf8');
 
 const css = read(path.join(ext, 'css', 'panel.css'));
@@ -21,5 +21,5 @@ const out = read(path.join(root, 'mockup', 'showcase.html'))
 	.replace('{{PANEL_CSS}}', () => css)
 	.replace('{{PANEL_JS}}', () => js.replace(/<\/script/gi, '<\\/script'));
 
-fs.writeFileSync(path.join(root, 'mockup', 'O-PALETTERO-mockup.html'), out);
-console.log('ok → mockup/O-PALETTERO-mockup.html', (out.length / 1024).toFixed(1) + 'KB');
+fs.writeFileSync(path.join(root, 'mockup', 'El-PALLETERO-mockup.html'), out);
+console.log('ok → mockup/El-PALLETERO-mockup.html', (out.length / 1024).toFixed(1) + 'KB');

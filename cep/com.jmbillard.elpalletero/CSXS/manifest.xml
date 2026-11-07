@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ExtensionManifest Version="7.0" ExtensionBundleId="com.jmbillard.opalettero" ExtensionBundleVersion="1.1.0" ExtensionBundleName="O PALETTERO"
+<ExtensionManifest Version="7.0" ExtensionBundleId="com.jmbillard.elpalletero" ExtensionBundleVersion="1.2.0" ExtensionBundleName="El PALLETERO"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<ExtensionList>
-		<Extension Id="com.jmbillard.opalettero.panel" Version="1.1.0" />
+		<Extension Id="com.jmbillard.elpalletero.panel" Version="1.2.0" />
 	</ExtensionList>
 	<ExecutionEnvironment>
 		<HostList>
@@ -16,7 +16,7 @@
 		</RequiredRuntimeList>
 	</ExecutionEnvironment>
 	<DispatchInfoList>
-		<Extension Id="com.jmbillard.opalettero.panel">
+		<Extension Id="com.jmbillard.elpalletero.panel">
 			<DispatchInfo>
 				<Resources>
 					<MainPath>./index.html</MainPath>
@@ -31,7 +31,7 @@
 				</Lifecycle>
 				<UI>
 					<Type>Panel</Type>
-					<Menu>O PALETTERO</Menu>
+					<Menu>El PALLETERO</Menu>
 					<Geometry>
 						<Size>
 							<Height>72</Height>

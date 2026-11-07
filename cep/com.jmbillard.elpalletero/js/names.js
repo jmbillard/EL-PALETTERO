@@ -1,4 +1,4 @@
-/* O PALETTERO · nomes automáticos de cor (pt-BR, evocativos)
+/* El PALLETERO · nomes automáticos de cor (pt-BR, evocativos)
    Escolhe o nome da referência mais próxima em CIELAB e evita repetir nomes na mesma paleta. */
 (function (root) {
 	'use strict';

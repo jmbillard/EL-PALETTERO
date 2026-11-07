@@ -32,8 +32,8 @@
 	};
 
 	var folders = {
-		'/Users/voce/Library/Application Support/O PALETTERO script/presets': [
-			{ id: 'o-palettero', name: 'O PALETTERO', swatches: BUILTIN },
+		'/Users/voce/Library/Application Support/El PALLETERO/presets': [
+			{ id: 'el-palletero', name: 'El PALLETERO', swatches: BUILTIN },
 			{ id: 'abertura', name: 'Abertura', swatches: sw(['#FF4D4D', '#FFC44E', '#5DE6A2', '#80C0FE', '#B5ADFF', '#FF8CCD', '#1E2A44', '#F2F2F2']) },
 			{ id: 'neutros', name: 'Neutros', swatches: sw(['#111111', '#2B2B2B', '#4A4A4A', '#8D8D8D', '#C0C0C0', '#E3DAC9', '#F5F3EE']) },
 			{ id: 'verao', name: 'Verão', swatches: sw(['#FF7518', '#FFC72C', '#40E0D0', '#00B2A9', '#FA8072', '#FFF1A8']) }
@@ -51,7 +51,7 @@
 	];
 	var folderNames = Object.keys(folders);
 
-	var prefs = { showColorLabels: true, showColorInfo: true, labelType: '#HEX', defaultPreset: 'o-palettero', presetFolder: folderNames[0] };
+	var prefs = { showColorLabels: true, showColorInfo: true, labelType: '#HEX', defaultPreset: 'el-palletero', presetFolder: folderNames[0] };
 	var current = 'abertura_v3.aep';
 	var listeners = [];
 

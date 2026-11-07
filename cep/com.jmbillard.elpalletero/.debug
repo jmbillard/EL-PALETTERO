@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ExtensionList>
-	<Extension Id="com.jmbillard.opalettero.panel">
+	<Extension Id="com.jmbillard.elpalletero.panel">
 		<HostList>
 			<Host Name="AEFT" Port="8099" />
 		</HostList>

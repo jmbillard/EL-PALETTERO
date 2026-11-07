@@ -1,12 +1,14 @@
-/* O PALETTERO · host (ExtendScript)
+/* El PALLETERO · host (ExtendScript)
    Todas as funções públicas começam com PAL_ e devolvem uma string JSON para o painel.
-   Compatível com o script O PALETTERO: mesma chave XMP (xmp:Label) e mesmo preferences.json. */
+   Antes se chamava O PALETTERO: o host lê os locais antigos (pasta de preferências,
+   namespace XMP e o xmp:Label do script clássico) e migra para os novos. */
 
 if (typeof ExternalObject.AdobeXMPScript == 'undefined' || ExternalObject.AdobeXMPScript == undefined) {
 	try { ExternalObject.AdobeXMPScript = new ExternalObject('lib:AdobeXMPScript'); } catch (e) {}
 }
 
-var PAL_PREFS_FOLDER = Folder.userData.fullName + '/O PALETTERO script';
+var PAL_PREFS_FOLDER = Folder.userData.fullName + '/El PALLETERO';
+var PAL_OLD_PREFS_FOLDER = Folder.userData.fullName + '/O PALETTERO script'; // nome antigo (e do script clássico)
 var PAL_DEFAULT_SWATCHES = [
 	'#F13333', '#FF4D4D', '#FE674C', '#FF8F4D', '#FFC44E', '#5DE6A2',
 	'#80C0FE', '#B5ADFF', '#FF8CCD', '#FF739A', '#FF5A68'
@@ -81,11 +83,15 @@ function PAL_writeFile(path, content) {
 }
 
 // ---------------------------------------------------------------- projeto
-// A paleta do projeto vive num grupo de metadados próprio (namespace O PALETTERO).
-// O xmp:Label do script antigo só é lido, para migrar paletas existentes.
+// A paleta do projeto vive num grupo de metadados próprio (namespace El PALLETERO).
+// Lidos só para migrar: o namespace do O PALETTERO e o xmp:Label do script clássico.
+// No primeiro salvamento, a paleta passa para o namespace novo e o antigo é apagado.
 
-var PAL_NS = 'https://github.com/jmbillard/O-PALETTERO/ns/1.0/';
-try { XMPMeta.registerNamespace(PAL_NS, 'opalettero'); } catch (e) {}
+var PAL_NS = 'https://github.com/jmbillard/El-PALLETERO/ns/1.0/';
+var PAL_NS_OLD = 'https://github.com/jmbillard/O-PALETTERO/ns/1.0/';
+var PAL_NS_FIELDS = ['palette', 'preset', 'version', 'updated'];
+try { XMPMeta.registerNamespace(PAL_NS, 'elpalletero'); } catch (e) {}
+try { XMPMeta.registerNamespace(PAL_NS_OLD, 'opalettero'); } catch (e) {}
 
 function PAL_projectKey() {
 	if (!app.project) return PAL_json('');
@@ -115,10 +121,13 @@ function PAL_loadPalette() {
 	var name = PAL_projectName();
 	try {
 		var meta = new XMPMeta(app.project.xmpPacket);
-		if (meta.doesPropertyExist(PAL_NS, 'palette')) {
-			var data = PAL_parse(meta.getProperty(PAL_NS, 'palette').toString());
-			var from = meta.doesPropertyExist(PAL_NS, 'preset') ? meta.getProperty(PAL_NS, 'preset').toString() : '';
-			return PAL_json({ source: 'project', project: name, preset: from, swatches: data });
+		var spaces = [PAL_NS, PAL_NS_OLD];
+		for (var n = 0; n < spaces.length; n++) {
+			var ns = spaces[n];
+			if (!meta.doesPropertyExist(ns, 'palette')) continue;
+			var data = PAL_parse(meta.getProperty(ns, 'palette').toString());
+			var from = meta.doesPropertyExist(ns, 'preset') ? meta.getProperty(ns, 'preset').toString() : '';
+			return PAL_json({ source: ns == PAL_NS ? 'project' : 'migrate', project: name, preset: from, swatches: data });
 		}
 		var legacy = PAL_legacyPalette(meta);
 		if (legacy.length) return PAL_json({ source: 'legacy', project: name, swatches: legacy });
@@ -130,6 +139,14 @@ function PAL_loadPalette() {
 // swatchesJson: [{color, label, auto}] · preset: nome do preset de origem (opcional)
 function PAL_savePalette(swatchesJson, preset) {
 	var meta = new XMPMeta(app.project.xmpPacket);
+	// preset não informado: mantém o que já havia (inclusive no namespace antigo)
+	if (preset === undefined) {
+		if (meta.doesPropertyExist(PAL_NS, 'preset')) preset = meta.getProperty(PAL_NS, 'preset').toString();
+		else if (meta.doesPropertyExist(PAL_NS_OLD, 'preset')) preset = meta.getProperty(PAL_NS_OLD, 'preset').toString();
+	}
+	for (var i = 0; i < PAL_NS_FIELDS.length; i++) {
+		try { meta.deleteProperty(PAL_NS_OLD, PAL_NS_FIELDS[i]); } catch (e) {}
+	}
 	meta.setProperty(PAL_NS, 'version', '1');
 	meta.setProperty(PAL_NS, 'palette', swatchesJson);
 	meta.setProperty(PAL_NS, 'updated', new Date().toUTCString());
@@ -408,7 +425,7 @@ function PAL_listPresets() {
 	// cria um primeiro preset para a biblioteca nunca começar vazia (só na pasta padrão)
 	var list = PAL_readPresets();
 	if (!list.length && !PAL_readPrefs().presetsSeeded) {
-		PAL_savePreset(PAL_json({ name: 'O PALETTERO', swatches: PAL_builtinSwatches() }));
+		PAL_savePreset(PAL_json({ name: 'El PALLETERO', swatches: PAL_builtinSwatches() }));
 		PAL_savePrefs(PAL_json({ presetsSeeded: true }));
 		list = PAL_readPresets();
 	}
@@ -444,7 +461,7 @@ function PAL_deletePreset(id) {
 function PAL_choosePresetFolder() {
 	var loc = PAL_presetLocation();
 	var start = loc.folder || new Folder(Folder.myDocuments);
-	var f = Folder.selectDialog('Pasta de presets do O PALETTERO', start);
+	var f = Folder.selectDialog('Pasta de presets do El PALLETERO', start);
 	if (!f) return PAL_json({ ok: false });
 	PAL_MOUNTS = null;
 	var net = PAL_toNet(f.fsName);
@@ -473,7 +490,7 @@ function PAL_revealPresetFolder() {
 // no Windows um PNG ainda aberto não pode ser apagado: o que sobrar sai na próxima extração
 function PAL_sweepTemp() {
 	try {
-		var old = Folder.temp.getFiles('opalettero_*.png');
+		var old = Folder.temp.getFiles('elpalletero_*.png').concat(Folder.temp.getFiles('opalettero_*.png'));
 		var limit = new Date().getTime() - 60000;
 		for (var i = 0; i < old.length; i++) if (old[i].modified && old[i].modified.getTime() < limit) old[i].remove();
 	} catch (e) {}
@@ -483,7 +500,7 @@ function PAL_releaseFrame(tmpId, path) {
 	try {
 		if (tmpId) {
 			var item = app.project.itemByID(tmpId);
-			if (item) { app.beginUndoGroup('O PALETTERO · extrair frame'); item.remove(); app.endUndoGroup(); }
+			if (item) { app.beginUndoGroup('El PALLETERO · extrair frame'); item.remove(); app.endUndoGroup(); }
 		}
 		if (path) { var f = new File(path); if (f.exists) f.remove(); }
 	} catch (e) {}
@@ -498,7 +515,7 @@ function PAL_grabFrame() {
 	if (!(comp instanceof CompItem)) return PAL_json({ ok: false, reason: 'nocomp' });
 	var layer = comp.selectedLayers.length ? comp.selectedLayers[0] : null;
 	PAL_sweepTemp();
-	var out = new File(Folder.temp.fsName + '/opalettero_' + new Date().getTime() + '.png');
+	var out = new File(Folder.temp.fsName + '/elpalletero_' + new Date().getTime() + '.png');
 	var src = layer && layer.source ? layer.source : null;
 
 	try {
@@ -512,10 +529,10 @@ function PAL_grabFrame() {
 		}
 		if (src instanceof FootageItem && !(src.mainSource instanceof SolidSource)) {
 			// vídeo, PSD, sequência…: renderiza o frame numa comp temporária
-			app.beginUndoGroup('O PALETTERO · extrair frame');
+			app.beginUndoGroup('El PALLETERO · extrair frame');
 			var fps = src.frameRate || comp.frameRate;
 			var dur = Math.max(src.duration || 0, 1 / fps);
-			var tmp = app.project.items.addComp('O PALETTERO tmp', src.width, src.height, src.pixelAspect || 1, dur, fps);
+			var tmp = app.project.items.addComp('El PALLETERO tmp', src.width, src.height, src.pixelAspect || 1, dur, fps);
 			tmp.layers.add(src);
 			var t = src.mainSource.isStill ? 0 : Math.max(0, Math.min(dur - 1 / fps, layer.sourceTime(comp.time)));
 			tmp.saveFrameToPng(t, out);
@@ -561,7 +578,7 @@ function PAL_apply(hex, optsJson) {
 		}
 	}
 
-	app.beginUndoGroup('O PALETTERO · aplicar ' + hex);
+	app.beginUndoGroup('El PALLETERO · aplicar ' + hex);
 	try {
 		if (props.length || texts.length) {
 			for (p = 0; p < props.length; p++) PAL_setProp(props[p], color, comp.time);
@@ -656,3 +673,52 @@ function PAL_capture(scope) {
 	if (!out.length) for (i = 0; i < layers.length; i++) PAL_layerColors(layers[i], out);
 	return PAL_json({ ok: true, colors: out });
 }
+
+// ---------------------------------------------------------------- migração O PALETTERO → El PALLETERO
+// Na primeira vez, copia preferences.json e os presets da pasta antiga para a nova.
+// A pasta antiga fica intacta: o script clássico continua usando ela.
+
+function PAL_copyFile(from, toPath) {
+	var src = new File(from);
+	if (!src.exists) return false;
+	src.encoding = 'UTF-8';
+	src.open('r');
+	var data = src.read();
+	src.close();
+	var dst = new File(toPath);
+	dst.encoding = 'UTF-8';
+	dst.open('w');
+	dst.write(data);
+	dst.close();
+	return true;
+}
+
+function PAL_migrateFolders() {
+	var nf = new Folder(PAL_PREFS_FOLDER), of = new Folder(PAL_OLD_PREFS_FOLDER);
+	if (nf.exists) return;
+	nf.create();
+	if (!of.exists) return;
+
+	var raw = PAL_readFile(of.fsName + '/preferences.json');
+	if (raw) {
+		var p = {};
+		try { p = PAL_parse(raw); } catch (e) {}
+		// se a pasta de presets era a padrão antiga, passa a ser a padrão nova; pastas de rede ficam como estão
+		var oldDefault = PAL_slash(of.fsName + '/presets').toLowerCase();
+		if (!p.presetFolder || PAL_slash(p.presetFolder).toLowerCase().replace(/\/+$/, '') == oldDefault) {
+			p.presetFolder = '';
+			p.presetFolderNet = '';
+		}
+		PAL_writeFile(PAL_PREFS_FOLDER + '/preferences.json', PAL_json(p));
+	}
+
+	var op = new Folder(of.fsName + '/presets');
+	if (op.exists) {
+		var np = new Folder(PAL_PREFS_FOLDER + '/presets');
+		if (!np.exists) np.create();
+		var files = op.getFiles('*.json');
+		for (var i = 0; i < files.length; i++) PAL_copyFile(files[i].fsName, np.fsName + '/' + files[i].name);
+	}
+}
+
+try { PAL_migrateFolders(); } catch (e) {}
