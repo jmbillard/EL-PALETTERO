@@ -33,7 +33,7 @@ o painel sempre mostra a paleta do projeto. os presets são uma biblioteca para 
   - ✏️ → renomear (ou `F2`).
   - ★ → preset **padrão**: é o que aparece em projetos que ainda não têm paleta.
   - 🗑️ → excluir (ou `Delete`).
-  - **arrastar** pela área vazia à direita do nome (a alça ⠿ aparece no hover) → reordena. a ordem fica nas suas preferências, por pasta: numa pasta de equipe cada pessoa tem a sua ordem e os arquivos não mudam.
+  - **arrastar** pela área vazia à direita do nome (a alça ⠿ aparece no hover) → reordena. com a alça em foco, ↑ ↓ (← → na faixa) também mudam a ordem. a ordem fica nas suas preferências, por pasta: numa pasta de equipe cada pessoa tem a sua ordem e os arquivos não mudam.
 - o pontinho colorido no canto do cartão marca o preset de onde a paleta do projeto veio.
 
 > 🚩 *obs:*\

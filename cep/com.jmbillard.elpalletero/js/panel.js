@@ -7,7 +7,7 @@
 	var Host = root.PalHost;
 	var N = root.PalNames;
 	var X = root.PalExtract;
-	var VERSION = 'v1.2.4';
+	var VERSION = 'v1.2.5';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
@@ -933,7 +933,7 @@
 				var cls = 'pcard' + (p.id === S.prefs.defaultPreset ? ' is-default' : '') + (p.name === S.preset ? ' is-origin' : '');
 				html += '<div class="' + cls + '" role="listitem" tabindex="0" data-pid="' + esc(p.id) + '" style="--i:' + i + '">' + bars(p.swatches) +
 					'<span class="pc-row"><span class="pc-name">' + esc(p.name) + '</span>' +
-					'<span class="pc-grip" aria-hidden="true" data-tip="Arraste para reordenar"><i></i><i></i><i></i><i></i><i></i><i></i></span></span>' +
+					'<button type="button" class="pc-grip" aria-label="Arraste para reordenar (ou use as setas)" data-tip="Arraste para reordenar"><i></i><i></i><i></i><i></i><i></i><i></i></button></span>' +
 					'<span class="pc-acts"><button class="pc-btn pc-ren" data-tip="Renomear">' + ic('pencil') + '</button>' +
 					'<button class="pc-btn pc-star" data-tip="Padrão para projetos sem paleta">' + ic('star') + '</button>' +
 					'<button class="pc-btn pc-del" data-tip="Excluir preset">' + ic('trash') + '</button></span></div>';
@@ -1065,75 +1065,124 @@
 		}
 		libList.addEventListener('scroll', libFade);
 
-		// arrastar presets pela alça (área vazia à direita do nome) para reordenar
-		var PD = null;
+		// arrastar presets pela alça (área vazia à direita do nome) para reordenar.
+		// Mesmo padrão do sortable.js do O PADEIRO, que funciona no CEP do After Effects:
+		// captura no próprio puxador (um <button>), nada muda no DOM durante o arrasto (só transforms
+		// calculados das posições iniciais) e a lista é reordenada uma vez, ao soltar.
 		function presetCards() { return Array.prototype.slice.call(libList.querySelectorAll('.pcard[data-pid]')); }
+
+		function movePreset(from, to) {
+			var all = presetCards();
+			if (from === to || !all[from] || !all[to]) return;
+			var card = all[from];
+			libList.insertBefore(card, to > from ? all[to].nextSibling : all[to]);
+			var ids = presetCards().map(function (c) { return c.dataset.pid; });
+			S.presets = ids.map(presetById);
+			Host.savePresetOrder(ids).catch(function () { toast('Não foi possível salvar a ordem', { icon: 'alert' }); });
+			return card;
+		}
+
 		libList.addEventListener('pointerdown', function (e) {
 			var grip = e.target.closest('.pc-grip');
 			if (!grip || e.button !== 0) return;
+			var all = presetCards();
 			var card = grip.closest('.pcard');
-			PD = { card: card, x: e.clientX, y: e.clientY, started: false, before: presetCards().map(function (c) { return c.dataset.pid; }) };
-			libList.setPointerCapture(e.pointerId);
+			var from = all.indexOf(card);
+			if (from < 0 || all.length < 2) return;
 			e.preventDefault();
-		});
-		libList.addEventListener('pointermove', function (e) {
-			if (!PD) return;
+
 			var row = el.dataset.orient === 'row';
-			if (!PD.started) {
-				if (Math.abs(e.clientX - PD.x) + Math.abs(e.clientY - PD.y) < 4) return;
-				PD.started = true;
-				hideTip();
-				libList.classList.add('sorting');
-				PD.card.classList.add('drag');
-				var r0 = rect(PD.card);
-				PD.gx = PD.x - r0.left; PD.gy = PD.y - r0.top;
-			}
-			// rola sozinho perto das bordas
-			var lr = rect(libList), edge = 28;
-			if (row) libList.scrollLeft += e.clientX < lr.left + edge ? -8 : e.clientX > lr.right - edge ? 8 : 0;
-			else libList.scrollTop += e.clientY < lr.top + edge ? -8 : e.clientY > lr.bottom - edge ? 8 : 0;
-			// posição de destino pelo centro dos outros cartões
-			var others = presetCards().filter(function (c) { return c !== PD.card; });
-			var idx = 0;
-			others.forEach(function (c, i) {
-				var b = rect(c);
-				if (row ? e.clientX > b.left + b.width / 2 : e.clientY > b.top + b.height / 2) idx = i + 1;
-			});
-			var cur = presetCards().indexOf(PD.card);
-			if (idx !== cur) {
-				var firsts = others.map(rect);
-				var ref = others[idx] || null;
-				if (ref) libList.insertBefore(PD.card, ref);
-				else libList.appendChild(PD.card);
-				others.forEach(function (c, i) {
-					var l = rect(c), f = firsts[i];
-					var dx = f.left - l.left, dy = f.top - l.top;
-					if (dx || dy) c.animate([{ transform: 'translate(' + dx + 'px,' + dy + 'px)' }, { transform: 'none' }], { duration: 200, easing: EASE });
+			var start = row ? e.clientX : e.clientY;
+			var scroll0 = row ? libList.scrollLeft : libList.scrollTop;
+			var boxes = all.map(rect);
+			var step = row ? boxes[1].left - boxes[0].left : boxes[1].top - boxes[0].top;
+			var to = from, started = false, last = e, raf = 0;
+
+			grip.setPointerCapture(e.pointerId);
+
+			function scrolled() { return (row ? libList.scrollLeft : libList.scrollTop) - scroll0; }
+
+			function update() {
+				var d = (row ? last.clientX : last.clientY) - start + scrolled();
+				if (!started) {
+					if (Math.abs(d) < 4) return;
+					started = true;
+					hideTip();
+					card.classList.add('drag');
+					libList.classList.add('sorting');
+				}
+				var b0 = boxes[from];
+				var center = (row ? b0.left + b0.width / 2 : b0.top + b0.height / 2) + d;
+				to = from;
+				for (var i = 0; i < boxes.length; i++) {
+					var mid = row ? boxes[i].left + boxes[i].width / 2 : boxes[i].top + boxes[i].height / 2;
+					if (i < from && center < mid) { to = i; break; }
+					if (i > from && center > mid) to = i;
+				}
+				card.style.transform = row ? 'translateX(' + d + 'px)' : 'translateY(' + d + 'px)';
+				all.forEach(function (c, i) {
+					if (c === card) return;
+					var shift = 0;
+					if (from < to && i > from && i <= to) shift = -step;
+					if (from > to && i < from && i >= to) shift = step;
+					c.style.transform = shift ? (row ? 'translateX(' : 'translateY(') + shift + 'px)' : '';
 				});
 			}
-			PD.card.style.transform = '';
-			var nat = rect(PD.card);
-			var tx = row ? e.clientX - PD.gx - nat.left : 0;
-			var ty = row ? 0 : e.clientY - PD.gy - nat.top;
-			PD.card.style.transform = 'translate(' + tx + 'px,' + ty + 'px)';
+
+			// rola sozinho perto das bordas da lista
+			function autoscroll() {
+				raf = 0;
+				if (!started) return;
+				var lr = rect(libList), edge = 28, v = 0;
+				var p = row ? last.clientX : last.clientY, lo = row ? lr.left : lr.top, hi = row ? lr.right : lr.bottom;
+				if (p < lo + edge) v = -Math.ceil((lo + edge - p) / 4);
+				else if (p > hi - edge) v = Math.ceil((p - hi + edge) / 4);
+				if (!v) return;
+				if (row) libList.scrollLeft += v; else libList.scrollTop += v;
+				update();
+				raf = requestAnimationFrame(autoscroll);
+			}
+
+			function move(ev) {
+				last = ev;
+				update();
+				if (!raf) raf = requestAnimationFrame(autoscroll);
+			}
+
+			function end() {
+				grip.removeEventListener('pointermove', move);
+				grip.removeEventListener('pointerup', end);
+				grip.removeEventListener('pointercancel', end);
+				grip.removeEventListener('lostpointercapture', end);
+				if (raf) cancelAnimationFrame(raf);
+				libList.classList.remove('sorting');
+				card.classList.remove('drag');
+				all.forEach(function (c) { c.style.transform = ''; });
+				if (started && to !== from) movePreset(from, to);
+			}
+
+			grip.addEventListener('pointermove', move);
+			grip.addEventListener('pointerup', end);
+			grip.addEventListener('pointercancel', end);
+			grip.addEventListener('lostpointercapture', end);
 		});
-		function endPresetDrag() {
-			if (!PD) return;
-			var d = PD;
-			PD = null;
-			if (!d.started) return;
-			var from = d.card.style.transform;
-			d.card.style.transform = '';
-			d.card.animate([{ transform: from }, { transform: 'none' }], { duration: 260, easing: SPRING });
-			d.card.classList.remove('drag');
-			libList.classList.remove('sorting');
-			var ids = presetCards().map(function (c) { return c.dataset.pid; });
-			if (ids.join() === d.before.join()) return;
-			S.presets = ids.map(presetById);
-			Host.savePresetOrder(ids).catch(function () { toast('Não foi possível salvar a ordem', { icon: 'alert' }); });
-		}
-		libList.addEventListener('pointerup', endPresetDrag);
-		libList.addEventListener('pointercancel', endPresetDrag);
+
+		// teclado: com o puxador em foco, ↑ ↓ (← → na faixa) mudam a ordem
+		libList.addEventListener('keydown', function (e) {
+			var grip = e.target.closest && e.target.closest('.pc-grip');
+			if (!grip) return;
+			var back = e.key === 'ArrowUp' || e.key === 'ArrowLeft', fwd = e.key === 'ArrowDown' || e.key === 'ArrowRight';
+			if (!back && !fwd) return;
+			e.preventDefault();
+			e.stopPropagation();
+			var all = presetCards(), from = all.indexOf(grip.closest('.pcard')), to = from + (back ? -1 : 1);
+			if (from < 0 || to < 0 || to >= all.length) return;
+			var moved = movePreset(from, to);
+			if (!moved) return;
+			moved.animate([{ transform: 'scale(.96)' }, { transform: 'none' }], { duration: 260, easing: SPRING });
+			moved.querySelector('.pc-grip').focus({ preventScroll: true });
+			moved.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+		});
 
 		libList.addEventListener('click', function (e) {
 			if (e.target.closest('.pc-input') || e.target.closest('.pc-grip')) return;
