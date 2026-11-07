@@ -31,35 +31,78 @@
 		else root.open(url, '_blank', 'noopener');
 	}
 
-	// carrega a imagem do frame. No CEP lê o arquivo pelo Node (data: URL não "suja" o canvas);
-	// o PNG pode demorar um pouco para existir, então tenta de novo por alguns segundos.
-	function loadImage(r) {
+	// Carrega a imagem do frame só quando o arquivo está completo.
+	// saveFrameToPng pode devolver o controle antes de terminar de gravar, então:
+	//  1) espera o arquivo existir com tamanho > 0;
+	//  2) espera o tamanho parar de mudar entre duas leituras;
+	//  3) para PNG, confere o bloco final IEND (prova de arquivo inteiro);
+	//  4) só então decodifica. Se a decodificação falhar, volta a esperar.
+	// opts: { timeout (ms), cancelled() → true para desistir }
+	var IEND = [0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82];
+
+	function isPng(path) { return /\.png$/i.test(path); }
+
+	function pngComplete(buf) {
+		if (buf.length < 20) return false;
+		var tail = buf.slice(buf.length - 8);
+		for (var i = 0; i < 8; i++) if (tail[i] !== IEND[i]) return false;
+		return true;
+	}
+
+	function decode(src) {
 		return new Promise(function (resolve, reject) {
-			var tries = 0;
-			function attempt() {
-				var src = r.url;
-				if (!src && r.path) {
-					var fs = root.require ? root.require('fs') : null;
-					if (fs) {
-						try {
-							var ext = (r.path.match(/\.(\w+)$/) || [, 'png'])[1].toLowerCase().replace('jpg', 'jpeg');
-							src = 'data:image/' + ext + ';base64,' + fs.readFileSync(r.path).toString('base64');
-						} catch (e) { src = null; }
-					} else {
-						src = encodeURI('file:///' + r.path.replace(/\\/g, '/').replace(/^\/+/, '')) + '?t=' + Date.now();
-					}
+			var img = new Image();
+			img.onload = function () { resolve(img); };
+			img.onerror = function () { reject(new Error('imagem inválida')); };
+			img.src = src;
+		});
+	}
+
+	function loadImage(r, opts) {
+		opts = opts || {};
+		var timeout = opts.timeout || 60000;
+		var t0 = Date.now();
+		var fs = root.require ? root.require('fs') : null;
+		var lastSize = -1;
+
+		return new Promise(function (resolve, reject) {
+			function again() {
+				if (opts.cancelled && opts.cancelled()) return reject(new Error('cancelado'));
+				if (Date.now() - t0 > timeout) return reject(new Error('tempo esgotado'));
+				setTimeout(step, 150);
+			}
+
+			function step() {
+				if (opts.cancelled && opts.cancelled()) return reject(new Error('cancelado'));
+
+				// mockup (navegador): imagem já vem como URL; readyAt simula o tempo de render
+				if (r.url) {
+					if (r.readyAt && Date.now() < r.readyAt) return again();
+					return decode(r.url).then(resolve, again);
 				}
-				if (!src) return retry();
-				var img = new Image();
-				img.onload = function () { resolve(img); };
-				img.onerror = retry;
-				img.src = src;
+
+				if (!fs) {
+					// sem Node: não há como checar o arquivo, só tentar decodificar
+					return decode(encodeURI('file:///' + r.path.replace(/\\/g, '/').replace(/^\/+/, '')) + '?t=' + Date.now()).then(resolve, again);
+				}
+
+				var size;
+				try { size = fs.statSync(r.path).size; } catch (e) { return again(); }   // ainda não existe
+				if (!size || size !== lastSize) { lastSize = size; return again(); }    // vazio ou crescendo
+
+				var buf;
+				try { buf = fs.readFileSync(r.path); } catch (e) { return again(); }    // ainda travado pelo AE
+				if (buf.length !== size) { lastSize = buf.length; return again(); }
+				if (isPng(r.path) && !pngComplete(buf)) return again();
+
+				var ext = (r.path.match(/\.(\w+)$/) || [, 'png'])[1].toLowerCase().replace('jpg', 'jpeg');
+				decode('data:image/' + ext + ';base64,' + buf.toString('base64')).then(resolve, function () {
+					lastSize = -1;
+					again();
+				});
 			}
-			function retry() {
-				if (++tries > 30) return reject(new Error('frame não encontrado'));
-				setTimeout(attempt, 200);
-			}
-			attempt();
+
+			step();
 		});
 	}
 

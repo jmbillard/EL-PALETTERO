@@ -113,7 +113,7 @@
 			'</div>',
 			'<div class="sheet extract" hidden tabindex="-1" role="dialog" aria-label="Extrair cores">',
 			'  <div class="ed-flood"></div>',
-			'  <div class="ex-img"><div class="ex-stage"><img alt=""><div class="ex-marks"></div><span class="ex-loupe"><i></i></span></div><span class="ex-wait"></span></div>',
+			'  <div class="ex-img"><div class="ex-stage"><img alt=""><div class="ex-marks"></div><span class="ex-loupe"><i></i></span></div><span class="ex-wait"><span class="ex-wait-txt"></span></span></div>',
 			'  <div class="ex-side">',
 			'    <div class="ex-head">' + ic('image') + '<span class="ex-label"></span></div>',
 			'    <div class="ex-chips"></div>',
@@ -985,9 +985,10 @@
 					flash(tool, 'nope', 420);
 					return toast(REASONS[r && r.reason] || 'Não foi possível ler o frame', { icon: 'alert' });
 				}
-				XS = { grab: r, chips: [], data: null };
+				var job = XS = { grab: r, chips: [], data: null };
 				q('.ex-label').textContent = r.label || 'frame';
 				exSheet.classList.add('loading');
+				exSheet.classList.remove('slow');
 				exImg.removeAttribute('src');
 				exMarks.innerHTML = exChips.innerHTML = '';
 				exSheet.hidden = false;
@@ -997,21 +998,41 @@
 				exSheet.animate([{ clipPath: clip(rr, 8) }, { clipPath: 'inset(0px 0px 0px 0px round 0px)' }], { duration: 420, easing: EASE });
 				exFlood.animate([{ opacity: 1 }, { opacity: 1, offset: 0.35 }, { opacity: 0 }], { duration: 520, easing: 'ease-out', fill: 'forwards' });
 				exSheet.focus({ preventScroll: true });
-				return Host.loadImage(r).then(function (img) {
+
+				// o esqueleto basta para esperas curtas; se demorar, explica o que está acontecendo
+				var t0 = Date.now(), waitTxt = q('.ex-wait-txt');
+				var ticker = setInterval(function () {
+					if (XS !== job) return clearInterval(ticker);
+					var sec = (Date.now() - t0) / 1000;
+					if (sec < 0.7) return;
+					exSheet.classList.add('slow');
+					waitTxt.textContent = (r.kind === 'image' && !r.temp ? 'lendo imagem' : 'renderizando frame') + (sec >= 2 ? ' · ' + Math.floor(sec) + 's' : '…');
+				}, 250);
+
+				function done() {
+					clearInterval(ticker);
 					busy(tool, false);
-					Host.releaseFrame(r);
-					if (!XS) return;
+					Host.releaseFrame(r); // remove PNG e comp temporários, dê certo ou não
+				}
+
+				return Host.loadImage(r, { timeout: 60000, cancelled: function () { return XS !== job; } }).then(function (img) {
+					done();
+					if (XS !== job) return;
 					XS.data = X.sample(img, 160);
 					XS.ratio = img.naturalWidth / img.naturalHeight;
 					exImg.src = img.src;
-					exSheet.classList.remove('loading');
+					exSheet.classList.remove('loading', 'slow');
 					fitStage();
 					exStage.animate([{ opacity: 0, transform: 'scale(.96)' }, { opacity: 1, transform: 'none' }], { duration: 360, easing: EASE });
 					computeChips();
+				}, function (err) {
+					done();
+					if (XS !== job) return; // cancelado com Esc/×: sem aviso
+					closeExtract();
+					toast(/tempo/.test(err && err.message) ? 'O frame demorou demais para renderizar' : 'Não foi possível ler o frame', { icon: 'alert' });
 				});
 			}).catch(function () {
 				busy(tool, false);
-				if (XS) closeExtract();
 				toast('Não foi possível ler o frame', { icon: 'alert' });
 			});
 		}

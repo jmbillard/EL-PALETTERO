@@ -620,7 +620,17 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 .ex-stage img { display: block; width: 100%; height: 100%; border-radius: 3px; user-select: none; -webkit-user-drag: none; }
 .extract.loading .ex-stage { visibility: hidden; }
 .ex-wait { position: absolute; inset: 0; display: none; background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .07) 50%, transparent 70%) 0 0 / 200% 100%; animation: pal-shimmer 1.1s linear infinite; }
-.extract.loading .ex-wait { display: block; }
+.extract.loading .ex-wait { display: grid; place-items: center; }
+.ex-wait-txt {
+	display: inline-flex; align-items: center; gap: 7px;
+	padding: 4px 10px; border-radius: 999px;
+	background: rgba(8, 9, 11, .7); color: var(--mute);
+	font: 10.5px var(--mono); white-space: nowrap;
+	opacity: 0; transform: translateY(4px);
+	transition: opacity .25s, transform .3s var(--ease);
+}
+.ex-wait-txt::before { content: ''; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--raise-2); border-top-color: var(--accent); animation: pal-spin .8s linear infinite; }
+.extract.slow .ex-wait-txt { opacity: 1; transform: none; }
 
 .ex-mark {
 	position: absolute; width: 12px; height: 12px;
@@ -1214,8 +1224,9 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		revealPresetFolder: function () { return { ok: true }; },
 		grabFrame: function () {
 			var l = selLayers()[0];
-			if (l && l.scene) return { ok: true, url: scene(l.scene, 640, 360), label: l.name, kind: l.kind };
-			return { ok: true, url: scene('comp', 640, 360), label: 'MAIN_COMP', kind: 'comp' };
+			// vídeo simula um render demorado (mostra o aviso de espera); imagem é lida na hora
+			if (l && l.scene) return { ok: true, url: scene(l.scene, 640, 360), label: l.name, kind: l.kind, temp: l.kind === 'video', readyAt: l.kind === 'video' ? Date.now() + 2600 : 0 };
+			return { ok: true, url: scene('comp', 640, 360), label: 'MAIN_COMP', kind: 'comp', temp: true, readyAt: Date.now() + 400 };
 		},
 		releaseFrame: function () { return { ok: true }; },
 		apply: function (hex) {
@@ -1270,35 +1281,78 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		else root.open(url, '_blank', 'noopener');
 	}
 
-	// carrega a imagem do frame. No CEP lê o arquivo pelo Node (data: URL não "suja" o canvas);
-	// o PNG pode demorar um pouco para existir, então tenta de novo por alguns segundos.
-	function loadImage(r) {
+	// Carrega a imagem do frame só quando o arquivo está completo.
+	// saveFrameToPng pode devolver o controle antes de terminar de gravar, então:
+	//  1) espera o arquivo existir com tamanho > 0;
+	//  2) espera o tamanho parar de mudar entre duas leituras;
+	//  3) para PNG, confere o bloco final IEND (prova de arquivo inteiro);
+	//  4) só então decodifica. Se a decodificação falhar, volta a esperar.
+	// opts: { timeout (ms), cancelled() → true para desistir }
+	var IEND = [0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82];
+
+	function isPng(path) { return /\.png$/i.test(path); }
+
+	function pngComplete(buf) {
+		if (buf.length < 20) return false;
+		var tail = buf.slice(buf.length - 8);
+		for (var i = 0; i < 8; i++) if (tail[i] !== IEND[i]) return false;
+		return true;
+	}
+
+	function decode(src) {
 		return new Promise(function (resolve, reject) {
-			var tries = 0;
-			function attempt() {
-				var src = r.url;
-				if (!src && r.path) {
-					var fs = root.require ? root.require('fs') : null;
-					if (fs) {
-						try {
-							var ext = (r.path.match(/\.(\w+)$/) || [, 'png'])[1].toLowerCase().replace('jpg', 'jpeg');
-							src = 'data:image/' + ext + ';base64,' + fs.readFileSync(r.path).toString('base64');
-						} catch (e) { src = null; }
-					} else {
-						src = encodeURI('file:///' + r.path.replace(/\\/g, '/').replace(/^\/+/, '')) + '?t=' + Date.now();
-					}
+			var img = new Image();
+			img.onload = function () { resolve(img); };
+			img.onerror = function () { reject(new Error('imagem inválida')); };
+			img.src = src;
+		});
+	}
+
+	function loadImage(r, opts) {
+		opts = opts || {};
+		var timeout = opts.timeout || 60000;
+		var t0 = Date.now();
+		var fs = root.require ? root.require('fs') : null;
+		var lastSize = -1;
+
+		return new Promise(function (resolve, reject) {
+			function again() {
+				if (opts.cancelled && opts.cancelled()) return reject(new Error('cancelado'));
+				if (Date.now() - t0 > timeout) return reject(new Error('tempo esgotado'));
+				setTimeout(step, 150);
+			}
+
+			function step() {
+				if (opts.cancelled && opts.cancelled()) return reject(new Error('cancelado'));
+
+				// mockup (navegador): imagem já vem como URL; readyAt simula o tempo de render
+				if (r.url) {
+					if (r.readyAt && Date.now() < r.readyAt) return again();
+					return decode(r.url).then(resolve, again);
 				}
-				if (!src) return retry();
-				var img = new Image();
-				img.onload = function () { resolve(img); };
-				img.onerror = retry;
-				img.src = src;
+
+				if (!fs) {
+					// sem Node: não há como checar o arquivo, só tentar decodificar
+					return decode(encodeURI('file:///' + r.path.replace(/\\/g, '/').replace(/^\/+/, '')) + '?t=' + Date.now()).then(resolve, again);
+				}
+
+				var size;
+				try { size = fs.statSync(r.path).size; } catch (e) { return again(); }   // ainda não existe
+				if (!size || size !== lastSize) { lastSize = size; return again(); }    // vazio ou crescendo
+
+				var buf;
+				try { buf = fs.readFileSync(r.path); } catch (e) { return again(); }    // ainda travado pelo AE
+				if (buf.length !== size) { lastSize = buf.length; return again(); }
+				if (isPng(r.path) && !pngComplete(buf)) return again();
+
+				var ext = (r.path.match(/\.(\w+)$/) || [, 'png'])[1].toLowerCase().replace('jpg', 'jpeg');
+				decode('data:image/' + ext + ';base64,' + buf.toString('base64')).then(resolve, function () {
+					lastSize = -1;
+					again();
+				});
 			}
-			function retry() {
-				if (++tries > 30) return reject(new Error('frame não encontrado'));
-				setTimeout(attempt, 200);
-			}
-			attempt();
+
+			step();
 		});
 	}
 
@@ -1438,7 +1492,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			'</div>',
 			'<div class="sheet extract" hidden tabindex="-1" role="dialog" aria-label="Extrair cores">',
 			'  <div class="ed-flood"></div>',
-			'  <div class="ex-img"><div class="ex-stage"><img alt=""><div class="ex-marks"></div><span class="ex-loupe"><i></i></span></div><span class="ex-wait"></span></div>',
+			'  <div class="ex-img"><div class="ex-stage"><img alt=""><div class="ex-marks"></div><span class="ex-loupe"><i></i></span></div><span class="ex-wait"><span class="ex-wait-txt"></span></span></div>',
 			'  <div class="ex-side">',
 			'    <div class="ex-head">' + ic('image') + '<span class="ex-label"></span></div>',
 			'    <div class="ex-chips"></div>',
@@ -2310,9 +2364,10 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 					flash(tool, 'nope', 420);
 					return toast(REASONS[r && r.reason] || 'Não foi possível ler o frame', { icon: 'alert' });
 				}
-				XS = { grab: r, chips: [], data: null };
+				var job = XS = { grab: r, chips: [], data: null };
 				q('.ex-label').textContent = r.label || 'frame';
 				exSheet.classList.add('loading');
+				exSheet.classList.remove('slow');
 				exImg.removeAttribute('src');
 				exMarks.innerHTML = exChips.innerHTML = '';
 				exSheet.hidden = false;
@@ -2322,21 +2377,41 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 				exSheet.animate([{ clipPath: clip(rr, 8) }, { clipPath: 'inset(0px 0px 0px 0px round 0px)' }], { duration: 420, easing: EASE });
 				exFlood.animate([{ opacity: 1 }, { opacity: 1, offset: 0.35 }, { opacity: 0 }], { duration: 520, easing: 'ease-out', fill: 'forwards' });
 				exSheet.focus({ preventScroll: true });
-				return Host.loadImage(r).then(function (img) {
+
+				// o esqueleto basta para esperas curtas; se demorar, explica o que está acontecendo
+				var t0 = Date.now(), waitTxt = q('.ex-wait-txt');
+				var ticker = setInterval(function () {
+					if (XS !== job) return clearInterval(ticker);
+					var sec = (Date.now() - t0) / 1000;
+					if (sec < 0.7) return;
+					exSheet.classList.add('slow');
+					waitTxt.textContent = (r.kind === 'image' && !r.temp ? 'lendo imagem' : 'renderizando frame') + (sec >= 2 ? ' · ' + Math.floor(sec) + 's' : '…');
+				}, 250);
+
+				function done() {
+					clearInterval(ticker);
 					busy(tool, false);
-					Host.releaseFrame(r);
-					if (!XS) return;
+					Host.releaseFrame(r); // remove PNG e comp temporários, dê certo ou não
+				}
+
+				return Host.loadImage(r, { timeout: 60000, cancelled: function () { return XS !== job; } }).then(function (img) {
+					done();
+					if (XS !== job) return;
 					XS.data = X.sample(img, 160);
 					XS.ratio = img.naturalWidth / img.naturalHeight;
 					exImg.src = img.src;
-					exSheet.classList.remove('loading');
+					exSheet.classList.remove('loading', 'slow');
 					fitStage();
 					exStage.animate([{ opacity: 0, transform: 'scale(.96)' }, { opacity: 1, transform: 'none' }], { duration: 360, easing: EASE });
 					computeChips();
+				}, function (err) {
+					done();
+					if (XS !== job) return; // cancelado com Esc/×: sem aviso
+					closeExtract();
+					toast(/tempo/.test(err && err.message) ? 'O frame demorou demais para renderizar' : 'Não foi possível ler o frame', { icon: 'alert' });
 				});
 			}).catch(function () {
 				busy(tool, false);
-				if (XS) closeExtract();
 				toast('Não foi possível ler o frame', { icon: 'alert' });
 			});
 		}

@@ -163,8 +163,9 @@
 		revealPresetFolder: function () { return { ok: true }; },
 		grabFrame: function () {
 			var l = selLayers()[0];
-			if (l && l.scene) return { ok: true, url: scene(l.scene, 640, 360), label: l.name, kind: l.kind };
-			return { ok: true, url: scene('comp', 640, 360), label: 'MAIN_COMP', kind: 'comp' };
+			// vídeo simula um render demorado (mostra o aviso de espera); imagem é lida na hora
+			if (l && l.scene) return { ok: true, url: scene(l.scene, 640, 360), label: l.name, kind: l.kind, temp: l.kind === 'video', readyAt: l.kind === 'video' ? Date.now() + 2600 : 0 };
+			return { ok: true, url: scene('comp', 640, 360), label: 'MAIN_COMP', kind: 'comp', temp: true, readyAt: Date.now() + 400 };
 		},
 		releaseFrame: function () { return { ok: true }; },
 		apply: function (hex) {
