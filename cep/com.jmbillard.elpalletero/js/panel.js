@@ -7,7 +7,7 @@
 	var Host = root.PalHost;
 	var N = root.PalNames;
 	var X = root.PalExtract;
-	var VERSION = 'v1.2.10';
+	var VERSION = 'v1.2.11';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
@@ -238,7 +238,7 @@
 			n.setAttribute('role', 'listitem');
 			n.innerHTML = '<button class="sw-edit" tabindex="-1" aria-label="Editar cor">' + ic('pencil') + '</button>' +
 				'<span class="sw-glyph">' + ic('bucket', 'g-fill') + ic('copy', 'g-copy') + ic('x', 'g-del') + ic('check', 'g-ok') + '</span>' +
-				'<span class="sw-meta"><span class="sw-name"></span><span class="sw-val"></span></span><i class="sw-dot"></i>';
+				'<span class="sw-meta"><span class="sw-line"><span class="sw-name"></span><span class="sw-val"></span></span></span><i class="sw-dot"></i>';
 			return n;
 		}
 

@@ -153,7 +153,7 @@
 .pal.alt .sw .g-del { opacity: .95; transform: none; }
 .sw.ok .g-ok { opacity: 1; transform: scale(1.25); stroke-width: 3; }
 /* lista e faixa baixa: rótulos · balde · lápis, lado a lado */
-.pal[data-orient='col'] .sw-glyph, .pal[data-tight='1'] .sw-glyph { top: 50%; left: auto; right: 28px; margin: -11px 0 0 0; }
+.pal[data-orient='col'] .sw-glyph, .pal[data-tight='1'] .sw-glyph { top: 50%; left: auto; right: 28px; margin: -11px 0 0 0; transform: translateY(-.25px); } /* centro ótico do desenho do balde (transform aceita fração; margem arredonda) */
 .pal[data-tight='1'] .sw.hot .sw-meta { right: 54px; }
 
 /* rótulos */
@@ -169,7 +169,15 @@
 .sw-val { font: 10px/1.2 var(--mono); opacity: .78; letter-spacing: .02em; overflow: hidden; text-overflow: ellipsis; }
 .pal:not(.show-names) .sw-name { display: none; }
 .sw.hot .sw-meta, .pal[data-roomy='1'].show-info .sw-meta { opacity: 1; transform: none; }
-.pal[data-orient='col'] .sw-meta { top: 0; bottom: 0; right: 8px; flex-direction: row; align-items: center; gap: 8px; }
+/* sw-line agrupa nome + valor: nos layouts empilhados ela "some" (display: contents) */
+.sw-line { display: contents; }
+/* lista: nome e valor na MESMA linha de base (fontes diferentes centralizadas pela caixa ficavam
+   desniveladas, o hex parecia mais alto); o conjunto é que fica centralizado na amostra */
+.pal[data-orient='col'] .sw-meta { top: 0; bottom: 0; right: 8px; flex-direction: row; align-items: center; }
+.pal[data-orient='col'] .sw-line { display: flex; align-items: baseline; gap: 8px; min-width: 0; line-height: 1; transform: translateY(-.04em); }
+/* centro ótico: o nome (minúsculas) tem o "meio" na altura-x; o hex (maiúsculas e números) é mais
+   alto. Desce o hex meia diferença entre altura das maiúsculas e altura-x, e os dois ficam no centro */
+.pal[data-orient='col'] .sw-val { transform: translateY(.075em); } /* transform: aceita fração de pixel (top arredonda) */
 .pal[data-orient='col'] .sw-name { flex: 0 1 auto; }
 .pal[data-orient='col'] .sw-val { flex: 1 1 auto; }
 
