@@ -248,7 +248,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 .pal[data-roomy='1']:not(.dragging) .strip .sw.hot { flex-grow: 1.5; }
 .pal[data-orient='grid']:not(.dragging) .strip .sw.hot { transform: scale(1.06); }
 .sw:active { transform: scale(.96); }
-.sw.drag { z-index: 10; transition: none; box-shadow: 0 0 0 2px #fff, 0 14px 30px -8px rgba(0, 0, 0, .7); cursor: grabbing; }
+.sw.drag { z-index: 10; transition: none; box-shadow: 0 0 0 2px #fff, 0 14px 30px -8px rgba(0, 0, 0, .7); cursor: pointer; }
 .pal.dragging .sw:not(.drag) { transition: flex-grow .2s, transform .2s; }
 
 /* glifo: balde (aplicar) · copiar (ctrl) · × (alt) · ✓ (aplicado)
@@ -480,7 +480,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 .knob {
 	position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px;
 	border-radius: 50%; border: 2px solid #fff;
-	box-shadow: 0 0 0 1px rgba(0, 0, 0, .35), 0 2px 6px rgba(0, 0, 0, .4);
+	box-shadow: inset 0 0 0 1px #808080, 0 1px 3px rgba(0, 0, 0, .3);
 	background: var(--new);
 	pointer-events: none;
 	transition: transform .2s var(--spring);
@@ -544,12 +544,12 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 .hm-mk {
 	position: absolute; left: 0; top: 0; width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px;
 	border-radius: 50%; background: var(--c);
-	box-shadow: 0 0 0 2px #fff, 0 1px 6px rgba(0, 0, 0, .55);
+	box-shadow: inset 0 0 0 1px #808080, 0 0 0 2px #fff, 0 1px 3px rgba(0, 0, 0, .3);
 	cursor: pointer;
 	transition: width .25s var(--spring), height .25s var(--spring), margin .25s var(--spring), opacity .25s;
 }
 .hm-mk:hover { width: 17px; height: 17px; margin: -8.5px 0 0 -8.5px; }
-.hm-mk.base { width: 18px; height: 18px; margin: -9px 0 0 -9px; box-shadow: 0 0 0 2.5px #fff, 0 0 0 4px rgba(0, 0, 0, .3), 0 2px 8px rgba(0, 0, 0, .5); }
+.hm-mk.base { width: 18px; height: 18px; margin: -9px 0 0 -9px; box-shadow: inset 0 0 0 1px #808080, 0 0 0 2.5px #fff, 0 1px 4px rgba(0, 0, 0, .3); }
 .hm-mk.base:hover { width: 22px; height: 22px; margin: -11px 0 0 -11px; }
 .hm-mk.off { opacity: .35; }
 .hm-mk.leaving { opacity: 0; pointer-events: none; }
@@ -742,14 +742,14 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	margin: 0; padding: 0; border: 0; border-radius: 4px;
 	background: transparent; color: var(--mute);
 	font-size: 0; line-height: 0;
-	cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
+	cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none;
 }
 .pc-grip svg { display: inline-block; width: 14px; height: 14px; fill: currentColor; stroke: none; vertical-align: middle; opacity: 0; transition: opacity .2s, color .2s; }
 .pcard:hover .pc-grip svg, .pc-grip:focus-visible svg { opacity: .6; }
 .pc-grip:hover { color: var(--fg); }
 .pc-grip:hover svg { opacity: 1; }
 .pc-grip:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.lib-list.sorting, .lib-list.sorting * { cursor: grabbing !important; user-select: none; }
+.lib-list.sorting, .lib-list.sorting * { cursor: pointer !important; user-select: none; }
 .lib-list.sorting { scroll-behavior: auto; }
 /* modo "pegar e soltar": o cartão pegado flutua e pulsa de leve */
 .lib-list.carry .pcard.drag { animation: pal-carry 1.2s ease-in-out infinite; }
@@ -1812,7 +1812,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	var Host = root.PalHost;
 	var N = root.PalNames;
 	var X = root.PalExtract;
-	var VERSION = 'v1.3.2';
+	var VERSION = 'v1.3.3';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
@@ -2295,9 +2295,16 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		}
 
 		function showTip(t) {
+			// enquanto o alvo (ou algo em volta) ainda está animando, a posição medida é a do meio da
+			// animação e a dica pode acabar em cima dele: espera assentar
+			if (moving(t)) { tipTimer = setTimeout(function () { if (tipTarget === t) showTip(t); }, 120); return; }
 			var html = tipHtml(t);
 			if (!html) return hideTip();
 			if (t.classList.contains('sw') && learned < 6) store('pal.tips', String(++learned));
+			// mede num canto livre: perto da borda (onde a dica anterior estava) ela ficaria espremida,
+			// com mais linhas, e a posição calculada não valeria para o tamanho de verdade
+			tipEl.style.left = '0px';
+			tipEl.style.top = '0px';
 			tipEl.innerHTML = html;
 			var pr = rect(el), tr = rect(t), w = tipEl.offsetWidth, h = tipEl.offsetHeight;
 			var x = tr.left - pr.left + tr.width / 2 - w / 2;
@@ -2312,13 +2319,25 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			x = Math.max(4, Math.min(pr.width - w - 4, x));
 			// a dica nunca cobre o que está sob o mouse: sem lugar livre, não aparece
 			var tl = tr.left - pr.left, tt = tr.top - pr.top;
-			if (x < tl + tr.width && x + w > tl && y < tt + tr.height && y + h > tt) return hideTip();
+			function covers() { return x < tl + tr.width && x + w > tl && y < tt + tr.height && y + h > tt; }
+			if (covers()) return hideTip();
 			tipEl.style.transform = '';
 			tipEl.style.left = x + 'px';
 			tipEl.style.top = y + 'px';
+			w = tipEl.offsetWidth; h = tipEl.offsetHeight; // confere com o tamanho final
+			if (covers()) return hideTip();
 			tipEl.classList.add('on');
 		}
 		function hideTip() { clearTimeout(tipTimer); tipEl.classList.remove('on'); }
+		function moving(t) {
+			if (!el.getAnimations) return false;
+			return el.getAnimations({ subtree: true }).some(function (a) {
+				var n = a.effect && a.effect.target;
+				if (a.playState !== 'running' || !n || n === tipEl || !n.contains || !n.contains(t)) return false;
+				var end = a.effect.getComputedTiming ? a.effect.getComputedTiming().endTime : 0;
+				return end !== Infinity; // animações em laço (carregando…) não seguram a dica
+			});
+		}
 
 		el.addEventListener('pointerover', function (e) {
 			var t = e.target.closest('.sw, .tool, [data-tip], [data-pid], [data-act="folder"]');

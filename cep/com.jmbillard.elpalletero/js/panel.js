@@ -7,7 +7,7 @@
 	var Host = root.PalHost;
 	var N = root.PalNames;
 	var X = root.PalExtract;
-	var VERSION = 'v1.3.2';
+	var VERSION = 'v1.3.3';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
@@ -490,9 +490,16 @@
 		}
 
 		function showTip(t) {
+			// enquanto o alvo (ou algo em volta) ainda está animando, a posição medida é a do meio da
+			// animação e a dica pode acabar em cima dele: espera assentar
+			if (moving(t)) { tipTimer = setTimeout(function () { if (tipTarget === t) showTip(t); }, 120); return; }
 			var html = tipHtml(t);
 			if (!html) return hideTip();
 			if (t.classList.contains('sw') && learned < 6) store('pal.tips', String(++learned));
+			// mede num canto livre: perto da borda (onde a dica anterior estava) ela ficaria espremida,
+			// com mais linhas, e a posição calculada não valeria para o tamanho de verdade
+			tipEl.style.left = '0px';
+			tipEl.style.top = '0px';
 			tipEl.innerHTML = html;
 			var pr = rect(el), tr = rect(t), w = tipEl.offsetWidth, h = tipEl.offsetHeight;
 			var x = tr.left - pr.left + tr.width / 2 - w / 2;
@@ -507,13 +514,25 @@
 			x = Math.max(4, Math.min(pr.width - w - 4, x));
 			// a dica nunca cobre o que está sob o mouse: sem lugar livre, não aparece
 			var tl = tr.left - pr.left, tt = tr.top - pr.top;
-			if (x < tl + tr.width && x + w > tl && y < tt + tr.height && y + h > tt) return hideTip();
+			function covers() { return x < tl + tr.width && x + w > tl && y < tt + tr.height && y + h > tt; }
+			if (covers()) return hideTip();
 			tipEl.style.transform = '';
 			tipEl.style.left = x + 'px';
 			tipEl.style.top = y + 'px';
+			w = tipEl.offsetWidth; h = tipEl.offsetHeight; // confere com o tamanho final
+			if (covers()) return hideTip();
 			tipEl.classList.add('on');
 		}
 		function hideTip() { clearTimeout(tipTimer); tipEl.classList.remove('on'); }
+		function moving(t) {
+			if (!el.getAnimations) return false;
+			return el.getAnimations({ subtree: true }).some(function (a) {
+				var n = a.effect && a.effect.target;
+				if (a.playState !== 'running' || !n || n === tipEl || !n.contains || !n.contains(t)) return false;
+				var end = a.effect.getComputedTiming ? a.effect.getComputedTiming().endTime : 0;
+				return end !== Infinity; // animações em laço (carregando…) não seguram a dica
+			});
+		}
 
 		el.addEventListener('pointerover', function (e) {
 			var t = e.target.closest('.sw, .tool, [data-tip], [data-pid], [data-act="folder"]');
