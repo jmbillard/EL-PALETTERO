@@ -391,6 +391,137 @@
 .ed-btn.del:hover { color: var(--danger); }
 .ed-btn.del[hidden] { display: none; }
 
+.ed-btn.nope { animation: pal-shake .4s; }
+.ed-btn.mode:hover .i-orbit { transform: rotate(120deg); }
+.ed-btn .i-orbit { transform-origin: 12px 12px; transition: transform .6s var(--spring); }
+.ed-btn.save.saved { color: var(--fg); }
+.ed-btn.save.saved .ic { fill: currentColor; animation: pal-pop .35s var(--spring); }
+
+/* ------------------------------------------------------------ harmonias
+   roda (ou quadrado, se apertado) · brilho · cores geradas · regras e ações */
+.harmony {
+	display: grid; gap: 8px; padding: 8px;
+	grid-template-columns: minmax(90px, 1.4fr) 12px minmax(48px, 1fr) auto;
+	grid-template-rows: minmax(0, 1fr);
+	grid-template-areas: 'w b g c';
+}
+.pal[data-shape='tall'] .harmony {
+	grid-template-columns: minmax(0, 1fr);
+	grid-template-rows: minmax(28px, 46px) minmax(70px, 1fr) 12px auto;
+	grid-template-areas: 'g' 'w' 'b' 'c';
+}
+.harmony > :not(.ed-flood) { animation: pal-rise .4s var(--ease) backwards; }
+.harmony > .hm-bri { animation-delay: .05s; } .harmony > .hm-gen { animation-delay: .1s; } .harmony > .hm-ctrl { animation-delay: .15s; }
+
+.hm-map { grid-area: w; position: relative; min-width: 0; min-height: 0; cursor: crosshair; touch-action: none; border-radius: 8px; }
+.hm-map:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.hm-disk {
+	position: absolute; border-radius: 8px;
+	background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff), linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+	transition: border-radius .35s var(--ease);
+}
+.hm-map[data-geo='wheel'] .hm-disk { border-radius: 50%; background: radial-gradient(closest-side, #fff, rgba(255, 255, 255, 0)), conic-gradient(#f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); }
+.hm-disk::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: #000; opacity: var(--dim, 0); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12); }
+.hm-geo { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.hm-geo line { stroke: rgba(255, 255, 255, .85); stroke-width: 1.25; }
+.hm-geo polygon { fill: rgba(255, 255, 255, .08); stroke: rgba(255, 255, 255, .45); stroke-width: 1; stroke-dasharray: 3 3; }
+.hm-mk {
+	position: absolute; left: 0; top: 0; width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px;
+	border-radius: 50%; background: var(--c);
+	box-shadow: 0 0 0 2px #fff, 0 1px 6px rgba(0, 0, 0, .55);
+	cursor: grab;
+	transition: width .25s var(--spring), height .25s var(--spring), margin .25s var(--spring), opacity .25s;
+}
+.hm-mk:hover { width: 17px; height: 17px; margin: -8.5px 0 0 -8.5px; }
+.hm-mk.base { width: 18px; height: 18px; margin: -9px 0 0 -9px; box-shadow: 0 0 0 2.5px #fff, 0 0 0 4px rgba(0, 0, 0, .3), 0 2px 8px rgba(0, 0, 0, .5); }
+.hm-mk.base:hover { width: 22px; height: 22px; margin: -11px 0 0 -11px; }
+.hm-mk.off { opacity: .35; }
+.hm-mk.leaving { opacity: 0; pointer-events: none; }
+.hm-map[data-geo='rect'] .hm-mk { width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; }
+.hm-map[data-geo='rect'] .hm-mk.base { width: 15px; height: 15px; margin: -7.5px 0 0 -7.5px; }
+.hm-map.grab, .hm-map.grab .hm-mk { cursor: grabbing; }
+
+.hm-bri { grid-area: b; position: relative; border-radius: 6px; cursor: pointer; touch-action: none; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08); }
+.hm-bri .knob { left: 50%; }
+.hm-bri.grab .knob, .hm-range.grab .knob { transform: scale(1.35); }
+.hm-bri:focus-visible, .hm-range:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* cores geradas: uma fila por cor da regra, com os degraus lado a lado (de pé, colunas) */
+.hm-gen { grid-area: g; display: flex; flex-direction: column; gap: 3px; min-width: 0; min-height: 0; }
+.hm-col { flex: 1; display: flex; gap: 3px; min-width: 0; min-height: 0; animation: pal-rise .4s var(--spring) backwards; animation-delay: calc(var(--i) * 45ms); }
+.pal[data-shape='tall'] .hm-gen { flex-direction: row; }
+.pal[data-shape='tall'] .hm-col { flex-direction: column; }
+.hm-sw {
+	position: relative; flex: 1; min-width: 0; min-height: 6px; padding: 0; border: 0; border-radius: 5px;
+	display: grid; place-items: center;
+	background: var(--c); color: var(--ink); cursor: pointer;
+	transition: background-color .1s, transform .25s var(--spring), opacity .2s, border-radius .25s var(--ease);
+}
+.hm-sw:hover { transform: scale(1.06); z-index: 1; }
+.hm-sw .ic { width: 12px; height: 12px; opacity: 0; transform: scale(.5) rotate(-90deg); }
+.hm-sw.off { opacity: .28; transform: scale(.86); border-radius: 9px; }
+.hm-sw.off .ic { opacity: 1; transform: none; }
+.hm-sw.base::after { content: ''; position: absolute; left: 50%; bottom: 3px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--ink); opacity: .7; }
+.hm-sw.base.off::after { display: none; }
+
+/* controles: regras, abertura, degraus e ações (empilhados; espalhados quando baixo ou de pé) */
+.hm-ctrl { grid-area: c; display: flex; flex-direction: column; justify-content: space-between; gap: 6px; min-width: 0; }
+.hm-rules { display: grid; grid-template-columns: repeat(4, 30px); gap: 2px 4px; justify-content: end; }
+.hm-rule { height: 26px; border: 0; border-radius: 7px; background: transparent; color: var(--mute); display: grid; place-items: center; cursor: pointer; transition: background .15s, color .15s, transform .25s var(--spring); }
+.hm-rule:hover { background: var(--raise-2); color: var(--fg); }
+.hm-rule:active { transform: scale(.88); }
+.hm-rule svg { width: 18px; height: 18px; overflow: visible; }
+.hm-rule .hr-ring { fill: none; stroke: currentColor; stroke-width: 1.3; opacity: .45; }
+.hm-rule .hr-spoke { stroke: currentColor; stroke-width: 1.3; opacity: .45; }
+.hm-rule .hr-dot { fill: currentColor; transition: fill .2s; }
+.hm-rule .hr-dots { transform-origin: 10px 10px; }
+.hm-rule:hover .hr-dots { animation: pal-peek .8s var(--ease); }
+.hm-rule[aria-pressed='true'] { background: var(--bg); color: var(--fg); box-shadow: inset 0 0 0 1px var(--line); }
+.hm-rule[aria-pressed='true'] .hr-ring, .hm-rule[aria-pressed='true'] .hr-spoke { opacity: .75; }
+@keyframes pal-peek { 40% { transform: rotate(30deg); } }
+
+.hm-opts { display: flex; flex-direction: column; gap: 6px; }
+.hm-opts > * { animation: pal-rise .3s var(--ease) backwards; }
+.hm-opts > .gone { display: none; }
+.hm-open { display: flex; align-items: center; gap: 6px; height: 20px; color: var(--mute); }
+.hm-open .ic { width: 13px; height: 13px; }
+.hm-range { position: relative; flex: 1; min-width: 44px; height: 4px; border-radius: 2px; background: var(--raise-2); cursor: pointer; touch-action: none; }
+.hm-range::before { content: ''; position: absolute; left: 0; right: 0; top: -8px; bottom: -8px; } /* área de clique maior */
+.hm-range i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: var(--fg); opacity: .45; }
+.hm-range .knob { top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border: 0; background: var(--fg); }
+.hm-steps { display: flex; gap: 2px; padding: 2px; border-radius: 8px; background: var(--bg); }
+.hm-steps button { flex: 1; height: 20px; min-width: 22px; border: 0; border-radius: 6px; background: transparent; color: var(--mute); display: grid; place-items: center; cursor: pointer; transition: background .15s, color .15s; }
+.hm-steps button:hover { color: var(--fg); }
+.hm-steps button[aria-pressed='true'] { background: var(--raise-2); color: var(--fg); }
+.hm-steps svg { width: 13px; height: 13px; }
+
+.harmony .ed-btn.ok { position: relative; }
+.harmony .ed-btn.ok.empty { opacity: .4; }
+.hm-n {
+	position: absolute; top: -5px; right: -5px; min-width: 15px; height: 15px; padding: 0 3px;
+	border-radius: 8px; background: var(--fg); color: #121316;
+	box-shadow: 0 0 0 2px var(--raise);
+	font: 700 9px/15px var(--mono); text-align: center; pointer-events: none;
+}
+
+.pal[data-shape='tall'] .hm-ctrl, .pal[data-short='1'] .hm-ctrl {
+	display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'r r' 'o a'; align-items: center; gap: 6px 10px;
+}
+.pal[data-shape='tall'] .hm-rules, .pal[data-short='1'] .hm-rules { grid-area: r; grid-template-columns: repeat(7, minmax(22px, 1fr)); justify-content: stretch; }
+.pal[data-short='1'] .hm-rule { height: 22px; }
+.pal[data-shape='tall'] .hm-opts, .pal[data-short='1'] .hm-opts { grid-area: o; flex-direction: row; align-items: center; gap: 10px; }
+.pal[data-shape='tall'] .hm-open, .pal[data-short='1'] .hm-open { flex: 1; max-width: 120px; }
+.pal[data-shape='tall'] .harmony .ed-actions, .pal[data-short='1'] .harmony .ed-actions { grid-area: a; }
+.pal[data-short='1'] .harmony { gap: 6px; padding: 6px; }
+/* coluna estreita: regras em duas linhas, e cada grupo de controles na sua linha */
+.pal[data-shape='tall'][data-slim='1'] .hm-ctrl { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'r' 'o' 'a'; }
+.pal[data-shape='tall'][data-slim='1'] .hm-rules { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.pal[data-shape='tall'][data-slim='1'] .hm-open { max-width: none; }
+.pal[data-shape='tall'][data-slim='1'] .hm-opts { gap: 8px; min-width: 0; }
+.pal[data-shape='tall'][data-slim='1'] .hm-steps button { min-width: 0; width: 20px; }
+.pal[data-shape='tall'][data-slim='1'] .hm-range { min-width: 24px; }
+.pal[data-shape='tall'][data-slim='1'] .harmony .ed-actions { justify-content: space-between; }
+
 /* registro de eventos (diagnóstico) */
 .dbg { position: absolute; right: 4px; top: 4px; z-index: 60; margin: 0; max-width: 62%; max-height: calc(100% - 8px); overflow: hidden; padding: 6px 8px; border-radius: 6px; background: rgba(0, 0, 0, .82); color: #9EF0C0; font: 9.5px/1.35 var(--mono); white-space: pre; pointer-events: none; }
 .ver { cursor: default; }

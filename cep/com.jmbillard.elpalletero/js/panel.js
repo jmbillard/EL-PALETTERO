@@ -7,7 +7,7 @@
 	var Host = root.PalHost;
 	var N = root.PalNames;
 	var X = root.PalExtract;
-	var VERSION = 'v1.2.11';
+	var VERSION = 'v1.3.0';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
@@ -45,6 +45,9 @@
 		folder: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
 		sparkle: '<path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.13-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.13a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.13 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.13a.5.5 0 0 1-.96 0z"/>',
 		minus: '<path d="M5 12h14"/>',
+		wheel: '<circle cx="12" cy="12" r="9"/><g class="i-orbit"><circle cx="12" cy="3" r="2" fill="currentColor"/><circle cx="19.8" cy="16.5" r="2" fill="currentColor"/><circle cx="4.2" cy="16.5" r="2" fill="currentColor"/></g>',
+		drop: '<path d="M12 2.7c3.5 4.1 6 7.1 6 10.3a6 6 0 0 1-12 0c0-3.2 2.5-6.2 6-10.3z"/>',
+		fan: '<path d="M12 21 5 5M12 21l7-16M12 21V3"/>',
 		unplug: '<path d="m19 5 3-3"/><path d="m2 22 3-3"/><path d="M6.3 20.3a2.4 2.4 0 0 0 3.4 0L12 18l-6-6-2.3 2.3a2.4 2.4 0 0 0 0 3.4Z"/><path d="M7.5 13.5 10 11"/><path d="M10.5 16.5 13 14"/><path d="m12 6 6 6 2.3-2.3a2.4 2.4 0 0 0 0-3.4l-2.6-2.6a2.4 2.4 0 0 0-3.4 0Z"/>',
 		file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>'
 	};
@@ -147,9 +150,29 @@
 			'  <div class="ed-ctrl">',
 			'    <div class="ed-field"><button class="ed-fmt" type="button" data-tip="Alternar HEX · RGB · HSB">HEX</button><input class="ed-val" id="pal-ed-val" spellcheck="false" autocomplete="off" aria-label="Valor da cor"></div>',
 			'    <div class="ed-actions">',
+			'      <button class="ed-btn mode" data-tip="Criar harmonia">' + ic('wheel') + '</button>',
 			'      <button class="ed-btn del" data-tip="Excluir cor">' + ic('trash') + '</button>',
 			'      <button class="ed-btn cancel" data-tip="Cancelar" data-kbd="Esc">' + ic('x') + '</button>',
 			'      <button class="ed-btn ok" data-tip="Aplicar" data-kbd="Enter">' + ic('check') + '</button>',
+			'    </div>',
+			'  </div>',
+			'</div>',
+			'<div class="sheet harmony" hidden tabindex="-1" role="dialog" aria-label="Criar harmonia">',
+			'  <div class="ed-flood"></div>',
+			'  <div class="hm-map" tabindex="0" aria-label="Matiz e saturação · arraste qualquer ponto para girar"><div class="hm-disk"></div><svg class="hm-geo" aria-hidden="true"></svg></div>',
+			'  <div class="hm-bri" tabindex="0" aria-label="Brilho"><span class="knob"></span></div>',
+			'  <div class="hm-gen" role="list" aria-label="Cores geradas"></div>',
+			'  <div class="hm-ctrl">',
+			'    <div class="hm-rules"></div>',
+			'    <div class="hm-opts">',
+			'      <div class="hm-open" data-tip="Abertura">' + ic('fan') + '<div class="hm-range" tabindex="0" aria-label="Abertura"><i></i><span class="knob"></span></div></div>',
+			'      <div class="hm-steps" role="group" aria-label="Degraus de brilho"></div>',
+			'    </div>',
+			'    <div class="ed-actions">',
+			'      <button class="ed-btn save" data-tip="Salvar como preset">' + ic('bookmark') + '</button>',
+			'      <button class="ed-btn mode" data-tip="Editar 1 cor">' + ic('drop') + '</button>',
+			'      <button class="ed-btn cancel" data-tip="Cancelar" data-kbd="Esc">' + ic('x') + '</button>',
+			'      <button class="ed-btn ok" data-tip="Adicionar">' + ic('check') + '<span class="hm-n"></span></button>',
 			'    </div>',
 			'  </div>',
 			'</div>',
@@ -208,11 +231,13 @@
 			el.dataset.orient = orient;
 			el.dataset.thin = h < 70 ? '1' : '0';
 			el.dataset.narrow = w < 160 ? '1' : '0';
+			el.dataset.slim = w < 240 ? '1' : '0';
 			el.dataset.short = h < 110 ? '1' : '0';
 			el.dataset.shape = (h < 220 && w > h) ? 'wide' : 'tall';
 			roomy();
 			if (!settings.hidden) placePill(false);
 			if (!exSheet.hidden) fitStage();
+			if (H) { layoutHarmony(); updateHarmony(); }
 			if (!library.hidden) libFade();
 		}
 
@@ -442,7 +467,11 @@
 				].join('');
 			}
 			var act = t.dataset.act;
-			if (act === 'add' && t.classList.contains('tool')) return '<b>Nova cor</b>';
+			if (act === 'add' && t.classList.contains('tool')) return '<b>' + (hPrefs.on ? 'Nova harmonia' : 'Nova cor') + '</b>';
+			if (t === hmOk && H) {
+				var n = harmonyColors().length;
+				return '<b>' + n + (n === 1 ? ' cor' : ' cores') + '</b>' + kbd('Enter', 'adicionar', !mods.shift) + kbd(KEY.shift, 'substituir a paleta', mods.shift);
+			}
 			if (act === 'capture' && t.classList.contains('tool')) return captureTip();
 			if (act === 'menu') return el.classList.contains('menu-open') ? '<b>Fechar ajustes</b>' : '<b>Ajustes</b>';
 			if (act === 'library') return el.classList.contains('lib-open') ? '<b>Fechar presets</b>' : '<b>Presets</b>';
@@ -813,7 +842,7 @@
 			var b = e.target.closest('[data-act]');
 			if (!b || !el.contains(b)) return;
 			var act = b.dataset.act;
-			if (act === 'add') openEditor(null, b);
+			if (act === 'add') { if (hPrefs.on) openHarmony(suggestColor(), b); else openEditor(null, b); }
 			else if (act === 'capture') capture(b, e);
 			else if (act === 'sort') { closeSettings(); sortPalette(); }
 			else if (act === 'menu') toggleSide('settings');
@@ -826,8 +855,8 @@
 		});
 
 		// ------------------------------------------------------------------ ajustes
-		function isSheetOpen() { return !settings.hidden || !library.hidden || !ed.hidden || !exSheet.hidden; }
-		function anyFull() { return !ed.hidden || !exSheet.hidden; }
+		function isSheetOpen() { return !settings.hidden || !library.hidden || !ed.hidden || !exSheet.hidden || !hm.hidden; }
+		function anyFull() { return !ed.hidden || !exSheet.hidden || !hm.hidden; }
 
 		// ajustes e presets ocupam a faixa; as docas continuam visíveis e o ícone vira ×
 		var SIDES = { settings: [settings, 'menu-open'], library: [library, 'lib-open'] };
@@ -1604,12 +1633,14 @@
 			return C.rgbToHex(C.hsbToRgb([h[0] + 137.5, C.clamp(h[1], 45, 80), C.clamp(h[2], 80, 96)]));
 		}
 
-		function openEditor(sw, fromEl) {
-			if (!sw && !fromEl) return;
+		// opt.swap: vem do modo harmonia (troca de folha sem a animação de abrir) · opt.hex: cor inicial
+		function openEditor(sw, fromEl, opt) {
+			opt = opt || {};
+			if (!sw && !fromEl && !opt.swap) return;
 			closeSettings();
 			hideTip();
-			var hex = sw ? sw.color : suggestColor();
-			E = { id: sw ? sw.id : null, old: hex, fmt: S.prefs.format, hsb: C.rgbToHsb(C.hexToRgb(hex)), auto: sw ? !!sw.auto : true };
+			var hex = sw ? sw.color : (opt.hex || suggestColor());
+			E = { id: sw ? sw.id : null, old: hex, fmt: S.prefs.format, hsb: C.rgbToHsb(C.hexToRgb(opt.hex || hex)), auto: sw ? !!sw.auto : true };
 			edName.value = sw ? sw.label : '';
 			ed.querySelector('.ed-btn.del').hidden = !sw;
 			q('.ed-prev').classList.toggle('is-new', !sw);
@@ -1620,6 +1651,7 @@
 			el.classList.add('sheet-open', 'editing');
 			el.classList.remove('alt', 'ctrl');
 			updateEditor();
+			if (opt.swap) return swapIn(ed);
 
 			var r = relRect(rect(fromEl));
 			ed.animate([{ clipPath: clip(r, 7) }, { clipPath: 'inset(0px 0px 0px 0px round 0px)' }], { duration: 420, easing: EASE });
@@ -1783,6 +1815,15 @@
 		ed.querySelector('.ed-btn.ok').addEventListener('click', function () { closeEditor(true); });
 		ed.querySelector('.ed-btn.cancel').addEventListener('click', function () { closeEditor(false); });
 		ed.querySelector('.ed-btn.del').addEventListener('click', function () { closeEditor('delete'); });
+		ed.querySelector('.ed-btn.mode').addEventListener('click', function () {
+			if (!E) return;
+			var back = { id: E.id }, hex = currentHex();
+			E = null;
+			hPrefs.on = true;
+			saveHPrefs();
+			swapOut(ed);
+			openHarmony(hex, null, back);
+		});
 
 		// nome automático: acompanha a cor até você digitar um nome seu
 		edName.addEventListener('input', function () {
@@ -1815,9 +1856,412 @@
 			updateEditor();
 		});
 
+		// ------------------------------------------------------------------ harmonias
+		// Segundo modo do editor: uma cor base + uma regra geram as cores irmãs.
+		// Com espaço, uma roda (ângulo = matiz, distância do centro = saturação); apertado, a mesma
+		// roda aberta num quadrado (matiz na horizontal, saturação na vertical). Arrastar qualquer
+		// ponto gira o conjunto inteiro e a regra continua valendo.
+		var HM = root.PalHarmony;
+		var H = null;
+		var hm = q('.harmony'), hmMap = q('.hm-map'), hmDisk = q('.hm-disk'), hmGeo = q('.hm-geo'), hmBri = q('.hm-bri');
+		var hmGen = q('.hm-gen'), hmRules = q('.hm-rules'), hmOpen = q('.hm-open'), hmRange = q('.hm-range'), hmSteps = q('.hm-steps');
+		var hmOk = hm.querySelector('.ed-btn.ok'), hmN = q('.hm-n'), hmFlood = hm.querySelector('.ed-flood');
+		var hPrefs = (function () { try { return JSON.parse(store('pal.harm') || '{}') || {}; } catch (e) { return {}; } })();
+		function saveHPrefs() { store('pal.harm', JSON.stringify(hPrefs)); }
+		var REDUCED = !!(root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+		hmRules.innerHTML = HM.RULES.map(function (r) {
+			return '<button class="hm-rule" data-rule="' + r.id + '" data-tip="' + r.name + '" aria-label="' + r.name + '">' + HM.icon(r) + '</button>';
+		}).join('');
+		hmSteps.innerHTML = [1, 2, 3].map(function (n) {
+			return '<button data-steps="' + n + '" data-tip="' + (n === 1 ? 'Um tom por cor' : n + ' tons por cor') + '">' + HM.stepsIcon(n) + '</button>';
+		}).join('');
+
+		// troca de folha (editor ⇄ harmonia) sem a animação de abrir
+		function swapIn(sheet) {
+			sheet.querySelector('.ed-flood').style.opacity = '0';
+			sheet.hidden = false;
+			sheet.animate([{ opacity: 0, transform: 'scale(.98)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: EASE });
+			setTimeout(function () { sheet.focus({ preventScroll: true }); }, 30);
+		}
+		function swapOut(sheet) {
+			sheet.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, easing: EASE }).onfinish = function () {
+				if (sheet === ed ? E : H) return; // voltou a abrir no meio
+				sheet.hidden = true;
+				sheet.getAnimations().forEach(function (a) { a.cancel(); });
+			};
+		}
+
+		function openHarmony(hex, fromEl, back) {
+			closeSettings();
+			hideTip();
+			var hsb = C.rgbToHsb(C.hexToRgb(hex));
+			H = {
+				h: hsb[0], s: hsb[1] / 100, b: Math.max(0.04, hsb[2] / 100),
+				rule: HM.rule(hPrefs.rule) ? hPrefs.rule : 'tri',
+				open: C.clamp(+hPrefs.open || 30, HM.OPEN_MIN, HM.OPEN_MAX),
+				steps: C.clamp(+hPrefs.steps || 1, 1, 3),
+				off: {}, back: back || null, disp: [], mk: [], sig: '', geo: null
+			};
+			hmGen.innerHTML = '';
+			Array.prototype.forEach.call(hmMap.querySelectorAll('.hm-mk'), function (m) { m.remove(); });
+			hm.hidden = false;
+			el.classList.add('sheet-open', 'editing');
+			el.classList.remove('alt', 'ctrl');
+			hm.style.setProperty('--from', hex);
+			layoutHarmony();
+			updateHarmony();
+			if (!fromEl) return swapIn(hm);
+			var r = relRect(rect(fromEl));
+			hm.animate([{ clipPath: clip(r, 7) }, { clipPath: 'inset(0px 0px 0px 0px round 0px)' }], { duration: 420, easing: EASE });
+			hmFlood.style.opacity = '1';
+			hmFlood.animate([{ opacity: 1 }, { opacity: 1, offset: 0.4 }, { opacity: 0 }], { duration: 560, easing: 'ease-out', fill: 'forwards' });
+			setTimeout(function () { hm.focus({ preventScroll: true }); }, 60);
+		}
+
+		function closeHarmony() {
+			if (!H) return;
+			H = null;
+			hm.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.97)' }], { duration: 220, easing: EASE }).onfinish = function () {
+				if (H) return;
+				hm.hidden = true;
+				hm.getAnimations().forEach(function (a) { a.cancel(); });
+				hmFlood.getAnimations().forEach(function (a) { a.cancel(); });
+				if (ed.hidden) el.classList.remove('editing');
+				if (!isSheetOpen()) el.classList.remove('sheet-open');
+				el.focus({ preventScroll: true });
+			};
+		}
+
+		function toEditor() {
+			if (!H) return;
+			var hex = baseHex(), back = H.back, sw = back && back.id ? find(back.id) : null;
+			H = null;
+			hPrefs.on = false;
+			saveHPrefs();
+			swapOut(hm);
+			openEditor(sw, null, { swap: true, hex: hex });
+		}
+
+		function baseHex() { return C.rgbToHex(C.hsbToRgb([H.h, H.s * 100, H.b * 100])); }
+		function baseIndex(pts) { for (var i = 0; i < pts.length; i++) if (pts[i].base) return i; return 0; }
+
+		// cores ligadas, na ordem das colunas, sem repetir
+		function harmonyColors() {
+			if (!H) return [];
+			var seen = {}, out = [];
+			HM.grid(H).forEach(function (col) {
+				col.forEach(function (c) { if (!H.off[c.key] && !seen[c.hex]) { seen[c.hex] = true; out.push(c.hex); } });
+			});
+			return out;
+		}
+
+		// roda quando cabe um círculo de bom tamanho; senão, o quadrado
+		function layoutHarmony() {
+			if (!H) return;
+			var w = hmMap.clientWidth, h = hmMap.clientHeight, d = Math.min(w, h), wheel = d >= 116;
+			var g = wheel ? { x: (w - d) / 2, y: (h - d) / 2, w: d, h: d } : { x: 0, y: 0, w: w, h: h };
+			g.wheel = wheel;
+			hmMap.dataset.geo = wheel ? 'wheel' : 'rect';
+			hmDisk.style.left = g.x + 'px';
+			hmDisk.style.top = g.y + 'px';
+			hmDisk.style.width = g.w + 'px';
+			hmDisk.style.height = g.h + 'px';
+			H.geo = g;
+		}
+		function hPlace(hue, r) {
+			var g = H.geo;
+			if (g.wheel) {
+				var R = g.w / 2, a = hue * Math.PI / 180;
+				return [g.x + R + Math.sin(a) * r * R, g.y + R - Math.cos(a) * r * R];
+			}
+			return [g.x + HM.norm(hue) / 360 * g.w, g.y + (1 - r) * g.h];
+		}
+		function hPick(x, y) {
+			var g = H.geo;
+			if (g.wheel) {
+				var R = g.w / 2, dx = x - g.x - R, dy = y - g.y - R;
+				return [HM.norm(Math.atan2(dx, -dy) * 180 / Math.PI), C.clamp(Math.sqrt(dx * dx + dy * dy) / R, 0, 1)];
+			}
+			return [C.clamp((x - g.x) / g.w, 0, 0.9999) * 360, 1 - C.clamp((y - g.y) / g.h, 0, 1)];
+		}
+
+		function updateHarmony() {
+			if (!H) return;
+			var r = HM.rule(H.rule), cols = HM.grid(H), pts = HM.points(H), base = baseHex();
+			hm.style.setProperty('--new', base);
+			hm.style.setProperty('--new-ink', C.ink(base));
+			hmMap.style.setProperty('--dim', (1 - H.b).toFixed(3));
+
+			var tall = el.dataset.shape === 'tall', full = C.rgbToHex(C.hsbToRgb([H.h, H.s * 100, 100]));
+			hmBri.style.background = 'linear-gradient(to ' + (tall ? 'right' : 'top') + ', #000, ' + full + ')';
+			var k = hmBri.querySelector('.knob');
+			if (tall) { k.style.left = (H.b * 100) + '%'; k.style.top = '50%'; }
+			else { k.style.top = ((1 - H.b) * 100) + '%'; k.style.left = '50%'; }
+
+			// a regra escolhida pinta os pontos do ícone com as cores de verdade
+			Array.prototype.forEach.call(hmRules.children, function (b) {
+				var on = b.dataset.rule === H.rule;
+				b.setAttribute('aria-pressed', on ? 'true' : 'false');
+				Array.prototype.forEach.call(b.querySelectorAll('.hr-dot'), function (d) {
+					var col = cols[+d.dataset.i];
+					d.style.fill = on && col ? col[col.length === 3 ? 1 : 0].hex : '';
+				});
+			});
+
+			// abertura e degraus só aparecem quando a regra usa
+			hmOpen.classList.toggle('gone', !r.open);
+			hmSteps.classList.toggle('gone', !!r.mono);
+			var t = (H.open - HM.OPEN_MIN) / (HM.OPEN_MAX - HM.OPEN_MIN);
+			hmRange.querySelector('.knob').style.left = (t * 100) + '%';
+			hmRange.querySelector('i').style.width = (t * 100) + '%';
+			hmOpen.dataset.tip = 'Abertura · ' + H.open + '°';
+			Array.prototype.forEach.call(hmSteps.children, function (b) {
+				b.setAttribute('aria-pressed', +b.dataset.steps === H.steps ? 'true' : 'false');
+			});
+
+			renderGen(cols);
+			syncMarkers(pts, cols);
+
+			var n = harmonyColors().length;
+			if (hmN.textContent !== String(n)) {
+				hmN.textContent = n;
+				hmN.animate([{ transform: 'scale(1.6)' }, { transform: 'none' }], { duration: 320, easing: SPRING });
+			}
+			hmOk.classList.toggle('empty', !n);
+		}
+
+		function renderGen(cols) {
+			var sig = H.rule + '|' + H.steps + '|' + cols.length;
+			if (H.sig !== sig) {
+				H.sig = sig;
+				hmGen.innerHTML = cols.map(function (col, i) {
+					return '<div class="hm-col" role="listitem" style="--i:' + i + '">' + col.map(function (c) {
+						return '<button class="hm-sw" data-k="' + c.key + '">' + ic('x') + '</button>';
+					}).join('') + '</div>';
+				}).join('');
+			}
+			cols.forEach(function (col, i) {
+				var box = hmGen.children[i];
+				col.forEach(function (c, j) {
+					var b = box.children[j], off = !!H.off[c.key];
+					b.style.setProperty('--c', c.hex);
+					b.style.setProperty('--ink', C.ink(c.hex));
+					b.classList.toggle('off', off);
+					b.classList.toggle('base', c.base);
+					b.dataset.tip = N.nearest(c.hex) + ' · ' + c.hex + (off ? ' · fora' : '');
+				});
+			});
+		}
+
+		// pontos: a posição exibida persegue a certa pelo caminho curto do matiz (giram em arco)
+		var hmRaf = 0;
+		function syncMarkers(pts, cols) {
+			while (H.mk.length < pts.length) {
+				var m = document.createElement('span'), src = H.disp[0] || { h: H.h, r: H.s };
+				m.className = 'hm-mk';
+				H.disp.push({ h: src.h, r: src.r }); // nasce de dentro da base
+				hmMap.appendChild(m);
+				H.mk.push(m);
+			}
+			while (H.mk.length > pts.length) {
+				var gone = H.mk.pop();
+				H.disp.pop();
+				gone.classList.add('leaving');
+				setTimeout(function (g) { return function () { g.remove(); }; }(gone), 260);
+			}
+			H.mk.forEach(function (m, i) {
+				var col = cols[i];
+				m.dataset.i = i;
+				m.style.setProperty('--c', col[col.length === 3 ? 1 : 0].hex);
+				m.classList.toggle('base', pts[i].base);
+				m.classList.toggle('off', col.every(function (c) { return H.off[c.key]; }));
+			});
+			if (!hmRaf) hmRaf = requestAnimationFrame(stepMarkers);
+		}
+		function stepMarkers() {
+			hmRaf = 0;
+			if (!H) return;
+			var pts = HM.points(H), moving = false, k = REDUCED ? 1 : hmMap.classList.contains('grab') ? 0.55 : 0.22;
+			H.disp.forEach(function (d, i) {
+				var th = H.h + pts[i].off, tr = C.clamp(H.s * pts[i].sk, 0, 1);
+				var dh = ((th - d.h) % 360 + 540) % 360 - 180, dr = tr - d.r;
+				if (Math.abs(dh) > 0.05 || Math.abs(dr) > 0.001) { d.h += dh * k; d.r += dr * k; moving = true; }
+				else { d.h = th; d.r = tr; }
+				var p = hPlace(d.h, d.r);
+				H.mk[i].style.transform = 'translate(' + p[0].toFixed(1) + 'px,' + p[1].toFixed(1) + 'px)';
+			});
+			drawGeo();
+			if (moving) hmRaf = requestAnimationFrame(stepMarkers);
+		}
+		// raios do centro até cada ponto + o polígono da regra (só na roda)
+		function drawGeo() {
+			var r = HM.rule(H.rule), g = H.geo, out = '';
+			if (g.wheel) {
+				var cx = (g.x + g.w / 2).toFixed(1), cy = (g.y + g.h / 2).toFixed(1);
+				var pts = H.disp.map(function (d) { return hPlace(d.h, d.r); });
+				var line = function (p) { return '<line x1="' + cx + '" y1="' + cy + '" x2="' + p[0].toFixed(1) + '" y2="' + p[1].toFixed(1) + '"/>'; };
+				if (r.mono) out = line(hPlace(H.h, 1));
+				else {
+					if (pts.length > 2 && r.id !== 'ana') out += '<polygon points="' + pts.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' ') + '"/>';
+					out += pts.map(line).join('');
+				}
+			}
+			hmGeo.innerHTML = out;
+		}
+
+		// arrastar: pegar um ponto gira o conjunto por ele; clicar no vazio leva a base até lá
+		onPress(hmMap, function (e) {
+			if (!H || e.button !== 0) return;
+			var mk = e.target.closest ? e.target.closest('.hm-mk') : null;
+			var pts = HM.points(H), idx = mk ? +mk.dataset.i : baseIndex(pts);
+			if (!pts[idx]) idx = baseIndex(pts);
+			e.preventDefault();
+			hmMap.focus({ preventScroll: true });
+			var r = rect(hmMap);
+			hmMap.classList.add('grab');
+			function mv(ev) {
+				if (!H) return;
+				var p = hPick(ev.clientX - r.left, ev.clientY - r.top), pt = HM.points(H)[idx];
+				H.h = HM.norm(p[0] - pt.off);
+				H.s = C.clamp(p[1] / pt.sk, 0, 1);
+				updateHarmony();
+			}
+			if (!mk) mv(e);
+			follow(mv, function () { hmMap.classList.remove('grab'); });
+		});
+		onPress(hmBri, function (e) {
+			if (!H || e.button !== 0) return;
+			e.preventDefault();
+			var r = rect(hmBri), tall = el.dataset.shape === 'tall';
+			hmBri.classList.add('grab');
+			function mv(ev) {
+				if (!H) return;
+				H.b = C.clamp(tall ? (ev.clientX - r.left) / r.width : 1 - (ev.clientY - r.top) / r.height, 0.04, 1);
+				updateHarmony();
+			}
+			mv(e);
+			follow(mv, function () { hmBri.classList.remove('grab'); });
+		});
+		onPress(hmRange, function (e) {
+			if (!H || e.button !== 0) return;
+			e.preventDefault();
+			var r = rect(hmRange);
+			hmRange.classList.add('grab');
+			function mv(ev) {
+				if (!H) return;
+				var t = C.clamp((ev.clientX - r.left) / r.width, 0, 1);
+				var a = Math.round(HM.OPEN_MIN + t * (HM.OPEN_MAX - HM.OPEN_MIN));
+				if (a !== H.open) { H.open = a; updateHarmony(); }
+			}
+			mv(e);
+			follow(mv, function () { hmRange.classList.remove('grab'); hPrefs.open = H ? H.open : hPrefs.open; saveHPrefs(); });
+		});
+
+		function arrow(e) { return /Right|Up/.test(e.key) ? 1 : /Left|Down/.test(e.key) ? -1 : 0; }
+		hmMap.addEventListener('keydown', function (e) {
+			if (!H) return;
+			var d = e.shiftKey ? 15 : 5;
+			if (e.key === 'ArrowRight') H.h = HM.norm(H.h + d);
+			else if (e.key === 'ArrowLeft') H.h = HM.norm(H.h - d);
+			else if (e.key === 'ArrowUp') H.s = C.clamp(H.s + d / 250, 0, 1);
+			else if (e.key === 'ArrowDown') H.s = C.clamp(H.s - d / 250, 0, 1);
+			else return;
+			e.preventDefault();
+			updateHarmony();
+		});
+		hmBri.addEventListener('keydown', function (e) {
+			var s = arrow(e);
+			if (!H || !s) return;
+			e.preventDefault();
+			H.b = C.clamp(H.b + s * (e.shiftKey ? 0.1 : 0.02), 0.04, 1);
+			updateHarmony();
+		});
+		hmRange.addEventListener('keydown', function (e) {
+			var s = arrow(e);
+			if (!H || !s) return;
+			e.preventDefault();
+			H.open = hPrefs.open = C.clamp(H.open + s * (e.shiftKey ? 10 : 2), HM.OPEN_MIN, HM.OPEN_MAX);
+			saveHPrefs();
+			updateHarmony();
+		});
+
+		hm.addEventListener('click', function (e) {
+			if (!H) return;
+			var b = e.target.closest('button');
+			if (!b || !hm.contains(b)) return;
+			if (b.dataset.rule) {
+				if (H.rule === b.dataset.rule) return;
+				H.rule = hPrefs.rule = b.dataset.rule;
+				H.off = {};
+				saveHPrefs();
+				updateHarmony();
+			} else if (b.dataset.steps) {
+				if (H.steps === +b.dataset.steps) return;
+				H.steps = hPrefs.steps = +b.dataset.steps;
+				H.off = {};
+				saveHPrefs();
+				updateHarmony();
+			} else if (b.dataset.k) {
+				if (H.off[b.dataset.k]) delete H.off[b.dataset.k]; else H.off[b.dataset.k] = true;
+				updateHarmony();
+				if (tipTarget === b) showTip(b);
+			} else if (b === hmOk) commitHarmony(e.shiftKey);
+			else if (b.classList.contains('cancel')) closeHarmony();
+			else if (b.classList.contains('mode')) toEditor();
+			else if (b.classList.contains('save')) saveHarmonyPreset(b);
+		});
+
+		// ✓ adiciona as cores ligadas que ainda não estão na paleta · Shift + ✓ substitui a paleta
+		function commitHarmony(replace) {
+			if (!H) return;
+			var list = harmonyColors();
+			if (!list.length) return flash(hmOk, 'nope', 420);
+			var have = {}, fresh = [];
+			if (!replace) S.swatches.forEach(function (s) { have[s.color] = true; });
+			list.forEach(function (c) { if (!have[c]) { have[c] = true; fresh.push(c); } });
+			if (!fresh.length) { flash(hmOk, 'nope', 420); return toast('Essas cores já estão na paleta', { icon: 'alert' }); }
+			var from = rect(hmGen), name = HM.rule(H.rule).name;
+			closeHarmony();
+			pushUndo();
+			if (replace) { S.swatches = []; S.preset = ''; }
+			fresh.forEach(function (c) { S.swatches.push({ id: newId(), color: c, label: '', auto: true }); });
+			setTimeout(function () {
+				render({ from: from });
+				save();
+			}, 120);
+			toast((replace ? 'Paleta trocada por ' : '+') + fresh.length + (fresh.length > 1 ? ' cores' : ' cor') + ' · ' + name, { color: fresh[0], undo: true });
+		}
+
+		// salvar as cores ligadas como um preset novo, com o nome da regra e da cor base
+		function saveHarmonyPreset(btn) {
+			var list = harmonyColors();
+			if (!list.length) return flash(btn, 'nope', 420);
+			if (S.offline) return toast((S.offline.volume || 'A pasta') + ' não está acessível', { icon: 'unplug' });
+			var name = N.unique(HM.rule(H.rule).name + ' ' + N.nearest(baseHex()), S.presets.map(function (p) { return p.name; }));
+			var taken = [];
+			var sws = list.map(function (c) { var l = N.pick(c, taken); taken.push(l); return { color: c, label: l, auto: true }; });
+			Host.savePreset({ name: name, swatches: sws }).then(function (r) {
+				if (!r || !r.ok) return toast(r && r.reason === 'offline' ? 'A pasta de presets não está acessível' : 'A pasta de presets não aceita gravação', { icon: 'alert' });
+				S.presets.push({ id: r.id, name: name, swatches: sws });
+				flash(btn, 'saved', 900);
+				toast('Preset salvo · ' + name, { icon: 'bookmark' });
+			}, function () { toast('Não foi possível salvar o preset', { icon: 'alert' }); });
+		}
+
+		hm.addEventListener('keydown', function (e) {
+			if (!H) return;
+			if (e.key === 'Enter') {
+				var b = e.target.closest && e.target.closest('button');
+				if (b && b !== hmOk) return; // Enter num botão é clique nele
+				e.preventDefault();
+				commitHarmony(e.shiftKey);
+			} else if (e.key === 'Escape') { e.preventDefault(); closeHarmony(); }
+		});
+
 		// ------------------------------------------------------------------ teclado global
 		root.addEventListener('keydown', function (e) {
-			if (!ed.hidden || !exSheet.hidden) return;
+			if (anyFull()) return;
 			if (cmd(e) && !e.shiftKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
 			else if (e.key === 'Escape') closeSettings();
 		});
@@ -1840,6 +2284,7 @@
 					S.key = k;
 					closeSettings();
 					if (E) closeEditor(false);
+					if (H) closeHarmony();
 					if (XS) closeExtract();
 					loadProject(true);
 				}

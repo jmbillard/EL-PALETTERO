@@ -17,6 +17,7 @@ o palletero guarda as cores do projeto num painel que você acopla em qualquer l
 - [aplicar cores](#-aplicar-cores)
 - [organizar a paleta](#-organizar-a-paleta)
 - [editor de cor e nomes automáticos](#-editor-de-cor-e-nomes-automáticos)
+- [criar harmonias](#-criar-harmonias)
 - [conta-gotas](#-conta-gotas)
 - [extrair cores de uma imagem](#-extrair-cores-de-uma-imagem)
 - [presets](#-presets)
@@ -134,6 +135,7 @@ o editor nasce da própria amostra e volta para ela quando você confirma.
 - **campo de valor** → digite ou cole a cor. o botão `HEX` alterna para `RGB` e `HSB`. colar em qualquer lugar do editor também funciona (`#ff4d4d`, `rgb(255, 77, 77)`, `0 70 100`…).
 - **metade esquerda da prévia** → a cor original. `◖ clique` volta para ela.
 - `Enter` confirma, `Esc` cancela. o 🗑️ exclui a cor.
+- o botão da **roda** troca para o [criador de harmonias](#-criar-harmonias), partindo da cor do editor.
 
 ### nomes automáticos
 
@@ -147,6 +149,43 @@ cada cor ganha um nome em português, do mundo real: *menta*, *tijolo*, *céu*, 
 > 🚩 *obs:*\
 > • nomes antigos como `cor 3`, vazios ou iguais ao hex viram automáticos.\
 > • para ver os nomes nas amostras, ligue **mostrar nomes** nos [ajustes](#-ajustes).
+
+<br>
+
+---
+
+<br>
+
+## 📍 criar harmonias
+
+o segundo modo do editor: você escolhe uma **cor base** e uma **regra**, e as cores irmãs aparecem juntas. entra pela roda no rodapé do editor; o 💧 volta para o editor de uma cor. o **+** abre no último modo usado.
+
+- **roda** → o ângulo é o matiz e a distância do centro é a saturação. com pouco espaço ela vira um **quadrado** (matiz na horizontal, saturação na vertical), com os mesmos gestos.
+  - arraste **qualquer ponto**: o conjunto inteiro gira junto e a regra continua valendo.
+  - clicar num lugar vazio leva a cor base até lá.
+  - com a roda em foco, ← → giram (`Shift` gira mais) e ↑ ↓ mudam a saturação.
+- **barra ao lado** → brilho de todas as cores.
+- **regras** (cada ícone é uma mini-roda com os pontos da regra):
+
+  | regra | cores |
+  | --- | --- |
+  | análoga | 5 vizinhas no círculo (com **abertura**) |
+  | monocromática | 5 tons da mesma cor |
+  | complementar | a base e a oposta |
+  | complementar dividida | a base e as duas vizinhas da oposta (com **abertura**) |
+  | tríade | 3, a 120° |
+  | tétrade | 4, em retângulo |
+  | quadrado | 4, a 90° |
+
+- **degraus** → 1, 2 ou 3 tons por cor (claro, a cor, escuro). somem na monocromática, que já é feita de tons.
+- **cores geradas** → `◖ clique` deixa uma cor de fora (e de novo traz de volta). o ponto da roda esmaece quando todas as cores dele estão de fora.
+- **rodapé**:
+  - 🔖 → salva as cores como um **preset** novo, com o nome da regra e da cor base (*tríade mostarda*).
+  - ✓ → **adiciona** à paleta as cores que ainda não estão lá. o número no canto conta quantas são.
+  - `Shift` + ✓ → **substitui** a paleta.
+  - `Enter` / `Shift+Enter` fazem o mesmo; `Esc` cancela. tudo tem desfazer.
+
+> 🚩 *obs:* a regra, a abertura e os degraus ficam guardados para a próxima vez.
 
 <br>
 
@@ -272,6 +311,7 @@ o **⋯** (doca da direita) abre os ajustes no lugar das cores.
 | excluir | `Alt` + `◖ clique` | `⌥` + `◖ clique` |
 | capturar do projeto inteiro | `Shift` + conta-gotas | `⇧` + conta-gotas |
 | adicionar preset sem substituir | `Shift` + `◖ clique` no preset | `⇧` + `◖ clique` no preset |
+| harmonia: substituir a paleta | `Shift` + ✓ ou `Shift+Enter` | `⇧` + ✓ ou `⇧Return` |
 | desfazer (paleta) | `Ctrl+Z` | `⌘Z` |
 | confirmar / cancelar (editor, extração) | `Enter` / `Esc` | `Return` / `Esc` |
 | amostra em foco: aplicar · editar · excluir | `Enter` · `F2` · `Delete` | `Return` · `F2` · `Delete` |

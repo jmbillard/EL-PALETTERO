@@ -12,6 +12,7 @@ const js = [
 	path.join(ext, 'js', 'color.js'),
 	path.join(ext, 'js', 'names.js'),
 	path.join(ext, 'js', 'extract.js'),
+	path.join(ext, 'js', 'harmony.js'),
 	path.join(root, 'mockup', 'mock-host.js'),
 	path.join(ext, 'js', 'bridge.js'),
 	path.join(ext, 'js', 'panel.js')
