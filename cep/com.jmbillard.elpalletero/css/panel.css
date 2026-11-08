@@ -483,12 +483,19 @@
 .pc-row { display: flex; align-items: center; gap: 6px; min-width: 0; flex: none; }
 .pc-row .pc-name { flex: 0 1 auto; min-width: 0; }
 /* alça de arrastar: a área vazia à direita do nome; os pontinhos aparecem no hover */
-.pc-grip { flex: 1 1 auto; align-self: stretch; min-width: 18px; display: grid; grid-template-columns: repeat(2, 2.5px); grid-auto-rows: 2.5px; gap: 2px; align-content: center; justify-content: end; margin: 0; padding: 0 2px 0 0; border: 0; border-radius: 4px; background: transparent; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.pc-grip {
+	flex: 1 1 auto; align-self: stretch; min-width: 24px;
+	display: block; text-align: right; /* sem grid/flex: o botão já centraliza na vertical, e funciona no Chromium do CEP */
+	margin: 0; padding: 0; border: 0; border-radius: 4px;
+	background: transparent; color: var(--mute);
+	font-size: 0; line-height: 0;
+	cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
+}
+.pc-grip svg { display: inline-block; width: 14px; height: 14px; fill: currentColor; stroke: none; vertical-align: middle; opacity: 0; transition: opacity .2s, color .2s; }
+.pcard:hover .pc-grip svg, .pc-grip:focus-visible svg { opacity: .6; }
+.pc-grip:hover { color: var(--fg); }
+.pc-grip:hover svg { opacity: 1; }
 .pc-grip:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.pc-grip:focus-visible i { opacity: 1; }
-.pc-grip i { border-radius: 50%; background: var(--mute); opacity: 0; transition: opacity .2s, background .2s; }
-.pcard:hover .pc-grip i { opacity: .55; }
-.pc-grip:hover i { opacity: 1; background: var(--fg); }
 .lib-list.sorting, .lib-list.sorting * { cursor: grabbing !important; user-select: none; }
 .lib-list.sorting { scroll-behavior: auto; }
 .lib-list.sorting .pcard:not(.drag) { transition: transform .18s var(--ease); }

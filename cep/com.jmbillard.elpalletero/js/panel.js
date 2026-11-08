@@ -7,7 +7,7 @@
 	var Host = root.PalHost;
 	var N = root.PalNames;
 	var X = root.PalExtract;
-	var VERSION = 'v1.2.5';
+	var VERSION = 'v1.2.6';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
@@ -51,6 +51,9 @@
 
 	// logo (picolé com mordida) para o estado de paleta vazia · mesmo desenho de docs/img/logo.svg
 	var LOGO = '<svg class="empty-logo" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="9.12 9.12 101.76 101.76"><defs><linearGradient id="pal-lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF4D4D"/><stop offset=".25" stop-color="#FF8F4D"/><stop offset=".5" stop-color="#FFC44E"/><stop offset=".75" stop-color="#5DE6A2"/><stop offset="1" stop-color="#80C0FE"/></linearGradient><mask id="pal-lm"><rect x="-20" y="-20" width="160" height="160" fill="#fff"/><g fill="#000"><circle cx="90.5" cy="32" r="13"/></g></mask></defs><rect x="53.0" y="80" width="14" height="28" rx="7.0" fill="#E9CFA0"/><g mask="url(#pal-lm)"><path d="M33.0,77 L37.0,21 Q37.0,12 46.0,12 L74.0,12 Q83.0,12 83.0,21 L87.0,77 Q87.0,86 78.0,86 L42.0,86 Q33.0,86 33.0,77 Z" fill="url(#pal-lg)"/><path d="M42.0,26 L41.0,58" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".35"/></g></svg>';
+
+	// pontinhos do puxador: SVG (como no O PADEIRO). Grid dentro de <button> não funciona no Chromium do CEP.
+	var GRIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>';
 
 	function ic(name, cls) {
 		return '<svg class="ic ' + (cls || '') + '" viewBox="0 0 24 24" aria-hidden="true">' + ICONS[name] + '</svg>';
@@ -933,7 +936,7 @@
 				var cls = 'pcard' + (p.id === S.prefs.defaultPreset ? ' is-default' : '') + (p.name === S.preset ? ' is-origin' : '');
 				html += '<div class="' + cls + '" role="listitem" tabindex="0" data-pid="' + esc(p.id) + '" style="--i:' + i + '">' + bars(p.swatches) +
 					'<span class="pc-row"><span class="pc-name">' + esc(p.name) + '</span>' +
-					'<button type="button" class="pc-grip" aria-label="Arraste para reordenar (ou use as setas)" data-tip="Arraste para reordenar"><i></i><i></i><i></i><i></i><i></i><i></i></button></span>' +
+					'<button type="button" class="pc-grip" aria-label="Arraste para reordenar (ou use as setas)" data-tip="Arraste para reordenar">' + GRIP + '</button></span>' +
 					'<span class="pc-acts"><button class="pc-btn pc-ren" data-tip="Renomear">' + ic('pencil') + '</button>' +
 					'<button class="pc-btn pc-star" data-tip="Padrão para projetos sem paleta">' + ic('star') + '</button>' +
 					'<button class="pc-btn pc-del" data-tip="Excluir preset">' + ic('trash') + '</button></span></div>';
