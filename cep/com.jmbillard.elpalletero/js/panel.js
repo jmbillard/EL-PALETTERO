@@ -7,14 +7,14 @@
 	var Host = root.PalHost;
 	var N = root.PalNames;
 	var X = root.PalExtract;
-	var VERSION = 'v1.3.1';
+	var VERSION = 'v1.3.2';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
 	// Windows × Mac: no Mac o "Ctrl" do painel é ⌘ (Ctrl+clique lá é clique direito) e as teclas
 	// aparecem com os símbolos do sistema
 	var IS_MAC = /Mac/i.test(root.navigator.platform || root.navigator.userAgent);
-	var KEY = IS_MAC ? { ctrl: '⌘', alt: '⌥', shift: '⇧' } : { ctrl: 'Ctrl', alt: 'Alt', shift: 'Shift' };
+	var KEY = IS_MAC ? { ctrl: '⌘', alt: '⌥', shift: '⇧ Shift' } : { ctrl: 'Ctrl', alt: 'Alt', shift: 'Shift' };
 	function cmd(e) { return IS_MAC ? !!e.metaKey : !!e.ctrlKey; }
 	function macRightClick(e) { return IS_MAC && e.ctrlKey && !e.metaKey; }
 	var SPRING = 'cubic-bezier(.34,1.56,.64,1)';
@@ -505,6 +505,9 @@
 				if (x + w > pr.width - 4) x = tr.left - pr.left - w - 6;
 			}
 			x = Math.max(4, Math.min(pr.width - w - 4, x));
+			// a dica nunca cobre o que está sob o mouse: sem lugar livre, não aparece
+			var tl = tr.left - pr.left, tt = tr.top - pr.top;
+			if (x < tl + tr.width && x + w > tl && y < tt + tr.height && y + h > tt) return hideTip();
 			tipEl.style.transform = '';
 			tipEl.style.left = x + 'px';
 			tipEl.style.top = y + 'px';
@@ -999,10 +1002,10 @@
 				var cls = 'pcard' + (p.id === S.prefs.defaultPreset ? ' is-default' : '') + (p.name === S.preset ? ' is-origin' : '');
 				html += '<div class="' + cls + '" role="listitem" tabindex="0" data-pid="' + esc(p.id) + '" style="--i:' + i + '">' + bars(p.swatches) +
 					'<span class="pc-row"><span class="pc-name">' + esc(p.name) + '</span>' +
-					'<button type="button" class="pc-grip" aria-label="Arraste para reordenar (ou use as setas)" data-tip="Arraste para reordenar">' + GRIP + '</button></span>' +
-					'<span class="pc-acts"><button class="pc-btn pc-ren" data-tip="Renomear">' + ic('pencil') + '</button>' +
-					'<button class="pc-btn pc-star" data-tip="Padrão para projetos sem paleta">' + ic('star') + '</button>' +
-					'<button class="pc-btn pc-del" data-tip="Excluir preset">' + ic('trash') + '</button></span></div>';
+					'<button type="button" class="pc-grip" aria-label="Arraste para reordenar (ou use as setas)">' + GRIP + '</button></span>' +
+					'<span class="pc-acts"><button class="pc-btn pc-ren" aria-label="Renomear">' + ic('pencil') + '</button>' +
+					'<button class="pc-btn pc-star" aria-label="Padrão para projetos sem paleta">' + ic('star') + '</button>' +
+					'<button class="pc-btn pc-del" aria-label="Excluir preset">' + ic('trash') + '</button></span></div>';
 			});
 			libList.innerHTML = html;
 			q('.lib-path').textContent = shortPath(S.folder);
@@ -1968,6 +1971,38 @@
 			hmDisk.style.width = g.w + 'px';
 			hmDisk.style.height = g.h + 'px';
 			H.geo = g;
+			paintDisk(g);
+		}
+		// desenha a roda (ou o quadrado) pixel a pixel, com brilho máximo: o escurecimento é a camada de cima.
+		// Só refaz quando o tamanho ou a forma mudam.
+		var hmCanvas = document.createElement('canvas');
+		hmDisk.insertBefore(hmCanvas, hmDisk.firstChild);
+		function paintDisk(g) {
+			var dpr = root.devicePixelRatio || 1, W = Math.max(1, Math.round(g.w * dpr)), Hh = Math.max(1, Math.round(g.h * dpr));
+			var sig = (g.wheel ? 'w' : 'r') + W + 'x' + Hh;
+			if (hmCanvas._sig === sig) return;
+			hmCanvas._sig = sig;
+			hmCanvas.width = W;
+			hmCanvas.height = Hh;
+			var cx = hmCanvas.getContext('2d'), img = cx.createImageData(W, Hh), d = img.data, R = W / 2, i = 0, x, y;
+			for (y = 0; y < Hh; y++) {
+				for (x = 0; x < W; x++, i += 4) {
+					var hue, sat, a = 255;
+					if (g.wheel) {
+						var dx = x + 0.5 - R, dy = y + 0.5 - R, dist = Math.sqrt(dx * dx + dy * dy);
+						if (dist > R + 0.5) { d[i + 3] = 0; continue; }
+						a = Math.round(C.clamp(R + 0.5 - dist, 0, 1) * 255); // borda suave de 1 px
+						hue = Math.atan2(dx, -dy) * 180 / Math.PI;
+						sat = Math.min(1, dist / R);
+					} else {
+						hue = (x + 0.5) / W * 360;
+						sat = 1 - (y + 0.5) / Hh;
+					}
+					var rgb = C.hsbToRgb([hue, sat * 100, 100]);
+					d[i] = rgb[0]; d[i + 1] = rgb[1]; d[i + 2] = rgb[2]; d[i + 3] = a;
+				}
+			}
+			cx.putImageData(img, 0, 0);
 		}
 		function hPlace(hue, r) {
 			var g = H.geo;

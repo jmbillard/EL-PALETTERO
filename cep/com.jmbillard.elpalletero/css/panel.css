@@ -54,7 +54,7 @@
 
 .tool {
 	position: relative;
-	width: 28px; height: 28px;
+	width: 28px; height: 28px; padding: 0;
 	display: grid; place-items: center;
 	border: 0; border-radius: var(--r);
 	background: transparent;
@@ -383,7 +383,7 @@
 .ed-val { width: 96px; min-width: 0; flex: 1; border: 0; background: transparent; color: var(--fg); padding: 0 7px; font: 11px var(--mono); }
 .ed-val:focus { outline: 0; }
 .ed-actions { display: flex; gap: 4px; justify-content: flex-end; }
-.ed-btn { width: 30px; height: 26px; display: grid; place-items: center; border: 0; border-radius: 7px; background: var(--raise-2); color: var(--mute); cursor: pointer; transition: background .18s, color .18s, transform .25s var(--spring); }
+.ed-btn { padding: 0; width: 30px; height: 26px; display: grid; place-items: center; border: 0; border-radius: 7px; background: var(--raise-2); color: var(--mute); cursor: pointer; transition: background .18s, color .18s, transform .25s var(--spring); }
 .ed-btn:hover { color: var(--fg); transform: translateY(-1px); }
 .ed-btn:active { transform: scale(.9); }
 .ed-btn.ok { background: var(--new); color: var(--new-ink); }
@@ -415,23 +415,11 @@
 
 .hm-map { grid-area: w; position: relative; min-width: 0; min-height: 0; cursor: crosshair; touch-action: none; border-radius: 8px; }
 .hm-map:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
-/* o gradiente fica numa camada desfocada (o Chromium do After desenha uma costura no gradiente
-   cônico). Só visual: a escolha da cor vem da posição do mouse, não dos pixels. A camada passa
-   6 px de cada lado (o desfoque não esmaece a borda) e as paradas compensam essa sobra, então
-   cada ponto continua com a cor exata. */
-.hm-disk {
-	position: absolute; border-radius: 8px; overflow: hidden;
-	-webkit-mask-image: linear-gradient(#000, #000); /* garante o recorte arredondado no Chromium antigo */
-	transition: border-radius .35s var(--ease);
-}
-.hm-disk::before {
-	content: ''; position: absolute; inset: -6px; filter: blur(1.5px);
-	background:
-		linear-gradient(to bottom, rgba(255, 255, 255, 0) 6px, #fff calc(100% - 6px)),
-		linear-gradient(to right, #f00 6px, #ff0, #0f0, #0ff, #00f, #f0f, #f00 calc(100% - 6px));
-}
+/* a roda e o quadrado são desenhados pixel a pixel num canvas: o gradiente cônico do Chromium do
+   After deixava costuras e linhas dependendo do tamanho */
+.hm-disk { position: absolute; border-radius: 8px; transition: border-radius .35s var(--ease); }
 .hm-map[data-geo='wheel'] .hm-disk { border-radius: 50%; }
-.hm-map[data-geo='wheel'] .hm-disk::before { background: radial-gradient(closest-side, #fff, rgba(255, 255, 255, 0) calc(100% - 6px)), conic-gradient(#f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); }
+.hm-disk canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
 .hm-disk::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: #000; opacity: var(--dim, 0); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12); }
 .hm-geo { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .hm-geo line { stroke: rgba(255, 255, 255, .85); stroke-width: 1.25; }
@@ -440,7 +428,7 @@
 	position: absolute; left: 0; top: 0; width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px;
 	border-radius: 50%; background: var(--c);
 	box-shadow: 0 0 0 2px #fff, 0 1px 6px rgba(0, 0, 0, .55);
-	cursor: grab;
+	cursor: pointer;
 	transition: width .25s var(--spring), height .25s var(--spring), margin .25s var(--spring), opacity .25s;
 }
 .hm-mk:hover { width: 17px; height: 17px; margin: -8.5px 0 0 -8.5px; }
@@ -450,7 +438,7 @@
 .hm-mk.leaving { opacity: 0; pointer-events: none; }
 .hm-map[data-geo='rect'] .hm-mk { width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; }
 .hm-map[data-geo='rect'] .hm-mk.base { width: 15px; height: 15px; margin: -7.5px 0 0 -7.5px; }
-.hm-map.grab, .hm-map.grab .hm-mk { cursor: grabbing; }
+.hm-map.grab .hm-mk { cursor: pointer; }
 
 .hm-bri { grid-area: b; position: relative; border-radius: 6px; cursor: pointer; touch-action: none; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08); }
 .hm-bri .knob { left: 50%; }
@@ -476,9 +464,9 @@
 .hm-sw.base.off::after { display: none; }
 
 /* controles: regras, abertura, degraus e ações (empilhados; espalhados quando baixo ou de pé) */
-.hm-ctrl { grid-area: c; display: flex; flex-direction: column; justify-content: space-between; gap: 6px; min-width: 0; }
-.hm-rules { display: grid; grid-template-columns: repeat(4, 30px); gap: 2px 4px; justify-content: end; }
-.hm-rule { height: 26px; border: 0; border-radius: 7px; background: transparent; color: var(--mute); display: grid; place-items: center; cursor: pointer; transition: background .15s, color .15s, transform .25s var(--spring); }
+.hm-ctrl { grid-area: c; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'r r' 'o a'; align-content: center; align-items: center; gap: 6px 10px; min-width: 0; }
+.hm-rules { grid-area: r; display: grid; grid-template-columns: repeat(7, minmax(22px, 1fr)); gap: 2px; }
+.hm-rule { padding: 0; height: 26px; border: 0; border-radius: 7px; background: transparent; color: var(--mute); display: grid; place-items: center; cursor: pointer; transition: background .15s, color .15s, transform .25s var(--spring); }
 .hm-rule:hover { background: var(--raise-2); color: var(--fg); }
 .hm-rule:active { transform: scale(.88); }
 .hm-rule svg { width: 18px; height: 18px; overflow: visible; }
@@ -491,17 +479,18 @@
 .hm-rule[aria-pressed='true'] .hr-ring, .hm-rule[aria-pressed='true'] .hr-spoke { opacity: .75; }
 @keyframes pal-peek { 40% { transform: rotate(30deg); } }
 
-.hm-opts { display: flex; flex-direction: column; gap: 6px; }
+.hm-opts { grid-area: o; display: flex; align-items: center; gap: 10px; min-width: 0; }
 .hm-opts > * { animation: pal-rise .3s var(--ease) backwards; }
 .hm-opts > .gone { display: none; }
-.hm-open { display: flex; align-items: center; gap: 6px; height: 20px; color: var(--mute); }
+.hm-open { flex: 1; max-width: 120px; display: flex; align-items: center; gap: 6px; height: 20px; color: var(--mute); }
+.harmony .ed-actions { grid-area: a; }
 .hm-open .ic { width: 13px; height: 13px; }
 .hm-range { position: relative; flex: 1; min-width: 44px; height: 4px; border-radius: 2px; background: var(--raise-2); cursor: pointer; touch-action: none; }
 .hm-range::before { content: ''; position: absolute; left: 0; right: 0; top: -8px; bottom: -8px; } /* área de clique maior */
 .hm-range i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: var(--fg); opacity: .45; }
 .hm-range .knob { top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border: 0; background: var(--fg); }
 .hm-steps { display: flex; gap: 2px; padding: 2px; border-radius: 8px; background: var(--bg); }
-.hm-steps button { flex: 1; height: 20px; min-width: 22px; border: 0; border-radius: 6px; background: transparent; color: var(--mute); display: grid; place-items: center; cursor: pointer; transition: background .15s, color .15s; }
+.hm-steps button { padding: 0; flex: 1; height: 20px; min-width: 22px; border: 0; border-radius: 6px; background: transparent; color: var(--mute); display: grid; place-items: center; cursor: pointer; transition: background .15s, color .15s; }
 .hm-steps button:hover { color: var(--fg); }
 .hm-steps button[aria-pressed='true'] { background: var(--raise-2); color: var(--fg); }
 .hm-steps svg { width: 13px; height: 13px; }
@@ -515,14 +504,7 @@
 	font: 700 9px/15px var(--mono); text-align: center; pointer-events: none;
 }
 
-.pal[data-shape='tall'] .hm-ctrl, .pal[data-short='1'] .hm-ctrl {
-	display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'r r' 'o a'; align-items: center; gap: 6px 10px;
-}
-.pal[data-shape='tall'] .hm-rules, .pal[data-short='1'] .hm-rules { grid-area: r; grid-template-columns: repeat(7, minmax(22px, 1fr)); justify-content: stretch; }
 .pal[data-short='1'] .hm-rule { height: 22px; }
-.pal[data-shape='tall'] .hm-opts, .pal[data-short='1'] .hm-opts { grid-area: o; flex-direction: row; align-items: center; gap: 10px; }
-.pal[data-shape='tall'] .hm-open, .pal[data-short='1'] .hm-open { flex: 1; max-width: 120px; }
-.pal[data-shape='tall'] .harmony .ed-actions, .pal[data-short='1'] .harmony .ed-actions { grid-area: a; }
 .pal[data-short='1'] .harmony { gap: 6px; padding: 6px; }
 /* coluna estreita: regras em duas linhas, e cada grupo de controles na sua linha */
 .pal[data-shape='tall'][data-slim='1'] .hm-ctrl { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'r' 'o' 'a'; }
@@ -677,7 +659,7 @@
 
 .pc-acts { position: absolute; top: 4px; right: 4px; display: flex; gap: 2px; }
 .pc-btn {
-	width: 20px; height: 20px; display: grid; place-items: center;
+	width: 20px; height: 20px; padding: 0; display: grid; place-items: center;
 	border: 0; border-radius: 6px; background: rgba(10, 11, 13, .72); color: var(--fg);
 	cursor: pointer; opacity: 0; transform: translateY(-4px) scale(.8);
 	transition: opacity .18s, transform .25s var(--spring), color .15s;
@@ -794,7 +776,7 @@
 .extract.enter .ex-chip { animation: pal-pop .45s var(--spring) backwards; animation-delay: calc(var(--i) * 45ms); }
 .ex-ctrl { display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
 .ex-count { display: flex; align-items: center; margin-right: auto; border-radius: 7px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); }
-.ex-step { width: 24px; height: 26px; display: grid; place-items: center; border: 0; background: transparent; color: var(--mute); cursor: pointer; transition: color .15s, transform .2s var(--spring); }
+.ex-step { padding: 0; width: 24px; height: 26px; display: grid; place-items: center; border: 0; background: transparent; color: var(--mute); cursor: pointer; transition: color .15s, transform .2s var(--spring); }
 .ex-step .ic { width: 12px; height: 12px; }
 .ex-step:hover { color: var(--fg); }
 .ex-step:active { transform: scale(.8); }
