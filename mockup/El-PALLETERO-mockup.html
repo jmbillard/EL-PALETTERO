@@ -1592,7 +1592,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	var Host = root.PalHost;
 	var N = root.PalNames;
 	var X = root.PalExtract;
-	var VERSION = 'v1.2.9';
+	var VERSION = 'v1.2.10';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
@@ -2697,6 +2697,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			var all = presetCards();
 			if (from === to || !all[from] || !all[to]) return;
 			var card = all[from];
+			card.style.animation = 'none'; // reinserir no DOM reiniciaria a animação de entrada
 			libList.insertBefore(card, to > from ? all[to].nextSibling : all[to]);
 			var ids = presetCards().map(function (c) { return c.dataset.pid; });
 			S.presets = ids.map(presetById);
@@ -2802,13 +2803,25 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 				root.removeEventListener('mousedown', drop, true);
 				root.removeEventListener('keydown', key, true);
 				if (raf) cancelAnimationFrame(raf);
+				// FLIP ao soltar: guarda onde cada cartão está na tela, reorganiza tudo de uma vez SEM
+				// transição (zerar o deslocamento dos vizinhos com transição os fazia voltar ao lugar
+				// antigo, atravessando o cartão solto) e só anima quem ficou fora do lugar
+				var seen = all.map(rect);
+				// transição desligada no próprio estilo de cada cartão (uma classe não basta: o navegador
+				// compara com o quadro anterior e criaria a transição mesmo assim); volta dois quadros depois
+				all.forEach(function (c) { c.style.transition = 'none'; });
 				libList.classList.remove('sorting', 'carry');
 				card.classList.remove('drag');
 				all.forEach(function (c) { c.style.transform = ''; });
-				if (!cancel && started && to !== from) {
-					var moved = movePreset(from, to);
-					if (moved && carrying) moved.animate([{ transform: 'scale(1.04)' }, { transform: 'none' }], { duration: 300, easing: SPRING });
-				}
+				if (!cancel && started && to !== from) movePreset(from, to);
+				void libList.offsetHeight;
+				all.forEach(function (c, i) {
+					c.getAnimations().forEach(function (a) { if (a.transitionProperty === 'transform') a.cancel(); });
+					var now = rect(c), dx = seen[i].left - now.left, dy = seen[i].top - now.top;
+					if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+					c.animate([{ transform: 'translate(' + dx + 'px,' + dy + 'px)' }, { transform: 'none' }], { duration: 260, easing: SPRING });
+				});
+				requestAnimationFrame(function () { requestAnimationFrame(function () { all.forEach(function (c) { c.style.transition = ''; }); }); });
 			}
 
 			function up(ev) {
