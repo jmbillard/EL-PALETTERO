@@ -203,7 +203,7 @@
 .sw-edit .ic { width: 12px; height: 12px; opacity: 0; transform: scale(.3) rotate(-60deg); transition: opacity .18s, transform .35s var(--spring); }
 .sw.hot .sw-edit::before { opacity: .55; transform: none; }
 .sw-edit:hover { background: rgba(0, 0, 0, .28); }
-.sw-edit:hover::before { opacity: 0; transform: scale(2.6); }
+.sw-edit:hover::before { opacity: 0; transform: scale(.4); transition: opacity .05s, transform .12s; } /* a argolinha some na hora em que o lápis entra */
 .sw-edit:hover .ic { opacity: 1; transform: none; }
 .sw-edit:active { transform: scale(.86); }
 .sw-edit:hover ~ .sw-glyph .ic { opacity: 0 !important; transform: scale(.5) !important; }
@@ -427,7 +427,7 @@
 .hm-mk {
 	position: absolute; left: 0; top: 0; width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px;
 	border-radius: 50%; background: var(--c);
-	box-shadow: inset 0 0 0 1px #808080, 0 0 0 2px #fff, 0 1px 3px rgba(0, 0, 0, .3);
+	box-shadow: 0 0 0 2px #fff, 0 1px 3px rgba(0, 0, 0, .3);
 	cursor: pointer;
 	transition: width .25s var(--spring), height .25s var(--spring), margin .25s var(--spring), opacity .25s;
 }
