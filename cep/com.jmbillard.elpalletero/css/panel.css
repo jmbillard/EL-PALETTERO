@@ -498,8 +498,11 @@
 .pc-grip:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .lib-list.sorting, .lib-list.sorting * { cursor: grabbing !important; user-select: none; }
 .lib-list.sorting { scroll-behavior: auto; }
+/* modo "pegar e soltar": o cartão pegado flutua e pulsa de leve */
+.lib-list.carry .pcard.drag { animation: pal-carry 1.2s ease-in-out infinite; }
+@keyframes pal-carry { 50% { box-shadow: inset 0 0 0 1.5px var(--accent), 0 0 0 3px rgba(255, 196, 78, .25), 0 14px 28px -12px #000; } }
 .lib-list.sorting .pcard:not(.drag) { transition: transform .18s var(--ease); }
-.lib-list.sorting .pcard:not(.drag) .pc-btn { opacity: 0 !important; }
+.lib-list.sorting .pc-btn { opacity: 0 !important; }
 .pcard.drag { z-index: 5; box-shadow: inset 0 0 0 1.5px var(--accent), 0 14px 28px -12px #000; transition: none; animation: none; }
 .pc-name { display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--mute); flex: none; transition: color .2s; }
 .pc-name > span { overflow: hidden; text-overflow: ellipsis; }

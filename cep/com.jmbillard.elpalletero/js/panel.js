@@ -7,7 +7,7 @@
 	var Host = root.PalHost;
 	var N = root.PalNames;
 	var X = root.PalExtract;
-	var VERSION = 'v1.2.6';
+	var VERSION = 'v1.2.7';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
@@ -455,7 +455,7 @@
 			if (t === tipTarget) return;
 			hideTip();
 			tipTarget = t;
-			if (!t || el.classList.contains('dragging')) return;
+			if (!t || el.classList.contains('dragging') || libList.classList.contains('sorting')) return;
 			tipTimer = setTimeout(function () { showTip(t); }, t.classList.contains('sw') ? 700 : 320);
 		});
 		el.addEventListener('pointerleave', function () { tipTarget = null; hideTip(); setMods({}); });
@@ -1085,6 +1085,18 @@
 			return card;
 		}
 
+		// Dois jeitos de mover um preset pelo puxador:
+		//  · arrastar (botão pressionado) — precisa do painel já em foco no CEP;
+		//  · clicar para pegar, mover o mouse (só hover) e clicar para soltar — funciona mesmo quando
+		//    o primeiro clique só ativa a janela do painel, que é o que o After Effects faz. Esc cancela.
+		var suppressClick = false;
+		root.addEventListener('click', function (e) {
+			if (!suppressClick) return;
+			suppressClick = false;
+			e.preventDefault();
+			e.stopPropagation();
+		}, true);
+
 		libList.addEventListener('pointerdown', function (e) {
 			var grip = e.target.closest('.pc-grip');
 			if (!grip || e.button !== 0) return;
@@ -1093,26 +1105,31 @@
 			var from = all.indexOf(card);
 			if (from < 0 || all.length < 2) return;
 			e.preventDefault();
+			try { root.focus(); grip.focus({ preventScroll: true }); } catch (err) {}
 
 			var row = el.dataset.orient === 'row';
 			var start = row ? e.clientX : e.clientY;
 			var scroll0 = row ? libList.scrollLeft : libList.scrollTop;
 			var boxes = all.map(rect);
 			var step = row ? boxes[1].left - boxes[0].left : boxes[1].top - boxes[0].top;
-			var to = from, started = false, last = e, raf = 0;
+			var to = from, started = false, carrying = false, last = e, raf = 0;
 
-			grip.setPointerCapture(e.pointerId);
+			try { grip.setPointerCapture(e.pointerId); } catch (err) {}
 
 			function scrolled() { return (row ? libList.scrollLeft : libList.scrollTop) - scroll0; }
+
+			function begin() {
+				started = true;
+				hideTip();
+				card.classList.add('drag');
+				libList.classList.add('sorting');
+			}
 
 			function update() {
 				var d = (row ? last.clientX : last.clientY) - start + scrolled();
 				if (!started) {
 					if (Math.abs(d) < 4) return;
-					started = true;
-					hideTip();
-					card.classList.add('drag');
-					libList.classList.add('sorting');
+					begin();
 				}
 				var b0 = boxes[from];
 				var center = (row ? b0.left + b0.width / 2 : b0.top + b0.height / 2) + d;
@@ -1138,8 +1155,8 @@
 				if (!started) return;
 				var lr = rect(libList), edge = 28, v = 0;
 				var p = row ? last.clientX : last.clientY, lo = row ? lr.left : lr.top, hi = row ? lr.right : lr.bottom;
-				if (p < lo + edge) v = -Math.ceil((lo + edge - p) / 4);
-				else if (p > hi - edge) v = Math.ceil((p - hi + edge) / 4);
+				if (p < lo + edge && p > lo - 40) v = -Math.ceil((lo + edge - p) / 4);
+				else if (p > hi - edge && p < hi + 40) v = Math.ceil((p - hi + edge) / 4);
 				if (!v) return;
 				if (row) libList.scrollLeft += v; else libList.scrollTop += v;
 				update();
@@ -1152,22 +1169,61 @@
 				if (!raf) raf = requestAnimationFrame(autoscroll);
 			}
 
-			function end() {
+			function finish(cancel) {
 				grip.removeEventListener('pointermove', move);
-				grip.removeEventListener('pointerup', end);
-				grip.removeEventListener('pointercancel', end);
-				grip.removeEventListener('lostpointercapture', end);
+				grip.removeEventListener('pointerup', up);
+				grip.removeEventListener('pointercancel', cancelDrag);
+				root.removeEventListener('pointermove', move, true);
+				root.removeEventListener('pointerdown', drop, true);
+				root.removeEventListener('keydown', key, true);
 				if (raf) cancelAnimationFrame(raf);
-				libList.classList.remove('sorting');
+				libList.classList.remove('sorting', 'carry');
 				card.classList.remove('drag');
 				all.forEach(function (c) { c.style.transform = ''; });
-				if (started && to !== from) movePreset(from, to);
+				if (!cancel && started && to !== from) {
+					var moved = movePreset(from, to);
+					if (moved && carrying) moved.animate([{ transform: 'scale(1.04)' }, { transform: 'none' }], { duration: 300, easing: SPRING });
+				}
 			}
 
+			function up() {
+				if (started) return finish(false);
+				// clique sem arrastar: pega o preset; ele segue o mouse até o próximo clique
+				carrying = true;
+				begin();
+				libList.classList.add('carry');
+				grip.removeEventListener('pointermove', move);
+				grip.removeEventListener('pointerup', up);
+				grip.removeEventListener('pointercancel', cancelDrag);
+				root.addEventListener('pointermove', move, true);
+				root.addEventListener('pointerdown', drop, true);
+				root.addEventListener('keydown', key, true);
+				toast('Mova e clique para soltar · Esc cancela', { icon: 'library' });
+			}
+
+			function drop(ev) {
+				ev.preventDefault();
+				ev.stopPropagation();
+				suppressClick = true;
+				last = ev;
+				update();
+				finish(false);
+				hideToast();
+			}
+
+			function key(ev) {
+				if (ev.key !== 'Escape') return;
+				ev.preventDefault();
+				ev.stopPropagation();
+				finish(true);
+				hideToast();
+			}
+
+			function cancelDrag() { if (!carrying) finish(true); }
+
 			grip.addEventListener('pointermove', move);
-			grip.addEventListener('pointerup', end);
-			grip.addEventListener('pointercancel', end);
-			grip.addEventListener('lostpointercapture', end);
+			grip.addEventListener('pointerup', up);
+			grip.addEventListener('pointercancel', cancelDrag);
 		});
 
 		// teclado: com o puxador em foco, ↑ ↓ (← → na faixa) mudam a ordem

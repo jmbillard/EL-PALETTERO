@@ -216,7 +216,7 @@ a paleta do projeto mora no `.aep`. os **presets** são uma biblioteca de paleta
 - `Shift` + `◖ clique` → **adiciona** as cores que faltam.
 - **salvar preset** → a paleta do projeto vira um preset novo.
 - ✏️ renomeia, ★ define o preset usado em projetos sem paleta, 🗑️ exclui.
-- arraste pela área à direita do nome para reordenar.
+- para reordenar, clique na alça ⠿ à direita do nome, mova e clique de novo (ou arraste).
 - já vêm 12 paletas de exemplo (Pôr do sol, Sorveteria, Neon, Oceano, Floresta, Terroso, Tropical, Retrô 70, Noite urbana, Brasil, Pastel, Monocromático).
 
 a pasta de presets entende caminhos de rede do Windows e do Mac, volumes montados de novo (`VFX-1`) e volumes desmontados → [documentação completa](docs/presets.md).
