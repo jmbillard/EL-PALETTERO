@@ -7,7 +7,7 @@
 	var Host = root.PalHost;
 	var N = root.PalNames;
 	var X = root.PalExtract;
-	var VERSION = 'v1.2.8';
+	var VERSION = 'v1.2.9';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
@@ -167,6 +167,39 @@
 		var toastEl = q('.toast');
 		var tipEl = q('.tip');
 		var nodes = {}; // id → elemento
+
+		// ------------------------------------------------------------------ apertar e arrastar no CEP
+		// No CEP do After Effects chegam mousedown, mouseup e click, mas nem sempre pointerdown e
+		// pointerup (o registro de eventos mostrou isso). Todo "apertar e arrastar" passa por estes
+		// dois auxiliares, que escutam os dois tipos de evento sem disparar duas vezes.
+		var lastPointerDown = 0;
+		function onPress(target, fn) {
+			target.addEventListener('pointerdown', function (e) { lastPointerDown = Date.now(); fn(e); });
+			target.addEventListener('mousedown', function (e) { if (Date.now() - lastPointerDown < 700) return; fn(e); });
+		}
+		// acompanha o movimento e a soltura na janela inteira (com ou sem captura do ponteiro)
+		function follow(onMove, onUp, onCancel) {
+			var done = false;
+			function mv(e) { if (!done) onMove(e); }
+			function stop() {
+				if (done) return false;
+				done = true;
+				root.removeEventListener('pointermove', mv, true);
+				root.removeEventListener('mousemove', mv, true);
+				root.removeEventListener('pointerup', up, true);
+				root.removeEventListener('mouseup', up, true);
+				root.removeEventListener('pointercancel', cancel, true);
+				return true;
+			}
+			function up(e) { if (stop() && onUp) onUp(e); }
+			function cancel(e) { if (stop()) (onCancel || onUp || function () {})(e); }
+			root.addEventListener('pointermove', mv, true);
+			root.addEventListener('mousemove', mv, true);
+			root.addEventListener('pointerup', up, true);
+			root.addEventListener('mouseup', up, true);
+			root.addEventListener('pointercancel', cancel, true);
+			return { stop: stop };
+		}
 
 		// ------------------------------------------------------------------ layout responsivo
 		function measure() {
@@ -460,6 +493,7 @@
 		});
 		el.addEventListener('pointerleave', function () { tipTarget = null; hideTip(); setMods({}); });
 		el.addEventListener('pointerdown', hideTip);
+		el.addEventListener('mousedown', hideTip);
 
 		// ------------------------------------------------------------------ teclas modificadoras (a UI reage em tempo real)
 		function setMods(e) {
@@ -602,14 +636,15 @@
 			hotTimer = setTimeout(function () { setHot(null); }, 60);
 		});
 
-		strip.addEventListener('pointerdown', function (e) {
+		onPress(strip, function (e) {
 			var n = e.target.closest('.sw');
-			if (!n || n.classList.contains('leaving') || e.button !== 0 || macRightClick(e) || e.target.closest('.sw-edit')) return;
+			if (D || !n || n.classList.contains('leaving') || e.button !== 0 || macRightClick(e) || e.target.closest('.sw-edit')) return;
 			D = { n: n, x: e.clientX, y: e.clientY, started: false, before: snapshot() };
-			strip.setPointerCapture(e.pointerId);
+			try { if (e.pointerId !== undefined) strip.setPointerCapture(e.pointerId); } catch (err) {}
+			follow(stripMove, function (ev) { endPress(ev, false); }, function (ev) { endPress(ev, true); });
 		});
 
-		strip.addEventListener('pointermove', function (e) {
+		function stripMove(e) {
 			if (!D) return;
 			if (!D.started) {
 				if (Math.abs(e.clientX - D.x) + Math.abs(e.clientY - D.y) < 6 || e.altKey) return;
@@ -623,7 +658,7 @@
 				D.gy = Math.max(0, Math.min(r0.height, D.y - r0.top));
 			}
 			dragMove(e);
-		});
+		}
 
 		function dragMove(e) {
 			var n = D.n, o = el.dataset.orient;
@@ -680,8 +715,6 @@
 				save();
 			}
 		}
-		strip.addEventListener('pointerup', function (e) { endPress(e, false); });
-		strip.addEventListener('pointercancel', function (e) { endPress(e, true); });
 
 		strip.addEventListener('contextmenu', function (e) {
 			var n = e.target.closest('.sw');
@@ -865,8 +898,9 @@
 		(function () {
 			var btn = q('[data-act="clear"]'), t;
 			function cancel() { clearTimeout(t); btn.classList.remove('holding'); }
-			btn.addEventListener('pointerdown', function (e) {
+			onPress(btn, function (e) {
 				if (e.button !== 0) return;
+				follow(function () {}, cancel);
 				btn.classList.add('holding');
 				t = setTimeout(function () {
 					cancel();
@@ -879,8 +913,8 @@
 					toast('Paleta limpa', { icon: 'trash', undo: true });
 				}, 900);
 			});
-			btn.addEventListener('pointerup', cancel);
 			btn.addEventListener('pointerleave', cancel);
+			btn.addEventListener('mouseleave', cancel);
 		})();
 
 		// ------------------------------------------------------------------ presets
@@ -1097,7 +1131,7 @@
 			e.stopPropagation();
 		}, true);
 
-		libList.addEventListener('pointerdown', function (e) {
+		onPress(libList, function (e) {
 			var grip = e.target.closest('.pc-grip');
 			if (!grip || e.button !== 0) return;
 			var all = presetCards();
@@ -1105,16 +1139,16 @@
 			var from = all.indexOf(card);
 			if (from < 0 || all.length < 2) return;
 			e.preventDefault();
-			dbg('alça: pointerdown (' + (card.querySelector('.pc-name') || {}).textContent + ')');
+			dbg('alça: ' + e.type + ' (' + (card.querySelector('.pc-name') || {}).textContent + ')');
 
 			var row = el.dataset.orient === 'row';
 			var start = row ? e.clientX : e.clientY;
 			var scroll0 = row ? libList.scrollLeft : libList.scrollTop;
 			var boxes = all.map(rect);
 			var step = row ? boxes[1].left - boxes[0].left : boxes[1].top - boxes[0].top;
-			var to = from, started = false, carrying = false, last = e, raf = 0;
+			var to = from, started = false, carrying = false, finished = false, last = e, raf = 0;
 
-			try { grip.setPointerCapture(e.pointerId); } catch (err) {}
+			try { if (e.pointerId !== undefined) grip.setPointerCapture(e.pointerId); } catch (err) {}
 
 			function scrolled() { return (row ? libList.scrollLeft : libList.scrollTop) - scroll0; }
 
@@ -1171,11 +1205,16 @@
 			}
 
 			function finish(cancel) {
+				if (finished) return;
+				finished = true;
 				dbg((cancel ? 'cancelou' : 'soltou') + ' · de ' + from + ' para ' + to);
 				root.removeEventListener('pointermove', move, true);
+				root.removeEventListener('mousemove', move, true);
 				root.removeEventListener('pointerup', up, true);
+				root.removeEventListener('mouseup', up, true);
 				root.removeEventListener('pointercancel', cancelDrag, true);
 				root.removeEventListener('pointerdown', drop, true);
+				root.removeEventListener('mousedown', drop, true);
 				root.removeEventListener('keydown', key, true);
 				if (raf) cancelAnimationFrame(raf);
 				libList.classList.remove('sorting', 'carry');
@@ -1187,16 +1226,19 @@
 				}
 			}
 
-			function up() {
-				dbg('alça: pointerup');
+			function up(ev) {
+				if (carrying || finished) return; // pointerup e mouseup do mesmo clique
+				dbg('alça: ' + (ev && ev.type));
 				if (started) return finish(false);
 				// clique sem arrastar: pega o preset; ele segue o mouse até o próximo clique
 				carrying = true;
 				begin();
 				libList.classList.add('carry');
 				root.removeEventListener('pointerup', up, true);
+				root.removeEventListener('mouseup', up, true);
 				root.removeEventListener('pointercancel', cancelDrag, true);
 				root.addEventListener('pointerdown', drop, true);
+				root.addEventListener('mousedown', drop, true);
 				root.addEventListener('keydown', key, true);
 				toast('Mova e clique para soltar · Esc cancela', { icon: 'library' });
 			}
@@ -1224,7 +1266,9 @@
 			// escuta na janela (e não só no puxador): funciona com ou sem a captura do ponteiro,
 			// que o CEP pode soltar quando o painel não está em foco
 			root.addEventListener('pointermove', move, true);
+			root.addEventListener('mousemove', move, true);
 			root.addEventListener('pointerup', up, true);
+			root.addEventListener('mouseup', up, true);
 			root.addEventListener('pointercancel', cancelDrag, true);
 		});
 
@@ -1652,21 +1696,12 @@
 		}
 
 		function drag(area, onMove) {
-			area.addEventListener('pointerdown', function (e) {
+			onPress(area, function (e) {
 				if (e.button !== 0) return;
-				area.setPointerCapture(e.pointerId);
+				try { if (e.pointerId !== undefined) area.setPointerCapture(e.pointerId); } catch (err) {}
 				area.classList.add('grab');
 				onMove(e);
-				function mv(ev) { onMove(ev); }
-				function up() {
-					area.classList.remove('grab');
-					area.removeEventListener('pointermove', mv);
-					area.removeEventListener('pointerup', up);
-					area.removeEventListener('pointercancel', up);
-				}
-				area.addEventListener('pointermove', mv);
-				area.addEventListener('pointerup', up);
-				area.addEventListener('pointercancel', up);
+				follow(onMove, function () { area.classList.remove('grab'); });
 			});
 		}
 
