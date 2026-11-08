@@ -7,7 +7,7 @@
 	var Host = root.PalHost;
 	var N = root.PalNames;
 	var X = root.PalExtract;
-	var VERSION = 'v1.2.7';
+	var VERSION = 'v1.2.8';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
@@ -1105,7 +1105,7 @@
 			var from = all.indexOf(card);
 			if (from < 0 || all.length < 2) return;
 			e.preventDefault();
-			try { root.focus(); grip.focus({ preventScroll: true }); } catch (err) {}
+			dbg('alça: pointerdown (' + (card.querySelector('.pc-name') || {}).textContent + ')');
 
 			var row = el.dataset.orient === 'row';
 			var start = row ? e.clientX : e.clientY;
@@ -1119,6 +1119,7 @@
 			function scrolled() { return (row ? libList.scrollLeft : libList.scrollTop) - scroll0; }
 
 			function begin() {
+				dbg(carrying ? 'pegou (clique)' : 'arrastando');
 				started = true;
 				hideTip();
 				card.classList.add('drag');
@@ -1170,10 +1171,10 @@
 			}
 
 			function finish(cancel) {
-				grip.removeEventListener('pointermove', move);
-				grip.removeEventListener('pointerup', up);
-				grip.removeEventListener('pointercancel', cancelDrag);
+				dbg((cancel ? 'cancelou' : 'soltou') + ' · de ' + from + ' para ' + to);
 				root.removeEventListener('pointermove', move, true);
+				root.removeEventListener('pointerup', up, true);
+				root.removeEventListener('pointercancel', cancelDrag, true);
 				root.removeEventListener('pointerdown', drop, true);
 				root.removeEventListener('keydown', key, true);
 				if (raf) cancelAnimationFrame(raf);
@@ -1187,15 +1188,14 @@
 			}
 
 			function up() {
+				dbg('alça: pointerup');
 				if (started) return finish(false);
 				// clique sem arrastar: pega o preset; ele segue o mouse até o próximo clique
 				carrying = true;
 				begin();
 				libList.classList.add('carry');
-				grip.removeEventListener('pointermove', move);
-				grip.removeEventListener('pointerup', up);
-				grip.removeEventListener('pointercancel', cancelDrag);
-				root.addEventListener('pointermove', move, true);
+				root.removeEventListener('pointerup', up, true);
+				root.removeEventListener('pointercancel', cancelDrag, true);
 				root.addEventListener('pointerdown', drop, true);
 				root.addEventListener('keydown', key, true);
 				toast('Mova e clique para soltar · Esc cancela', { icon: 'library' });
@@ -1219,11 +1219,13 @@
 				hideToast();
 			}
 
-			function cancelDrag() { if (!carrying) finish(true); }
+			function cancelDrag() { dbg('alça: pointercancel'); if (!carrying) finish(true); }
 
-			grip.addEventListener('pointermove', move);
-			grip.addEventListener('pointerup', up);
-			grip.addEventListener('pointercancel', cancelDrag);
+			// escuta na janela (e não só no puxador): funciona com ou sem a captura do ponteiro,
+			// que o CEP pode soltar quando o painel não está em foco
+			root.addEventListener('pointermove', move, true);
+			root.addEventListener('pointerup', up, true);
+			root.addEventListener('pointercancel', cancelDrag, true);
 		});
 
 		// teclado: com o puxador em foco, ↑ ↓ (← → na faixa) mudam a ordem
@@ -1478,6 +1480,50 @@
 		exSheet.addEventListener('keydown', function (e) {
 			if (e.key === 'Enter') { e.preventDefault(); confirmExtract(); }
 			else if (e.key === 'Escape') { e.preventDefault(); closeExtract(); }
+		});
+
+		// ------------------------------------------------------------------ registro de eventos (diagnóstico)
+		// 3 cliques no número da versão (nos ajustes) liga/desliga. Mostra os eventos de mouse que chegam
+		// ao painel e o que o arrasto dos presets fez — para descobrir o que o CEP entrega de verdade.
+		var dbgBox = null, dbgLines = [], dbgMoveAt = 0, verClicks = 0, verTimer = null;
+		function dbg(msg) {
+			if (!dbgBox) return;
+			var t = new Date(), ms = ('00' + t.getMilliseconds()).slice(-3);
+			dbgLines.push(t.getSeconds() + '.' + ms + '  ' + msg);
+			if (dbgLines.length > 14) dbgLines.shift();
+			dbgBox.textContent = dbgLines.join('\n');
+		}
+		function dbgTarget(e) {
+			var t = e.target;
+			if (!t || !t.closest) return String(t && t.nodeName || '?');
+			var c = t.closest('.pc-grip, .pcard, .sw, .tool, .lib-list, .strip, .sheet');
+			return c ? (c.className.baseVal !== undefined ? 'svg' : c.className.split(' ').slice(0, 2).join('.')) : t.nodeName.toLowerCase();
+		}
+		['pointerdown', 'pointerup', 'pointercancel', 'mousedown', 'mouseup', 'click', 'gotpointercapture', 'lostpointercapture'].forEach(function (type) {
+			root.addEventListener(type, function (e) {
+				if (!dbgBox) return;
+				dbg(type + ' → ' + dbgTarget(e) + (e.buttons !== undefined ? ' b' + e.buttons : '') + (e.pointerType ? ' ' + e.pointerType : ''));
+			}, true);
+		});
+		root.addEventListener('pointermove', function (e) {
+			if (!dbgBox || Date.now() - dbgMoveAt < 400) return;
+			dbgMoveAt = Date.now();
+			dbg('pointermove → ' + dbgTarget(e) + ' b' + e.buttons);
+		}, true);
+		root.addEventListener('focus', function () { dbg('janela: focus'); });
+		root.addEventListener('blur', function () { dbg('janela: blur'); });
+		settings.querySelector('.ver').addEventListener('click', function () {
+			clearTimeout(verTimer);
+			verTimer = setTimeout(function () { verClicks = 0; }, 600);
+			if (++verClicks < 3) return;
+			verClicks = 0;
+			if (dbgBox) { dbgBox.remove(); dbgBox = null; return toast('Registro de eventos desligado'); }
+			dbgBox = document.createElement('pre');
+			dbgBox.className = 'dbg';
+			el.appendChild(dbgBox);
+			dbgLines = [];
+			dbg('registro ligado · ' + VERSION + ' · ' + (Host.isCEP ? 'CEP' : 'navegador') + ' · ' + (root.navigator.userAgent.match(/Chrome\/[\d.]+/) || ['?'])[0]);
+			toast('Registro de eventos ligado', { icon: 'help' });
 		});
 
 		// ------------------------------------------------------------------ editor de cor
