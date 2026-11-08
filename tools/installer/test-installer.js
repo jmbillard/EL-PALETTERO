@@ -67,9 +67,9 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'elpalletero-inst-'));
 const ext = (u, id) => path.join(u, EXT, id);
 const ok = (msg) => console.log('  ✓ ' + msg);
 
-console.log('1. instalação nova (Windows)');
+console.log('1. instalação nova (Windows) · checagem ok: abre direto em instalar');
 let u = path.join(tmp, 'win');
-let r = run({ userData: u, clicks: ['começar', 'próximo', 'instalar'] });
+let r = run({ userData: u, clicks: ['instalar'] });
 assert(r.win.text.includes('El PALLETERO v'), 'título com versão'); ok('janela: ' + r.win.text);
 assert(fs.existsSync(path.join(ext(u, 'com.jmbillard.elpalletero'), 'CSXS/manifest.xml'))); ok('manifest copiado');
 const n = (function count(d) { return fs.readdirSync(d).reduce((s, f) => s + (fs.statSync(path.join(d, f)).isDirectory() ? count(path.join(d, f)) : 1), 0); })(ext(u, 'com.jmbillard.elpalletero'));
@@ -78,27 +78,27 @@ assert.strictEqual(r.calls.filter(c => /reg add .*PlayerDebugMode/.test(c)).leng
 assert(r.texts.some(t => /instalado!/.test(t))); ok('conclusão: "' + r.texts.find(t => /instalado!/.test(t)).split('\n')[0] + '"');
 
 console.log('2. de novo, mesma versão');
-r = run({ userData: u, clicks: ['começar', 'próximo'] });
+r = run({ userData: u, clicks: [] });
 assert(r.radios.includes('reinstalar')); ok('opções: ' + r.radios.join(' · '));
 
 console.log('3. O PALETTERO (nome antigo) instalado, El PALLETERO não');
 u = path.join(tmp, 'legacy');
 fs.mkdirSync(path.join(ext(u, 'com.jmbillard.opalettero'), 'CSXS'), { recursive: true });
 fs.writeFileSync(path.join(ext(u, 'com.jmbillard.opalettero'), 'CSXS/manifest.xml'), '<x ExtensionBundleVersion="1.1.0">');
-r = run({ userData: u, clicks: ['começar', 'próximo', 'atualizar'] });
-assert(r.texts.some(t => /nome antigo/.test(t))); ok('boas-vindas avisa da troca de nome');
+r = run({ userData: u, clicks: ['atualizar'] });
+assert(r.texts.some(t => /nome antigo/.test(t))); ok('avisa da troca de nome');
 assert(!fs.existsSync(ext(u, 'com.jmbillard.opalettero'))); ok('pasta antiga removida');
 assert(fs.existsSync(ext(u, 'com.jmbillard.elpalletero'))); ok('pasta nova instalada');
 assert(r.texts.some(t => /atualizado!/.test(t))); ok('conclusão: atualizado');
 
 console.log('4. remover');
-r = run({ userData: u, clicks: ['começar', 'próximo', 'opção:remover', 'remover'] });
+r = run({ userData: u, clicks: ['opção:remover', 'remover'] });
 assert(!fs.existsSync(ext(u, 'com.jmbillard.elpalletero'))); ok('extensão removida');
 assert(r.texts.some(t => /presets continuam/.test(t))); ok('avisa que paletas e presets ficam');
 
 console.log('5. macOS');
 u = path.join(tmp, 'mac');
-r = run({ userData: u, os: 'Macintosh OS 14', clicks: ['começar', 'próximo', 'instalar'] });
+r = run({ userData: u, os: 'Macintosh OS 14', clicks: ['instalar'] });
 assert.strictEqual(r.calls.filter(c => /^defaults write com\.adobe\.CSXS\.\d+ PlayerDebugMode 1$/.test(c)).length, 5); ok('PlayerDebugMode via defaults write');
 assert(fs.existsSync(ext(u, 'com.jmbillard.elpalletero'))); ok('instalado');
 assert(r.texts.some(t => /reinicie o computador/.test(t))); ok('dica de reiniciar o Mac');

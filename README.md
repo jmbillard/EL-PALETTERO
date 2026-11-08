@@ -43,8 +43,8 @@ requer After Effects **2022 (22.0)** ou mais novo, no Windows ou no macOS.
 > • **cep/com.jmbillard.elpalletero/** → a extensão (painel CEP).\
 > • **instalar_windows.bat** / **instalar_mac.command** → instaladores alternativos, sem abrir o After Effects.
 
-1. no After Effects, abra `File` > `Scripts` > `Run Script File...` e escolha o **INSTALAR El PALLETERO.jsx** direto da pasta do El PALLETERO (a que tem a pasta `cep` dentro). o instalador abre com as boas-vindas: clique em **começar**.
-2. o instalador confere o que é necessário. bolinha 🟢 = ok, 🔴 = precisa resolver. se a escrita de arquivos estiver bloqueada, use o link **› abrir preferências de scripts e expressões**, marque *Allow Scripts to Write Files and Access Network* e clique em **› verificar de novo**.
+1. no After Effects, abra `File` > `Scripts` > `Run Script File...` e escolha o **INSTALAR El PALLETERO.jsx** direto da pasta do El PALLETERO (a que tem a pasta `cep` dentro).
+2. o instalador confere o que é necessário. **se estiver tudo certo, ele abre direto no passo 3** (o botão **anterior** mostra a checagem). senão, abre nas boas-vindas e depois mostra a checagem: bolinha 🟢 = ok, 🔴 = precisa resolver. se a escrita de arquivos estiver bloqueada, use o link **› abrir preferências de scripts e expressões**, marque *Allow Scripts to Write Files and Access Network* e clique em **› verificar de novo**.
 3. escolha **instalar** (ou **atualizar** / **reinstalar**, se já houver uma versão no computador; **remover** desinstala). a tela mostra de onde a extensão vai ser copiada e para onde.
 4. pronto! **reinicie o After Effects** e abra o painel em `Window` > `Extensions` > `El PALLETERO`. acople onde preferir.
 

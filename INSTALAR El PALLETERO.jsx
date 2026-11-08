@@ -323,7 +323,7 @@ Baseado no instalador do ABRIDOR.
 
 	// 2 · ação
 	var p2 = page();
-	var actionMsg = 'tudo pronto! o que você quer fazer?';
+	var actionMsg = 'tudo certo por aqui! a extensão será copiada para este computador e não depende mais desta pasta.';
 
 	if (installed) {
 		actionMsg = 'o El PALLETERO' + (oldVersion ? ' v' + oldVersion : '') + ' já está instalado neste computador';
@@ -519,7 +519,8 @@ Baseado no instalador do ABRIDOR.
 		nextBtn.text = removeRdo.value ? 'remover' : installRdo.text;
 	};
 
-	showPage(0);
+	// com tudo certo na checagem, abre direto na etapa de instalar / atualizar ("anterior" mostra a checagem)
+	showPage(runChecks() ? 2 : 0);
 	win.center();
 	win.show();
 })();
