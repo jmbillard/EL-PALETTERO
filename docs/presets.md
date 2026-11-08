@@ -25,8 +25,10 @@ o painel sempre mostra a paleta do projeto. os presets são uma biblioteca para 
 >
 > <img src="gifs/presets.gif" alt="biblioteca de presets" width="420">
 
-- **primeiro cartão** (borda colorida) → a paleta deste projeto, com o nome do `.aep`.
-- **salvar preset** → salva a paleta do projeto como um preset novo e já abre o nome para edição. `Enter` confirma, `Esc` mantém o nome sugerido.
+- **primeiro cartão** (borda colorida) → a paleta deste projeto, com o nome do `.aep`. passe o mouse para ver o que o clique faz:
+  - **não salva** (não veio de um preset, ou mudou desde que veio) → um fio separa o cartão dos presets. `◖ clique` salva como um preset novo e já abre o nome para edição (`Enter` confirma, `Esc` mantém o nome sugerido).
+  - **mudou desde o preset de origem** → `Shift` + `◖ clique` **atualiza** aquele preset com a paleta do projeto (tem desfazer). o pontinho do preset de origem fica vazado.
+  - **salva** (igual ao preset de origem) → o hover só confirma onde ela está.
 - **cartão de preset**:
   - `◖ clique esquerdo` → **substitui** a paleta do projeto pelo preset.
   - `Shift` + `◖ clique esquerdo` → **adiciona** ao projeto só as cores do preset que ainda não estão lá.

@@ -253,7 +253,7 @@ a paleta do projeto mora no `.aep`. os **presets** são uma biblioteca de paleta
 
 - `◖ clique` num preset → **substitui** a paleta do projeto.
 - `Shift` + `◖ clique` → **adiciona** as cores que faltam.
-- **salvar preset** → a paleta do projeto vira um preset novo.
+- **cartão do projeto** (o primeiro) → `◖ clique` salva a paleta como preset novo. quando ela mudou desde o preset de origem, `Shift` + `◖ clique` atualiza aquele preset. um fio separa a paleta quando ela ainda não está salva.
 - ✏️ renomeia, ★ define o preset usado em projetos sem paleta, 🗑️ exclui.
 - para reordenar, clique na alça ⠿ à direita do nome, mova e clique de novo (ou arraste).
 - já vêm 12 paletas de exemplo (Pôr do sol, Sorveteria, Neon, Oceano, Floresta, Terroso, Tropical, Retrô 70, Noite urbana, Brasil, Pastel, Monocromático).

@@ -7,7 +7,7 @@
 	var Host = root.PalHost;
 	var N = root.PalNames;
 	var X = root.PalExtract;
-	var VERSION = 'v1.3.3';
+	var VERSION = 'v1.3.4';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
@@ -1003,9 +1003,16 @@
 		}
 
 		function renderLibrary(focusId, rename) {
-			var html = '<div class="pcard is-project" role="listitem" data-tip="Paleta deste projeto · salva no .aep">' + bars(S.swatches) +
-				'<span class="pc-name">' + ic('file') + '<span>' + esc(S.project || 'projeto') + '</span></span></div>' +
-				'<button class="pcard add" data-act="save-preset" data-tip="Salvar a paleta do projeto como preset">' + ic('plus') + '<span class="pc-name">Salvar preset</span></button>';
+			// o cartão do projeto faz o papel do antigo "salvar preset": no hover mostra o que o clique faz.
+			// sem preset de origem, ou mudada desde ele, a paleta "não está salva": um fio a separa dos presets
+			var st = projectState(), src = st.p ? esc(st.p.name) : '';
+			var over = st.k === 'saved' ? '<span class="pc-save is-saved"><span class="pc-sv">' + ic('check') + '<b>Salva em ' + src + '</b></span></span>'
+				: st.k === 'empty' ? ''
+				: '<span class="pc-save"><span class="pc-sv pc-sv-a">' + ic('bookmark') + '<b>Salvar preset</b></span>' +
+					(st.k === 'changed' ? '<span class="pc-sv pc-sv-b">' + ic('reset') + '<b>Atualizar ' + src + '</b></span><small><kbd>' + KEY.shift + '</kbd> atualiza ' + src + '</small>' : '') + '</span>';
+			var html = '<div class="pcard is-project st-' + st.k + '" role="listitem" tabindex="0" aria-label="Paleta deste projeto">' + bars(S.swatches) +
+				'<span class="pc-name">' + ic('file') + '<span>' + esc(S.project || 'projeto') + '</span></span>' + over + '</div>' +
+				(st.k === 'new' || st.k === 'changed' ? '<span class="lib-sep" aria-hidden="true"></span>' : '');
 			if (S.offline) {
 				// volume de rede desmontado / unidade desconectada: explica e oferece saída
 				html += '<div class="pcard offline" role="listitem">' +
@@ -1018,7 +1025,7 @@
 					'</span></div>';
 			}
 			S.presets.forEach(function (p, i) {
-				var cls = 'pcard' + (p.id === S.prefs.defaultPreset ? ' is-default' : '') + (p.name === S.preset ? ' is-origin' : '');
+				var cls = 'pcard' + (p.id === S.prefs.defaultPreset ? ' is-default' : '') + (p.name === S.preset ? ' is-origin' + (st.k === 'changed' ? ' drift' : '') : '');
 				html += '<div class="' + cls + '" role="listitem" tabindex="0" data-pid="' + esc(p.id) + '" style="--i:' + i + '">' + bars(p.swatches) +
 					'<span class="pc-row"><span class="pc-name">' + esc(p.name) + '</span>' +
 					'<button type="button" class="pc-grip" aria-label="Arraste para reordenar (ou use as setas)">' + GRIP + '</button></span>' +
@@ -1065,6 +1072,29 @@
 				S.preset = name;
 				save();
 				loadPresets(r.id, true);
+			});
+		}
+
+		// a paleta do projeto está salva? saved: igual ao preset de origem · changed: mudou desde ele ·
+		// new: não veio de preset nenhum · empty: nada para salvar
+		function projectState() {
+			if (!S.swatches.length) return { k: 'empty' };
+			var src = null;
+			S.presets.forEach(function (p) { if (!src && p.name === S.preset) src = p; });
+			if (!src) return { k: 'new' };
+			var key = function (list) { return (list || []).map(function (s) { return C.normHex(s.color); }).join(); };
+			return { k: key(S.swatches) === key(src.swatches) ? 'saved' : 'changed', p: src };
+		}
+
+		// Shift + clique no cartão do projeto: grava a paleta por cima do preset de origem (com desfazer)
+		function updatePreset(p) {
+			if (S.offline) return toast((S.offline.volume || 'A pasta') + ' não está acessível', { icon: 'unplug' });
+			var old = { id: p.id, name: p.name, swatches: p.swatches };
+			Host.savePreset({ id: p.id, name: p.name, swatches: plain(S.swatches) }).then(function (r) {
+				if (!r || !r.ok) return toast('A pasta de presets não aceita gravação', { icon: 'alert' });
+				pushUndo({ restorePreset: old });
+				loadPresets(p.id);
+				toast(p.name + ' atualizado', { icon: 'bookmark', undo: true });
 			});
 		}
 
@@ -1372,7 +1402,15 @@
 				});
 			}
 			var card = e.target.closest('[data-pid]');
-			if (!card) { if (e.target.closest('.is-project')) closeSettings(); return; }
+			if (!card) {
+				var proj = e.target.closest('.is-project');
+				if (!proj) return;
+				var ps = projectState();
+				if (ps.k === 'changed' && e.shiftKey) updatePreset(ps.p);
+				else if (ps.k === 'new' || ps.k === 'changed') savePreset();
+				else closeSettings();
+				return;
+			}
 			var p = presetById(card.dataset.pid);
 			if (!p) return;
 			if (e.target.closest('.pc-ren')) startRename(card);
@@ -1381,6 +1419,10 @@
 			else applyPreset(p, e.shiftKey, card);
 		});
 		libList.addEventListener('keydown', function (e) {
+			if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('is-project')) {
+				e.target.dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey: e.shiftKey }));
+				return;
+			}
 			var card = e.target.closest('[data-pid]');
 			if (!card || e.target !== card) return;
 			var p = presetById(card.dataset.pid);

@@ -767,12 +767,33 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 .pcard.is-project { cursor: default; background: transparent; box-shadow: inset 0 0 0 1.5px var(--accent); }
 .pcard.is-project:hover { transform: none; }
 .pcard.is-project .pc-name { color: var(--fg); font-weight: 600; }
-.pcard.add { align-items: center; justify-content: center; color: var(--mute); background: transparent; box-shadow: inset 0 0 0 1.5px var(--raise-2); border: 0; }
-.pcard.add .ic { transition: transform .35s var(--spring); }
-.pcard.add:hover { color: var(--fg); box-shadow: inset 0 0 0 1.5px var(--mute); }
-.pcard.add:hover .ic { transform: rotate(90deg) scale(1.15); }
-.pcard.add .pc-name { color: inherit; }
-.pal:not([data-orient='row']) .pcard.add { flex-direction: row; gap: 6px; }
+/* hover do cartão do projeto: o que o clique faz (salvar, ou Shift: atualizar o preset de origem) */
+.pcard.is-project:not(.st-empty) { cursor: pointer; }
+.pc-save {
+	position: absolute; inset: 0; z-index: 2;
+	display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+	border-radius: inherit; background: rgba(19, 20, 24, .86); box-shadow: inset 0 0 0 1.5px var(--accent);
+	color: var(--fg); font-size: 11px; text-align: center;
+	opacity: 0; transition: opacity .18s;
+	pointer-events: none;
+}
+.pcard.is-project:hover .pc-save, .pcard.is-project:focus-visible .pc-save { opacity: 1; }
+.pc-sv { display: flex; align-items: center; gap: 5px; max-width: 100%; padding: 0 6px; }
+.pc-sv b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pc-sv .ic { width: 13px; height: 13px; color: var(--accent); transform: scale(.6); transition: transform .3s var(--spring); }
+.pcard.is-project:hover .pc-sv .ic { transform: none; }
+.pc-sv-b { display: none; }
+.pal.shift .pc-sv-a { display: none; }
+.pal.shift .pc-sv-b { display: flex; }
+.pc-save small { display: flex; align-items: center; gap: 4px; max-width: 100%; padding: 0 6px; color: var(--mute); font-size: 10px; white-space: nowrap; overflow: hidden; }
+.pal.shift .pc-save small { visibility: hidden; }
+.pc-save kbd { font: 600 9px/1 var(--mono); padding: 2px 4px; border-radius: 4px; background: var(--raise-2); color: var(--fg); }
+.pc-save.is-saved .pc-sv .ic { color: var(--fg); }
+.pc-save.is-saved { background: rgba(19, 20, 24, .7); }
+.pal:not([data-orient='row']) .pc-save { flex-direction: row; gap: 10px; }
+/* fio entre a paleta não salva e os presets */
+.lib-sep { flex: none; align-self: stretch; width: 1px; margin: 6px 2px; border-radius: 1px; background: var(--raise-2); animation: pal-fade .3s var(--ease) backwards; }
+.pal:not([data-orient='row']) .lib-sep { width: auto; height: 1px; margin: 2px 6px; }
 
 .pc-acts { position: absolute; top: 4px; right: 4px; display: flex; gap: 2px; }
 .pc-btn {
@@ -790,6 +811,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 .pcard.is-default .pc-star { opacity: 1; transform: none; color: #FFC44E; }
 .pcard.is-default .pc-star .ic { fill: currentColor; }
 .pcard.is-origin::after { content: ''; position: absolute; left: 5px; top: 5px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--bg); }
+.pcard.is-origin.drift::after { background: var(--bg); box-shadow: inset 0 0 0 1.5px var(--accent), 0 0 0 2px var(--bg); } /* a paleta veio daqui, mas mudou */
 
 .lib-folder {
 	flex: none; display: flex; align-items: center; justify-content: center; gap: 6px;
@@ -1812,7 +1834,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	var Host = root.PalHost;
 	var N = root.PalNames;
 	var X = root.PalExtract;
-	var VERSION = 'v1.3.3';
+	var VERSION = 'v1.3.4';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
@@ -2808,9 +2830,16 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		}
 
 		function renderLibrary(focusId, rename) {
-			var html = '<div class="pcard is-project" role="listitem" data-tip="Paleta deste projeto · salva no .aep">' + bars(S.swatches) +
-				'<span class="pc-name">' + ic('file') + '<span>' + esc(S.project || 'projeto') + '</span></span></div>' +
-				'<button class="pcard add" data-act="save-preset" data-tip="Salvar a paleta do projeto como preset">' + ic('plus') + '<span class="pc-name">Salvar preset</span></button>';
+			// o cartão do projeto faz o papel do antigo "salvar preset": no hover mostra o que o clique faz.
+			// sem preset de origem, ou mudada desde ele, a paleta "não está salva": um fio a separa dos presets
+			var st = projectState(), src = st.p ? esc(st.p.name) : '';
+			var over = st.k === 'saved' ? '<span class="pc-save is-saved"><span class="pc-sv">' + ic('check') + '<b>Salva em ' + src + '</b></span></span>'
+				: st.k === 'empty' ? ''
+				: '<span class="pc-save"><span class="pc-sv pc-sv-a">' + ic('bookmark') + '<b>Salvar preset</b></span>' +
+					(st.k === 'changed' ? '<span class="pc-sv pc-sv-b">' + ic('reset') + '<b>Atualizar ' + src + '</b></span><small><kbd>' + KEY.shift + '</kbd> atualiza ' + src + '</small>' : '') + '</span>';
+			var html = '<div class="pcard is-project st-' + st.k + '" role="listitem" tabindex="0" aria-label="Paleta deste projeto">' + bars(S.swatches) +
+				'<span class="pc-name">' + ic('file') + '<span>' + esc(S.project || 'projeto') + '</span></span>' + over + '</div>' +
+				(st.k === 'new' || st.k === 'changed' ? '<span class="lib-sep" aria-hidden="true"></span>' : '');
 			if (S.offline) {
 				// volume de rede desmontado / unidade desconectada: explica e oferece saída
 				html += '<div class="pcard offline" role="listitem">' +
@@ -2823,7 +2852,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 					'</span></div>';
 			}
 			S.presets.forEach(function (p, i) {
-				var cls = 'pcard' + (p.id === S.prefs.defaultPreset ? ' is-default' : '') + (p.name === S.preset ? ' is-origin' : '');
+				var cls = 'pcard' + (p.id === S.prefs.defaultPreset ? ' is-default' : '') + (p.name === S.preset ? ' is-origin' + (st.k === 'changed' ? ' drift' : '') : '');
 				html += '<div class="' + cls + '" role="listitem" tabindex="0" data-pid="' + esc(p.id) + '" style="--i:' + i + '">' + bars(p.swatches) +
 					'<span class="pc-row"><span class="pc-name">' + esc(p.name) + '</span>' +
 					'<button type="button" class="pc-grip" aria-label="Arraste para reordenar (ou use as setas)">' + GRIP + '</button></span>' +
@@ -2870,6 +2899,29 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 				S.preset = name;
 				save();
 				loadPresets(r.id, true);
+			});
+		}
+
+		// a paleta do projeto está salva? saved: igual ao preset de origem · changed: mudou desde ele ·
+		// new: não veio de preset nenhum · empty: nada para salvar
+		function projectState() {
+			if (!S.swatches.length) return { k: 'empty' };
+			var src = null;
+			S.presets.forEach(function (p) { if (!src && p.name === S.preset) src = p; });
+			if (!src) return { k: 'new' };
+			var key = function (list) { return (list || []).map(function (s) { return C.normHex(s.color); }).join(); };
+			return { k: key(S.swatches) === key(src.swatches) ? 'saved' : 'changed', p: src };
+		}
+
+		// Shift + clique no cartão do projeto: grava a paleta por cima do preset de origem (com desfazer)
+		function updatePreset(p) {
+			if (S.offline) return toast((S.offline.volume || 'A pasta') + ' não está acessível', { icon: 'unplug' });
+			var old = { id: p.id, name: p.name, swatches: p.swatches };
+			Host.savePreset({ id: p.id, name: p.name, swatches: plain(S.swatches) }).then(function (r) {
+				if (!r || !r.ok) return toast('A pasta de presets não aceita gravação', { icon: 'alert' });
+				pushUndo({ restorePreset: old });
+				loadPresets(p.id);
+				toast(p.name + ' atualizado', { icon: 'bookmark', undo: true });
 			});
 		}
 
@@ -3177,7 +3229,15 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 				});
 			}
 			var card = e.target.closest('[data-pid]');
-			if (!card) { if (e.target.closest('.is-project')) closeSettings(); return; }
+			if (!card) {
+				var proj = e.target.closest('.is-project');
+				if (!proj) return;
+				var ps = projectState();
+				if (ps.k === 'changed' && e.shiftKey) updatePreset(ps.p);
+				else if (ps.k === 'new' || ps.k === 'changed') savePreset();
+				else closeSettings();
+				return;
+			}
 			var p = presetById(card.dataset.pid);
 			if (!p) return;
 			if (e.target.closest('.pc-ren')) startRename(card);
@@ -3186,6 +3246,10 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			else applyPreset(p, e.shiftKey, card);
 		});
 		libList.addEventListener('keydown', function (e) {
+			if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('is-project')) {
+				e.target.dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey: e.shiftKey }));
+				return;
+			}
 			var card = e.target.closest('[data-pid]');
 			if (!card || e.target !== card) return;
 			var p = presetById(card.dataset.pid);
