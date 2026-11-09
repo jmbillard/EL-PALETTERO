@@ -33,14 +33,31 @@
 	var KEYS = IS_MAC ? [
 		{ keyCode: 53 }, { keyCode: 36 }, { keyCode: 76 }, { keyCode: 51 }, { keyCode: 117 }, { keyCode: 49 },  // esc, return, enter, delete, del, espaço
 		{ keyCode: 123 }, { keyCode: 124 }, { keyCode: 125 }, { keyCode: 126 }, { keyCode: 120 }, { keyCode: 14 }, // setas, F2, E
-		{ keyCode: 6, metaKey: true }, { keyCode: 58 }, { keyCode: 61 }, { keyCode: 55 }, { keyCode: 56 }, { keyCode: 60 }  // ⌘Z, ⌥, ⌘, ⇧
+		{ keyCode: 6, metaKey: true }, { keyCode: 58 }, { keyCode: 61 }, { keyCode: 55 }, { keyCode: 56 }, { keyCode: 60 }, // ⌘Z, ⌥, ⌘, ⇧
+		{ keyCode: 9, metaKey: true }, { keyCode: 44, shiftKey: true }, { keyCode: 94, shiftKey: true }  // ⌘V, ? (US e ABNT)
 	] : [
 		{ keyCode: 27 }, { keyCode: 13 }, { keyCode: 46 }, { keyCode: 8 }, { keyCode: 32 },
 		{ keyCode: 37 }, { keyCode: 38 }, { keyCode: 39 }, { keyCode: 40 }, { keyCode: 113 }, { keyCode: 69 },
-		{ keyCode: 90, ctrlKey: true }, { keyCode: 18 }, { keyCode: 17 }, { keyCode: 16 }
+		{ keyCode: 90, ctrlKey: true }, { keyCode: 18 }, { keyCode: 17 }, { keyCode: 16 },
+		{ keyCode: 86, ctrlKey: true }, { keyCode: 191, shiftKey: true }, { keyCode: 193, shiftKey: true } // Ctrl+V, ? (US e ABNT)
 	];
 	if (cep && cep.registerKeyEventsInterest) {
 		try { cep.registerKeyEventsInterest(JSON.stringify(KEYS)); } catch (e) {}
+	}
+
+	// área de transferência pelo sistema (pbpaste / Get-Clipboard): no CEP o evento de colar nem
+	// sempre chega ao painel. Fora do CEP, a API do navegador.
+	function readClipboard() {
+		try {
+			var req = root.cep_node ? root.cep_node.require : root.require;
+			if (cep && req) {
+				var cp = req('child_process');
+				var cmd = IS_MAC ? 'pbpaste' : 'powershell -NoProfile -NonInteractive -Command Get-Clipboard -Raw';
+				return Promise.resolve(String(cp.execSync(cmd, { encoding: 'utf8', timeout: 4000, windowsHide: true })));
+			}
+		} catch (e) {}
+		if (root.navigator.clipboard && root.navigator.clipboard.readText) return root.navigator.clipboard.readText();
+		return Promise.reject(new Error('sem área de transferência'));
 	}
 
 	function openURL(url) {
@@ -143,6 +160,9 @@
 		resetPresetFolder: function () { return call('resetPresetFolder'); },
 		grabFrame: function () { return call('grabFrame'); },
 		releaseFrame: function (r) { return r && r.temp ? call('releaseFrame', r.tmpId || 0, r.path) : Promise.resolve(); },
+		importColors: function () { return call('importColors'); },
+		exportAse: function (hex, name) { return call('exportAse', hex, name); },
+		readClipboard: readClipboard,
 		loadImage: loadImage,
 		openURL: openURL
 	};

@@ -623,6 +623,31 @@ function PAL_setProp(prop, value, time) {
 	else prop.setValue(value);
 }
 
+// cor do texto: preenchimento ou contorno (o contorno ganha espessura se estava em zero)
+function PAL_textColor(prop, c, stroke, time) {
+	var doc = prop.value;
+	if (stroke) {
+		doc.applyStroke = true;
+		doc.strokeColor = c;
+		try { if (!doc.strokeWidth) doc.strokeWidth = 2; } catch (e) {}
+	} else {
+		doc.applyFill = true;
+		doc.fillColor = c;
+	}
+	PAL_setProp(prop, doc, time);
+}
+
+// todas as cores de traço dentro do conteúdo de um shape layer (ligados ou não)
+function PAL_strokes(group, out) {
+	if (!group) return out;
+	for (var i = 1; i <= group.numProperties; i++) {
+		var ch = group.property(i);
+		if (ch.matchName == 'ADBE Vector Graphic - Stroke') out.push(ch.property('ADBE Vector Stroke Color'));
+		else if (ch.propertyType != PropertyType.PROPERTY) PAL_strokes(ch, out);
+	}
+	return out;
+}
+
 function PAL_apply(hex, optsJson) {
 	var comp = app.project.activeItem;
 	if (!(comp instanceof CompItem)) return PAL_json({ ok: false, reason: 'nocomp' });
@@ -632,6 +657,9 @@ function PAL_apply(hex, optsJson) {
 	var c = PAL_rgb(hex);
 	var color = [c[0], c[1], c[2], 1];
 	var props = [], texts = [], i, p;
+	var opts = {};
+	try { opts = optsJson ? PAL_parse(optsJson) : {}; } catch (e) {}
+	var stroke = !!opts.stroke;
 
 	// 1) propriedades de cor selecionadas têm prioridade
 	for (i = 0; i < layers.length; i++) {
@@ -646,13 +674,26 @@ function PAL_apply(hex, optsJson) {
 	try {
 		if (props.length || texts.length) {
 			for (p = 0; p < props.length; p++) PAL_setProp(props[p], color, comp.time);
-			for (p = 0; p < texts.length; p++) {
-				var doc = texts[p].value;
-				doc.applyFill = true;
-				doc.fillColor = c;
-				PAL_setProp(texts[p], doc, comp.time);
-			}
+			for (p = 0; p < texts.length; p++) PAL_textColor(texts[p], c, stroke, comp.time);
 			return PAL_json({ ok: true, mode: 'props', count: props.length + texts.length });
+		}
+
+		// Shift: contorno — traços dos shapes e contorno dos textos
+		if (stroke) {
+			var n = 0;
+			for (i = 0; i < layers.length; i++) {
+				var L = layers[i];
+				if (L.matchName == 'ADBE Vector Layer') {
+					var strokes = PAL_strokes(L.property('ADBE Root Vectors Group'), []);
+					for (p = 0; p < strokes.length; p++) PAL_setProp(strokes[p], color, comp.time);
+					n += strokes.length;
+				} else if (L.matchName == 'ADBE Text Layer') {
+					PAL_textColor(L.property('ADBE Text Properties').property('ADBE Text Document'), c, true, comp.time);
+					n++;
+				}
+			}
+			if (!n) return PAL_json({ ok: false, reason: 'nostroke' });
+			return PAL_json({ ok: true, mode: 'stroke', count: n });
 		}
 
 		// 2) senão, efeito Fill — reaproveita o último Fill criado pelo painel
@@ -670,6 +711,46 @@ function PAL_apply(hex, optsJson) {
 	} finally {
 		app.endUndoGroup();
 	}
+}
+
+// ---------------------------------------------------------------- importar / exportar cores
+
+var PAL_COLOR_FILES = /\.(ase|txt|css|scss|less|json|hex|svg)$/i;
+
+// abre um arquivo de cores: .ase vem em bytes (hex), o resto como texto (o painel acha as cores)
+function PAL_importColors() {
+	var filter = PAL_OS == 'Win' ? 'Cores:*.ase;*.txt;*.css;*.scss;*.less;*.json;*.hex;*.svg,Todos:*.*'
+		: function (f) { return f instanceof Folder || PAL_COLOR_FILES.test(f.name); };
+	var f = File.openDialog('Importar cores (.ase, .css, .txt…)', filter, false);
+	if (!f) return PAL_json({ ok: false, reason: 'cancel' });
+	var ase = /\.ase$/i.test(f.name);
+	f.encoding = ase ? 'BINARY' : 'UTF-8';
+	if (!f.open('r')) return PAL_json({ ok: false, reason: 'read' });
+	var s = f.read();
+	f.close();
+	var name = decodeURI(f.name).replace(/\.[^.]+$/, '');
+	if (!ase) return PAL_json({ ok: true, kind: 'text', name: name, text: s });
+	var hex = [];
+	for (var i = 0; i < s.length; i++) {
+		var b = s.charCodeAt(i) & 255;
+		hex.push((b < 16 ? '0' : '') + b.toString(16));
+	}
+	return PAL_json({ ok: true, kind: 'ase', name: name, hex: hex.join('') });
+}
+
+// grava um .ase (bytes em hex, montados pelo painel)
+function PAL_exportAse(hex, name) {
+	var start = new File(Folder.desktop.fsName + '/' + String(name || 'paleta').replace(/[\\\/:*?"<>|]+/g, '-') + '.ase');
+	var f = start.saveDlg('Exportar paleta (.ase)', PAL_OS == 'Win' ? 'Adobe Swatch Exchange:*.ase' : undefined);
+	if (!f) return PAL_json({ ok: false, reason: 'cancel' });
+	if (!/\.ase$/i.test(f.name)) f = new File(f.fsName + '.ase');
+	f.encoding = 'BINARY';
+	if (!f.open('w')) return PAL_json({ ok: false, reason: 'readonly' });
+	var out = [];
+	for (var i = 0; i + 1 < hex.length; i += 2) out.push(String.fromCharCode(parseInt(hex.substr(i, 2), 16)));
+	f.write(out.join(''));
+	f.close();
+	return PAL_json({ ok: true, path: f.fsName, name: decodeURI(f.name) });
 }
 
 // ---------------------------------------------------------------- capturar cores

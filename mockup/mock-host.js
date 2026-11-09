@@ -204,12 +204,33 @@
 			return { ok: true, url: scene('comp', 640, 360), label: 'MAIN_COMP', kind: 'comp', temp: true, readyAt: Date.now() + 400 };
 		},
 		releaseFrame: function () { return { ok: true }; },
-		apply: function (hex) {
+		apply: function (hex, optsJson) {
 			var sel = selLayers().filter(function (l) { return !l.scene; });
 			if (!sel.length) return { ok: false, reason: 'nosel' };
+			var opts = optsJson ? JSON.parse(optsJson) : {};
+			if (opts.stroke) {
+				// contorno: só shapes com traço e textos
+				var st = sel.filter(function (l) { return l.stroke || l.kind === 'text'; });
+				if (!st.length) return { ok: false, reason: 'nostroke' };
+				st.forEach(function (l) { l.stroke = hex; l.flash = Date.now(); });
+				emit();
+				return { ok: true, mode: 'stroke', count: st.length };
+			}
 			sel.forEach(function (l) { l.color = hex; l.flash = Date.now(); });
 			emit();
 			return { ok: true, mode: 'fill', count: sel.length };
+		},
+		// importar: no mockup, um .ase de exemplo (como se viesse do Illustrator)
+		importColors: function () {
+			var bytes = window.PalIO.buildAse([
+				{ color: '#0B132B', label: 'Azul noite' }, { color: '#1C2541', label: 'Marinho' }, { color: '#3A506B', label: 'Aço' },
+				{ color: '#5BC0BE', label: 'Turquesa' }, { color: '#F2E9E4', label: 'Areia' }
+			], 'Cliente');
+			return { ok: true, kind: 'ase', name: 'Cliente', hex: window.PalIO.bytesToHex(bytes) };
+		},
+		exportAse: function (hex, name) {
+			window.PalMockHost.lastAse = hex;
+			return { ok: true, path: '~/Desktop/' + name + '.ase', name: name + '.ase' };
 		},
 		capture: function (scope) {
 			var src = scope === 'project' ? proj().layers : selLayers();

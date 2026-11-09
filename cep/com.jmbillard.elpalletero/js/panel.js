@@ -7,7 +7,8 @@
 	var Host = root.PalHost;
 	var N = root.PalNames;
 	var X = root.PalExtract;
-	var VERSION = 'v1.3.5';
+	var IO = root.PalIO;
+	var VERSION = 'v1.4.0';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
@@ -48,6 +49,10 @@
 		wheel: '<circle cx="12" cy="12" r="9"/><g class="i-orbit"><circle cx="12" cy="3" r="2" fill="currentColor"/><circle cx="19.8" cy="16.5" r="2" fill="currentColor"/><circle cx="4.2" cy="16.5" r="2" fill="currentColor"/></g>',
 		drop: '<path d="M12 2.7c3.5 4.1 6 7.1 6 10.3a6 6 0 0 1-12 0c0-3.2 2.5-6.2 6-10.3z"/>',
 		fan: '<path d="M12 21 5 5M12 21l7-16M12 21V3"/>',
+		ring: '<circle cx="12" cy="12" r="7.5" stroke-width="3.2"/>',
+		import: '<path class="i-arrow" d="M12 3v11m-4.5-4.5L12 14l4.5-4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
+		export: '<path class="i-arrow i-up" d="M12 14V3M7.5 7.5 12 3l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
+		keyboard: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M18 13h.01M9 15.5h6"/>',
 		unplug: '<path d="m19 5 3-3"/><path d="m2 22 3-3"/><path d="M6.3 20.3a2.4 2.4 0 0 0 3.4 0L12 18l-6-6-2.3 2.3a2.4 2.4 0 0 0 0 3.4Z"/><path d="M7.5 13.5 10 11"/><path d="M10.5 16.5 13 14"/><path d="m12 6 6 6 2.3-2.3a2.4 2.4 0 0 0 0-3.4l-2.6-2.6a2.4 2.4 0 0 0-3.4 0Z"/>',
 		file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>'
 	};
@@ -104,6 +109,9 @@
 			'<div class="empty" hidden>' + LOGO + '<span>Paleta vazia</span>',
 			'  <button class="row-btn" data-act="capture">' + ic('pipette') + '<span class="lbl">Capturar</span></button>',
 			'  <button class="row-btn" data-act="add">' + ic('plus') + '<span class="lbl">Nova cor</span></button>',
+			'  <button class="row-btn" data-act="library" data-tip="Abrir um preset">' + ic('library') + '<span class="lbl">Presets</span></button>',
+			'  <button class="row-btn" data-act="harmony" data-tip="Criar uma harmonia">' + ic('wheel') + '<span class="lbl">Harmonia</span></button>',
+			'  <span class="empty-hint">ou cole cores <kbd>' + (IS_MAC ? '⌘V' : 'Ctrl+V') + '</kbd></span>',
 			'</div>',
 			'<div class="dock dock-b">',
 			'  <button class="tool" data-act="library" aria-label="Presets"><span class="swap">' + ic('library') + ic('x') + '</span></button>',
@@ -119,10 +127,12 @@
 			'  <span class="vr"></span>',
 			'  <div class="grp"><span class="grp-title">Paleta</span>',
 			'    <button class="row-btn" data-act="sort" data-tip="Ordenar por matiz">' + ic('sort') + '<span class="lbl">Ordenar por matiz</span></button>',
+			'    <button class="row-btn" data-act="import" data-tip="Importar cores (.ase, .css, .txt…)">' + ic('import') + '<span class="lbl">Importar cores</span></button>',
+			'    <button class="row-btn" data-act="export" data-tip="Exportar .ase (Illustrator, Photoshop)">' + ic('export') + '<span class="lbl">Exportar .ase</span></button>',
 			'    <button class="row-btn danger" data-act="clear" data-tip="Segure para limpar">' + ic('trash') + '<span class="lbl">Segure para limpar</span><i class="hold"></i></button>',
 			'  </div>',
 			'  <span class="vr"></span>',
-			'  <div class="grp"><button class="row-btn" data-act="help" data-tip="Ajuda e documentação">' + ic('help') + '<span class="lbl">Ajuda</span></button><span class="ver">' + VERSION + '</span></div>',
+			'  <div class="grp"><button class="row-btn" data-act="keys" data-tip="Atalhos" data-kbd="?">' + ic('keyboard') + '<span class="lbl">Atalhos</span></button><button class="row-btn" data-act="help" data-tip="Ajuda e documentação">' + ic('help') + '<span class="lbl">Ajuda</span></button><span class="ver">' + VERSION + '</span></div>',
 			'</div>',
 			'<div class="sheet library" hidden>',
 			'  <div class="lib-list" role="list"></div>',
@@ -176,6 +186,7 @@
 			'    </div>',
 			'  </div>',
 			'</div>',
+			'<div class="sheet keys" hidden tabindex="-1" role="dialog" aria-label="Atalhos"><div class="k-body"></div><button class="tool k-x" aria-label="Fechar (Esc)">' + ic('x') + '</button></div>',
 			'<div class="toast" role="status"><span class="chip"></span><span class="toast-ic"></span><span class="toast-msg"></span><button type="button">desfazer</button></div>',
 			'<div class="tip"></div>'
 		].join('\n');
@@ -187,6 +198,7 @@
 		var library = q('.library');
 		var exSheet = q('.extract');
 		var ed = q('.editor');
+		var keysSheet = q('.keys');
 		var toastEl = q('.toast');
 		var tipEl = q('.tip');
 		var nodes = {}; // id → elemento
@@ -262,7 +274,7 @@
 			n.tabIndex = 0;
 			n.setAttribute('role', 'listitem');
 			n.innerHTML = '<button class="sw-edit" tabindex="-1" aria-label="Editar cor">' + ic('pencil') + '</button>' +
-				'<span class="sw-glyph">' + ic('bucket', 'g-fill') + ic('copy', 'g-copy') + ic('x', 'g-del') + ic('check', 'g-ok') + '</span>' +
+				'<span class="sw-glyph">' + ic('bucket', 'g-fill') + ic('ring', 'g-stroke') + ic('copy', 'g-copy') + ic('x', 'g-del') + ic('check', 'g-ok') + '</span>' +
 				'<span class="sw-meta"><span class="sw-line"><span class="sw-name"></span><span class="sw-val"></span></span></span><i class="sw-dot"></i>';
 			return n;
 		}
@@ -460,7 +472,8 @@
 				// as dicas das amostras somem depois que você já viu algumas vezes
 				if (learned >= 6 && !mods.alt && !mods.ctrl) return '';
 				return [
-					kbd('clique', 'aplicar', !mods.alt && !mods.ctrl),
+					kbd('clique', 'aplicar', !mods.alt && !mods.ctrl && !mods.shift),
+					kbd(KEY.shift, 'contorno', mods.shift && !mods.alt && !mods.ctrl),
 					kbd('botão dir.', 'editar'),
 					kbd(KEY.ctrl, 'copiar', mods.ctrl),
 					kbd(KEY.alt, 'excluir', mods.alt)
@@ -586,13 +599,14 @@
 		var REASONS = {
 			nocomp: 'Abra uma composição primeiro',
 			nosel: 'Selecione um layer ou uma propriedade de cor',
+			nostroke: 'Nenhum contorno: o Shift pinta o traço de shapes e textos',
 			error: 'O After Effects recusou a cor'
 		};
 
-		function applySwatch(sw, e) {
+		function applySwatch(sw, e, opts) {
 			var n = nodes[sw.id];
 			ripple(n, e && e.clientX, e && e.clientY);
-			Host.apply(sw.color).then(function (r) {
+			Host.apply(sw.color, opts).then(function (r) {
 				if (r && r.ok) {
 					var prev = S.last && nodes[S.last];
 					if (prev) prev.classList.remove('last');
@@ -642,7 +656,7 @@
 				flash(nodes[sw.id], 'ok', 700);
 				return toast(v + ' copiado', { color: sw.color, icon: 'copy' });
 			}
-			applySwatch(sw, e);
+			applySwatch(sw, e, e.shiftKey ? { stroke: true } : null);
 		}
 
 		// arrastar para reordenar (pointer capture fica na faixa, que nunca se move)
@@ -870,6 +884,10 @@
 			else if (act === 'menu') toggleSide('settings');
 			else if (act === 'library') toggleSide('library');
 			else if (act === 'save-preset') savePreset();
+			else if (act === 'harmony') openHarmony(suggestColor(), b);
+			else if (act === 'import') { closeSettings(); importColors(); }
+			else if (act === 'export') { closeSettings(); exportAse(); }
+			else if (act === 'keys') openKeys();
 			else if (act === 'folder') chooseFolder(e);
 			else if (act === 'toggle-info') setPref('info', !S.prefs.info);
 			else if (act === 'toggle-names') setPref('names', !S.prefs.names);
@@ -877,8 +895,8 @@
 		});
 
 		// ------------------------------------------------------------------ ajustes
-		function isSheetOpen() { return !settings.hidden || !library.hidden || !ed.hidden || !exSheet.hidden || !hm.hidden; }
-		function anyFull() { return !ed.hidden || !exSheet.hidden || !hm.hidden; }
+		function isSheetOpen() { return !settings.hidden || !library.hidden || !ed.hidden || !exSheet.hidden || !hm.hidden || !keysSheet.hidden; }
+		function anyFull() { return !ed.hidden || !exSheet.hidden || !hm.hidden || !keysSheet.hidden; }
 
 		// ajustes e presets ocupam a faixa; as docas continuam visíveis e o ícone vira ×
 		var SIDES = { settings: [settings, 'menu-open'], library: [library, 'lib-open'] };
@@ -2355,10 +2373,147 @@
 			} else if (e.key === 'Escape') { e.preventDefault(); closeHarmony(); }
 		});
 
+		// ------------------------------------------------------------------ colar, importar e exportar cores
+		// adiciona cores novas (as que já existem ficam de fora), com desfazer
+		function addColors(list, from) {
+			if (!list || !list.length) return toast('Nenhuma cor encontrada' + (from ? ' em ' + from : ''), { icon: 'alert' });
+			var have = {}, fresh = [];
+			S.swatches.forEach(function (s) { have[s.color] = true; });
+			list.forEach(function (c) {
+				var h = C.normHex(c.color);
+				if (!h || have[h]) return;
+				have[h] = true;
+				var lbl = String(c.label || '').trim().slice(0, 40), auto = N.isGeneric(lbl, h);
+				fresh.push({ id: newId(), color: h, label: auto ? '' : lbl, auto: auto });
+			});
+			if (!fresh.length) return toast('Essas cores já estão na paleta', { icon: 'alert' });
+			closeSettings();
+			pushUndo();
+			S.swatches = S.swatches.concat(fresh);
+			render();
+			save();
+			var last = nodes[fresh[fresh.length - 1].id];
+			if (last && last.scrollIntoView) last.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+			toast('+' + fresh.length + (fresh.length > 1 ? ' cores' : ' cor') + (from ? ' · ' + from : ''), { color: fresh[0].color, undo: true });
+		}
+
+		// colar: o evento de colar traz o texto; no CEP ele nem sempre chega, então o Ctrl/⌘+V também
+		// agenda uma leitura da área de transferência pelo sistema, cancelada se o evento vier
+		var pasteAt = 0;
+		function pasteText(t) { addColors(IO.parseText(t), 'colado'); }
+		el.addEventListener('paste', function (e) {
+			if (anyFull() || (e.target.closest && e.target.closest('input, textarea'))) return;
+			pasteAt = 0;
+			e.preventDefault();
+			pasteText((e.clipboardData || root.clipboardData).getData('text'));
+		});
+		function waitPaste() {
+			var at = pasteAt = Date.now();
+			setTimeout(function () {
+				if (pasteAt !== at) return;
+				pasteAt = 0;
+				Host.readClipboard().then(pasteText, function () { toast('Não foi possível ler a área de transferência', { icon: 'alert' }); });
+			}, 200);
+		}
+
+		// importar: .ase (Illustrator, Photoshop…) ou qualquer texto com cores (.css, .txt, .json…)
+		function importColors() {
+			Host.importColors().then(function (r) {
+				if (!r || !r.ok) { if (r && r.reason !== 'cancel') toast('Não foi possível ler o arquivo', { icon: 'alert' }); return; }
+				var list;
+				try { list = r.kind === 'ase' ? IO.parseAse(IO.hexToBytes(r.hex)).colors : IO.parseText(r.text); }
+				catch (err) { return toast('Esse .ase não pôde ser lido', { icon: 'alert' }); }
+				addColors(list, r.name);
+			}, function () { toast('Não foi possível ler o arquivo', { icon: 'alert' }); });
+		}
+
+		// exportar a paleta do projeto como .ase, com os nomes das cores
+		function exportAse() {
+			if (!S.swatches.length) return toast('A paleta do projeto está vazia', { icon: 'alert' });
+			var title = S.project && S.project !== 'sem título' ? S.project : 'El PALLETERO';
+			var bytes = IO.buildAse(S.swatches.map(function (s) { return { color: s.color, label: s.label }; }), title);
+			Host.exportAse(IO.bytesToHex(bytes), title).then(function (r) {
+				if (!r || !r.ok) { if (r && r.reason !== 'cancel') toast('Não foi possível gravar o arquivo', { icon: 'alert' }); return; }
+				toast('Exportada · ' + r.name, { icon: 'export' });
+			}, function () { toast('Não foi possível gravar o arquivo', { icon: 'alert' }); });
+		}
+
+		// ------------------------------------------------------------------ folha de atalhos
+		function keysHtml() {
+			function k(x) { return '<kbd>' + x + '</kbd>'; }
+			function combo(mod, x) { return k(mod) + '<i>+</i>' + k(x); }
+			var click = 'clique', cmdKey = IS_MAC ? '⌘' : 'Ctrl';
+			var groups = [
+				['Amostras', [
+					[k(click), 'aplicar no layer ou na propriedade'],
+					[combo(KEY.shift, click), 'aplicar no contorno'],
+					[combo(KEY.ctrl, click), 'copiar o valor'],
+					[combo(KEY.alt, click), 'excluir'],
+					[k('botão direito') + (IS_MAC ? '<i>ou</i>' + combo('Ctrl', click) : ''), 'editar'],
+					[k('arrastar'), 'reordenar'],
+					[k('Enter') + k('F2') + k('Delete'), 'em foco: aplicar · editar · excluir']
+				]],
+				['Painel', [
+					[k('+'), 'nova cor ou harmonia (o último modo)'],
+					[k('conta-gotas'), 'capturar cores dos layers'],
+					[combo(KEY.shift, 'conta-gotas'), 'capturar do projeto todo'],
+					[IS_MAC ? k('⌘V') : combo(cmdKey, 'V'), 'colar cores (hex, rgb, CSS, Coolors)'],
+					[IS_MAC ? k('⌘Z') : combo(cmdKey, 'Z'), 'desfazer'],
+					[k('?'), 'estes atalhos']
+				]],
+				['Presets', [
+					[k(click), 'substituir a paleta'],
+					[combo(KEY.shift, click), 'adicionar as cores que faltam'],
+					[k(click) + '<i>no projeto</i>', 'salvar como preset'],
+					[combo(KEY.shift, click) + '<i>no projeto</i>', 'atualizar o preset de origem'],
+					[k('F2') + k('Delete'), 'renomear · excluir'],
+					[k('⠿') + '<i>ou</i>' + k('↑↓'), 'reordenar']
+				]],
+				['Editor e harmonia', [
+					[k('Enter') + k('Esc'), 'confirmar · cancelar'],
+					[combo(KEY.shift, 'Enter'), 'harmonia: substituir a paleta'],
+					[k('←→↑↓'), 'ajustar (' + KEY.shift + ' anda mais)'],
+					[k('arrastar ponto'), 'girar a harmonia inteira']
+				]]
+			];
+			return groups.map(function (g) {
+				return '<section class="k-grp"><h4>' + g[0] + '</h4>' + g[1].map(function (r) {
+					return '<div class="k-row"><span class="k-keys">' + r[0] + '</span><span class="k-what">' + r[1] + '</span></div>';
+				}).join('') + '</section>';
+			}).join('');
+		}
+		function openKeys() {
+			if (anyFull()) return;
+			closeSettings();
+			hideTip();
+			keysSheet.querySelector('.k-body').innerHTML = '<div class="k-cols">' + keysHtml() + '</div>';
+			keysSheet.hidden = false;
+			el.classList.add('sheet-open');
+			keysSheet.animate([{ opacity: 0, transform: 'scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: EASE });
+			keysSheet.focus({ preventScroll: true });
+		}
+		function closeKeys() {
+			if (keysSheet.hidden || keysSheet.dataset.closing) return;
+			keysSheet.dataset.closing = '1';
+			keysSheet.animate([{ opacity: 1 }, { opacity: 0, transform: 'scale(.97)' }], { duration: 180, easing: EASE }).onfinish = function () {
+				delete keysSheet.dataset.closing;
+				keysSheet.hidden = true;
+				if (!isSheetOpen()) el.classList.remove('sheet-open');
+				el.focus({ preventScroll: true });
+			};
+		}
+		keysSheet.querySelector('.k-x').addEventListener('click', closeKeys);
+		keysSheet.addEventListener('keydown', function (e) {
+			if (e.key === 'Escape' || e.key === '?' || e.key === 'Enter') { e.preventDefault(); closeKeys(); }
+		});
+
 		// ------------------------------------------------------------------ teclado global
 		root.addEventListener('keydown', function (e) {
 			if (anyFull()) return;
+			var typing = e.target && e.target.closest && e.target.closest('input, textarea');
 			if (cmd(e) && !e.shiftKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
+			else if (cmd(e) && e.key.toLowerCase() === 'v' && !typing) waitPaste();
+			else if (e.key === '?' && !typing) { e.preventDefault(); openKeys(); }
 			else if (e.key === 'Escape') closeSettings();
 		});
 

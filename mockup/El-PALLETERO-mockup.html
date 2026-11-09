@@ -265,7 +265,8 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 }
 .sw-glyph .ic { position: absolute; inset: 3px; opacity: 0; transform: scale(.5); transition: opacity .2s, transform .3s var(--spring); }
 .sw.hot .g-fill { opacity: .9; transform: none; }
-.pal.ctrl .sw.hot .g-fill, .pal.alt .sw.hot .g-fill, .sw.ok .g-fill { opacity: 0; transform: scale(.5); }
+.pal.ctrl .sw.hot .g-fill, .pal.alt .sw.hot .g-fill, .pal.shift .sw.hot .g-fill, .sw.ok .g-fill { opacity: 0; transform: scale(.5); }
+.pal.shift:not(.ctrl):not(.alt):not(.sheet-open) .sw.hot .g-stroke { opacity: .9; transform: none; } /* Shift: contorno */
 .pal.ctrl .sw.hot .g-copy { opacity: .9; transform: none; }
 .pal.alt .sw .g-del { opacity: .95; transform: none; }
 .sw.ok .g-ok { opacity: 1; transform: scale(1.25); stroke-width: 3; }
@@ -357,6 +358,32 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 .pal[data-thin='1'] .empty-logo { width: 28px; height: 28px; }
 @keyframes pal-sway { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg) translateY(-1px); } }
 .empty .row-btn { color: var(--fg); }
+.pal:not([data-orient='row']) .empty { align-content: center; }
+.empty-hint { flex-basis: 100%; font-size: 10.5px; color: var(--mute); }
+.empty-hint kbd { font: 600 9px/1 var(--mono); padding: 2px 4px; border-radius: 4px; background: var(--raise-2); color: var(--fg); }
+.pal[data-orient='row'] .empty-hint { flex-basis: auto; }
+.pal[data-thin='1'] .empty .lbl, .pal[data-thin='1'] .empty-hint { display: none; }
+
+/* ------------------------------------------------------------ atalhos */
+.keys { padding: 10px 12px; display: flex; }
+.k-body { flex: 1; min-width: 0; min-height: 0; overflow-x: hidden; overflow-y: auto; padding-right: 26px; }
+.k-cols { columns: 220px; column-gap: 22px; }
+/* faixa: as colunas correm para o lado */
+.pal[data-orient='row'] .k-body { overflow-x: auto; overflow-y: hidden; }
+.pal[data-orient='row'] .k-cols { height: 100%; column-fill: auto; columns: 230px auto; }
+.k-x { position: absolute; top: 6px; right: 6px; }
+.k-grp { break-inside: avoid; margin: 0 0 10px; animation: pal-rise .35s var(--ease) backwards; }
+.k-grp:nth-child(2) { animation-delay: .04s; } .k-grp:nth-child(3) { animation-delay: .08s; } .k-grp:nth-child(4) { animation-delay: .12s; }
+.k-grp h4 { margin: 0 0 4px; font: 600 9.5px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--mute); }
+.k-row { display: grid; grid-template-columns: minmax(86px, max-content) minmax(0, 1fr); align-items: baseline; gap: 10px; padding: 2px 0; font-size: 11px; break-inside: avoid; }
+.k-keys { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 3px; }
+.k-keys i { font-style: normal; color: var(--mute); font-size: 10px; padding: 0 1px; }
+.k-keys kbd { font: 600 9.5px/1 var(--mono); padding: 3px 5px; border-radius: 4px; background: var(--raise-2); color: var(--fg); white-space: nowrap; }
+.k-what { color: var(--mute); }
+.pal button:hover .i-arrow { animation: pal-nudge .5s var(--spring); }
+@keyframes pal-nudge { 50% { transform: translateY(1.5px); } }
+.pal button:hover .i-arrow.i-up { animation-name: pal-nudge-up; }
+@keyframes pal-nudge-up { 50% { transform: translateY(-1.5px); } }
 
 /* ------------------------------------------------------------ folhas (editor / ajustes) */
 .sheet { position: absolute; inset: 0; z-index: 20; background: var(--raise); }
@@ -1450,6 +1477,138 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	};
 })(window);
 
+/* El PALLETERO · entrada e saída de cores
+   - texto: acha cores em qualquer texto colado ou arquivo (hex, rgb(), listas do Coolors, CSS…)
+   - .ase: Adobe Swatch Exchange (Illustrator, Photoshop, InDesign), leitura e escrita
+   Só cálculo: diálogos e arquivos ficam no host (jsx). */
+(function (root) {
+	'use strict';
+
+	var C = root.PalColor;
+
+	function hex2(n) { n = Math.max(0, Math.min(255, Math.round(n))); return (n < 16 ? '0' : '') + n.toString(16); }
+	function rgbHex(r, g, b) { return ('#' + hex2(r) + hex2(g) + hex2(b)).toUpperCase(); }
+
+	// ------------------------------------------------------------ texto
+	// Formatos: #RGB, #RRGGBB, #RRGGBBAA, 0xRRGGBB, rgb()/rgba() (vírgulas ou espaços) e hex sem "#"
+	// (só quando tem algum dígito, ou quando o texto é só uma lista de hex: "264653-2a9d8f-…").
+	// Nome: o que vem antes de ":" ou "=" na mesma linha ("--primaria: #264653" → primaria).
+	var RX = /#([0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3})(?![0-9a-z])|\b0x([0-9a-f]{6})\b|rgba?\(\s*(\d{1,3}(?:\.\d+)?)\s*[,\s]\s*(\d{1,3}(?:\.\d+)?)\s*[,\s]\s*(\d{1,3}(?:\.\d+)?)|(?:^|[^0-9a-z#_-]|-)([0-9a-f]{6})(?![0-9a-z])/gi;
+
+	function nameBefore(text, at) {
+		var line = text.slice(text.lastIndexOf('\n', at - 1) + 1, at);
+		var m = /(?:^|[\s;{,"'])[-$@]{0,2}([a-zÀ-ɏ][\wÀ-ɏ -]{0,38}?)["']?\s*[:=]\s*["']?$/i.exec(line);
+		var name = m ? m[1].replace(/[-_]+/g, ' ').trim() : '';
+		// nomes de propriedade de CSS/SVG não dizem nada da cor
+		return /^(colou?r|background( colou?r)?|bg|fill|stroke|border( colou?r)?|outline( colou?r)?|stop colou?r|value|hex|rgba?)$/i.test(name) ? '' : name;
+	}
+
+	function parseText(text) {
+		text = String(text || '');
+		var onlyHex = /^[\s,;|/\-]*([0-9a-f]{6}[\s,;|/\-]*)+$/i.test(text.replace(/^.*\//, '')); // aceita a URL do Coolors
+		var out = [], seen = {}, m;
+		RX.lastIndex = 0;
+		while ((m = RX.exec(text))) {
+			var hex = null, at = m.index;
+			if (m[1]) {
+				var h = m[1];
+				if (h.length === 3) h = h.charAt(0) + h.charAt(0) + h.charAt(1) + h.charAt(1) + h.charAt(2) + h.charAt(2);
+				hex = '#' + h.slice(0, 6);
+			} else if (m[2]) hex = '#' + m[2];
+			else if (m[3]) {
+				if (+m[3] > 255 || +m[4] > 255 || +m[5] > 255) continue;
+				hex = rgbHex(+m[3], +m[4], +m[5]);
+			} else if (m[6]) {
+				if (!/\d/.test(m[6]) && !onlyHex) continue; // "facade", "decade"… não são cores
+				hex = '#' + m[6];
+				at = m.index + m[0].length - 6;
+			}
+			hex = C.normHex(hex);
+			if (!hex || seen[hex]) continue;
+			seen[hex] = true;
+			out.push({ color: hex, label: nameBefore(text, at) });
+		}
+		return out;
+	}
+
+	// ------------------------------------------------------------ .ase
+	function hexToBytes(h) {
+		var out = new Uint8Array(Math.floor(h.length / 2));
+		for (var i = 0; i < out.length; i++) out[i] = parseInt(h.substr(i * 2, 2), 16);
+		return out;
+	}
+	function bytesToHex(b) {
+		var out = '';
+		for (var i = 0; i < b.length; i++) out += hex2(b[i]);
+		return out;
+	}
+
+	// → { colors: [{ color, label }], group }
+	function parseAse(bytes) {
+		var b = bytes, p = 0, dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+		function u16() { var v = dv.getUint16(p); p += 2; return v; }
+		function u32() { var v = dv.getUint32(p); p += 4; return v; }
+		function f32() { var v = dv.getFloat32(p); p += 4; return v; }
+		function str() {
+			var n = u16(), s = '';
+			for (var i = 0; i < n; i++) { var c = u16(); if (c) s += String.fromCharCode(c); }
+			return s;
+		}
+		if (b.length < 12 || String.fromCharCode(b[0], b[1], b[2], b[3]) !== 'ASEF') throw new Error('não é um arquivo .ase');
+		p = 8;
+		var blocks = u32(), colors = [], group = '', seen = {};
+		for (var k = 0; k < blocks && p + 6 <= b.length; k++) {
+			var type = u16(), len = u32(), end = p + len;
+			if (type === 0xC001) group = group || str();
+			else if (type === 0x0001) {
+				var name = str(), model = String.fromCharCode(b[p], b[p + 1], b[p + 2], b[p + 3]); p += 4;
+				var rgb = null;
+				if (model === 'RGB ') rgb = [f32() * 255, f32() * 255, f32() * 255];
+				else if (model === 'CMYK') {
+					var cc = f32(), mm = f32(), yy = f32(), kk = f32();
+					rgb = [255 * (1 - cc) * (1 - kk), 255 * (1 - mm) * (1 - kk), 255 * (1 - yy) * (1 - kk)];
+				} else if (model === 'LAB ') {
+					var L = f32(), a = f32(), bb = f32();
+					rgb = C.labToRgb([L <= 1.0001 ? L * 100 : L, a, bb]);
+				} else if (model === 'Gray') { var g = f32() * 255; rgb = [g, g, g]; }
+				if (rgb) {
+					var hex = rgbHex(rgb[0], rgb[1], rgb[2]);
+					if (!seen[hex]) { seen[hex] = true; colors.push({ color: hex, label: name }); }
+				}
+			}
+			p = end;
+		}
+		return { colors: colors, group: group };
+	}
+
+	// [{ color, label }] → bytes de um .ase (RGB, num grupo com o nome da paleta)
+	function buildAse(list, title) {
+		var out = [];
+		function u16(v) { out.push((v >> 8) & 255, v & 255); }
+		function u32(v) { out.push((v >>> 24) & 255, (v >> 16) & 255, (v >> 8) & 255, v & 255); }
+		function f32(v) { var t = new DataView(new ArrayBuffer(4)); t.setFloat32(0, v); for (var i = 0; i < 4; i++) out.push(t.getUint8(i)); }
+		function strLen(s) { return 2 + (s.length + 1) * 2; }
+		function str(s) { u16(s.length + 1); for (var i = 0; i < s.length; i++) u16(s.charCodeAt(i)); u16(0); }
+		title = String(title || 'El PALLETERO').slice(0, 60);
+		out.push(65, 83, 69, 70); // ASEF
+		u16(1); u16(0);
+		u32(list.length + 2);
+		u16(0xC001); u32(strLen(title)); str(title);
+		list.forEach(function (s, i) {
+			var name = String(s.label || s.color || 'cor ' + (i + 1)).slice(0, 60), rgb = C.hexToRgb(s.color);
+			u16(0x0001); u32(strLen(name) + 4 + 12 + 2);
+			str(name);
+			out.push(82, 71, 66, 32); // 'RGB '
+			f32(rgb[0] / 255); f32(rgb[1] / 255); f32(rgb[2] / 255);
+			u16(2); // normal (nem global nem spot)
+		});
+		u16(0xC002); u32(0);
+		return new Uint8Array(out);
+	}
+
+	root.PalIO = { parseText: parseText, parseAse: parseAse, buildAse: buildAse, hexToBytes: hexToBytes, bytesToHex: bytesToHex };
+})(window);
+
 /* "After Effects de mentira" para o mockup: uma composição com layers selecionáveis,
    dois projetos, presets em duas pastas e frames gerados por canvas. */
 (function (root) {
@@ -1656,12 +1815,33 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			return { ok: true, url: scene('comp', 640, 360), label: 'MAIN_COMP', kind: 'comp', temp: true, readyAt: Date.now() + 400 };
 		},
 		releaseFrame: function () { return { ok: true }; },
-		apply: function (hex) {
+		apply: function (hex, optsJson) {
 			var sel = selLayers().filter(function (l) { return !l.scene; });
 			if (!sel.length) return { ok: false, reason: 'nosel' };
+			var opts = optsJson ? JSON.parse(optsJson) : {};
+			if (opts.stroke) {
+				// contorno: só shapes com traço e textos
+				var st = sel.filter(function (l) { return l.stroke || l.kind === 'text'; });
+				if (!st.length) return { ok: false, reason: 'nostroke' };
+				st.forEach(function (l) { l.stroke = hex; l.flash = Date.now(); });
+				emit();
+				return { ok: true, mode: 'stroke', count: st.length };
+			}
 			sel.forEach(function (l) { l.color = hex; l.flash = Date.now(); });
 			emit();
 			return { ok: true, mode: 'fill', count: sel.length };
+		},
+		// importar: no mockup, um .ase de exemplo (como se viesse do Illustrator)
+		importColors: function () {
+			var bytes = window.PalIO.buildAse([
+				{ color: '#0B132B', label: 'Azul noite' }, { color: '#1C2541', label: 'Marinho' }, { color: '#3A506B', label: 'Aço' },
+				{ color: '#5BC0BE', label: 'Turquesa' }, { color: '#F2E9E4', label: 'Areia' }
+			], 'Cliente');
+			return { ok: true, kind: 'ase', name: 'Cliente', hex: window.PalIO.bytesToHex(bytes) };
+		},
+		exportAse: function (hex, name) {
+			window.PalMockHost.lastAse = hex;
+			return { ok: true, path: '~/Desktop/' + name + '.ase', name: name + '.ase' };
 		},
 		capture: function (scope) {
 			var src = scope === 'project' ? proj().layers : selLayers();
@@ -1710,14 +1890,31 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	var KEYS = IS_MAC ? [
 		{ keyCode: 53 }, { keyCode: 36 }, { keyCode: 76 }, { keyCode: 51 }, { keyCode: 117 }, { keyCode: 49 },  // esc, return, enter, delete, del, espaço
 		{ keyCode: 123 }, { keyCode: 124 }, { keyCode: 125 }, { keyCode: 126 }, { keyCode: 120 }, { keyCode: 14 }, // setas, F2, E
-		{ keyCode: 6, metaKey: true }, { keyCode: 58 }, { keyCode: 61 }, { keyCode: 55 }, { keyCode: 56 }, { keyCode: 60 }  // ⌘Z, ⌥, ⌘, ⇧
+		{ keyCode: 6, metaKey: true }, { keyCode: 58 }, { keyCode: 61 }, { keyCode: 55 }, { keyCode: 56 }, { keyCode: 60 }, // ⌘Z, ⌥, ⌘, ⇧
+		{ keyCode: 9, metaKey: true }, { keyCode: 44, shiftKey: true }, { keyCode: 94, shiftKey: true }  // ⌘V, ? (US e ABNT)
 	] : [
 		{ keyCode: 27 }, { keyCode: 13 }, { keyCode: 46 }, { keyCode: 8 }, { keyCode: 32 },
 		{ keyCode: 37 }, { keyCode: 38 }, { keyCode: 39 }, { keyCode: 40 }, { keyCode: 113 }, { keyCode: 69 },
-		{ keyCode: 90, ctrlKey: true }, { keyCode: 18 }, { keyCode: 17 }, { keyCode: 16 }
+		{ keyCode: 90, ctrlKey: true }, { keyCode: 18 }, { keyCode: 17 }, { keyCode: 16 },
+		{ keyCode: 86, ctrlKey: true }, { keyCode: 191, shiftKey: true }, { keyCode: 193, shiftKey: true } // Ctrl+V, ? (US e ABNT)
 	];
 	if (cep && cep.registerKeyEventsInterest) {
 		try { cep.registerKeyEventsInterest(JSON.stringify(KEYS)); } catch (e) {}
+	}
+
+	// área de transferência pelo sistema (pbpaste / Get-Clipboard): no CEP o evento de colar nem
+	// sempre chega ao painel. Fora do CEP, a API do navegador.
+	function readClipboard() {
+		try {
+			var req = root.cep_node ? root.cep_node.require : root.require;
+			if (cep && req) {
+				var cp = req('child_process');
+				var cmd = IS_MAC ? 'pbpaste' : 'powershell -NoProfile -NonInteractive -Command Get-Clipboard -Raw';
+				return Promise.resolve(String(cp.execSync(cmd, { encoding: 'utf8', timeout: 4000, windowsHide: true })));
+			}
+		} catch (e) {}
+		if (root.navigator.clipboard && root.navigator.clipboard.readText) return root.navigator.clipboard.readText();
+		return Promise.reject(new Error('sem área de transferência'));
 	}
 
 	function openURL(url) {
@@ -1820,6 +2017,9 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		resetPresetFolder: function () { return call('resetPresetFolder'); },
 		grabFrame: function () { return call('grabFrame'); },
 		releaseFrame: function (r) { return r && r.temp ? call('releaseFrame', r.tmpId || 0, r.path) : Promise.resolve(); },
+		importColors: function () { return call('importColors'); },
+		exportAse: function (hex, name) { return call('exportAse', hex, name); },
+		readClipboard: readClipboard,
 		loadImage: loadImage,
 		openURL: openURL
 	};
@@ -1834,7 +2034,8 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	var Host = root.PalHost;
 	var N = root.PalNames;
 	var X = root.PalExtract;
-	var VERSION = 'v1.3.5';
+	var IO = root.PalIO;
+	var VERSION = 'v1.4.0';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
@@ -1875,6 +2076,10 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		wheel: '<circle cx="12" cy="12" r="9"/><g class="i-orbit"><circle cx="12" cy="3" r="2" fill="currentColor"/><circle cx="19.8" cy="16.5" r="2" fill="currentColor"/><circle cx="4.2" cy="16.5" r="2" fill="currentColor"/></g>',
 		drop: '<path d="M12 2.7c3.5 4.1 6 7.1 6 10.3a6 6 0 0 1-12 0c0-3.2 2.5-6.2 6-10.3z"/>',
 		fan: '<path d="M12 21 5 5M12 21l7-16M12 21V3"/>',
+		ring: '<circle cx="12" cy="12" r="7.5" stroke-width="3.2"/>',
+		import: '<path class="i-arrow" d="M12 3v11m-4.5-4.5L12 14l4.5-4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
+		export: '<path class="i-arrow i-up" d="M12 14V3M7.5 7.5 12 3l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
+		keyboard: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M18 13h.01M9 15.5h6"/>',
 		unplug: '<path d="m19 5 3-3"/><path d="m2 22 3-3"/><path d="M6.3 20.3a2.4 2.4 0 0 0 3.4 0L12 18l-6-6-2.3 2.3a2.4 2.4 0 0 0 0 3.4Z"/><path d="M7.5 13.5 10 11"/><path d="M10.5 16.5 13 14"/><path d="m12 6 6 6 2.3-2.3a2.4 2.4 0 0 0 0-3.4l-2.6-2.6a2.4 2.4 0 0 0-3.4 0Z"/>',
 		file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>'
 	};
@@ -1931,6 +2136,9 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			'<div class="empty" hidden>' + LOGO + '<span>Paleta vazia</span>',
 			'  <button class="row-btn" data-act="capture">' + ic('pipette') + '<span class="lbl">Capturar</span></button>',
 			'  <button class="row-btn" data-act="add">' + ic('plus') + '<span class="lbl">Nova cor</span></button>',
+			'  <button class="row-btn" data-act="library" data-tip="Abrir um preset">' + ic('library') + '<span class="lbl">Presets</span></button>',
+			'  <button class="row-btn" data-act="harmony" data-tip="Criar uma harmonia">' + ic('wheel') + '<span class="lbl">Harmonia</span></button>',
+			'  <span class="empty-hint">ou cole cores <kbd>' + (IS_MAC ? '⌘V' : 'Ctrl+V') + '</kbd></span>',
 			'</div>',
 			'<div class="dock dock-b">',
 			'  <button class="tool" data-act="library" aria-label="Presets"><span class="swap">' + ic('library') + ic('x') + '</span></button>',
@@ -1946,10 +2154,12 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			'  <span class="vr"></span>',
 			'  <div class="grp"><span class="grp-title">Paleta</span>',
 			'    <button class="row-btn" data-act="sort" data-tip="Ordenar por matiz">' + ic('sort') + '<span class="lbl">Ordenar por matiz</span></button>',
+			'    <button class="row-btn" data-act="import" data-tip="Importar cores (.ase, .css, .txt…)">' + ic('import') + '<span class="lbl">Importar cores</span></button>',
+			'    <button class="row-btn" data-act="export" data-tip="Exportar .ase (Illustrator, Photoshop)">' + ic('export') + '<span class="lbl">Exportar .ase</span></button>',
 			'    <button class="row-btn danger" data-act="clear" data-tip="Segure para limpar">' + ic('trash') + '<span class="lbl">Segure para limpar</span><i class="hold"></i></button>',
 			'  </div>',
 			'  <span class="vr"></span>',
-			'  <div class="grp"><button class="row-btn" data-act="help" data-tip="Ajuda e documentação">' + ic('help') + '<span class="lbl">Ajuda</span></button><span class="ver">' + VERSION + '</span></div>',
+			'  <div class="grp"><button class="row-btn" data-act="keys" data-tip="Atalhos" data-kbd="?">' + ic('keyboard') + '<span class="lbl">Atalhos</span></button><button class="row-btn" data-act="help" data-tip="Ajuda e documentação">' + ic('help') + '<span class="lbl">Ajuda</span></button><span class="ver">' + VERSION + '</span></div>',
 			'</div>',
 			'<div class="sheet library" hidden>',
 			'  <div class="lib-list" role="list"></div>',
@@ -2003,6 +2213,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			'    </div>',
 			'  </div>',
 			'</div>',
+			'<div class="sheet keys" hidden tabindex="-1" role="dialog" aria-label="Atalhos"><div class="k-body"></div><button class="tool k-x" aria-label="Fechar (Esc)">' + ic('x') + '</button></div>',
 			'<div class="toast" role="status"><span class="chip"></span><span class="toast-ic"></span><span class="toast-msg"></span><button type="button">desfazer</button></div>',
 			'<div class="tip"></div>'
 		].join('\n');
@@ -2014,6 +2225,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		var library = q('.library');
 		var exSheet = q('.extract');
 		var ed = q('.editor');
+		var keysSheet = q('.keys');
 		var toastEl = q('.toast');
 		var tipEl = q('.tip');
 		var nodes = {}; // id → elemento
@@ -2089,7 +2301,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			n.tabIndex = 0;
 			n.setAttribute('role', 'listitem');
 			n.innerHTML = '<button class="sw-edit" tabindex="-1" aria-label="Editar cor">' + ic('pencil') + '</button>' +
-				'<span class="sw-glyph">' + ic('bucket', 'g-fill') + ic('copy', 'g-copy') + ic('x', 'g-del') + ic('check', 'g-ok') + '</span>' +
+				'<span class="sw-glyph">' + ic('bucket', 'g-fill') + ic('ring', 'g-stroke') + ic('copy', 'g-copy') + ic('x', 'g-del') + ic('check', 'g-ok') + '</span>' +
 				'<span class="sw-meta"><span class="sw-line"><span class="sw-name"></span><span class="sw-val"></span></span></span><i class="sw-dot"></i>';
 			return n;
 		}
@@ -2287,7 +2499,8 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 				// as dicas das amostras somem depois que você já viu algumas vezes
 				if (learned >= 6 && !mods.alt && !mods.ctrl) return '';
 				return [
-					kbd('clique', 'aplicar', !mods.alt && !mods.ctrl),
+					kbd('clique', 'aplicar', !mods.alt && !mods.ctrl && !mods.shift),
+					kbd(KEY.shift, 'contorno', mods.shift && !mods.alt && !mods.ctrl),
 					kbd('botão dir.', 'editar'),
 					kbd(KEY.ctrl, 'copiar', mods.ctrl),
 					kbd(KEY.alt, 'excluir', mods.alt)
@@ -2413,13 +2626,14 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		var REASONS = {
 			nocomp: 'Abra uma composição primeiro',
 			nosel: 'Selecione um layer ou uma propriedade de cor',
+			nostroke: 'Nenhum contorno: o Shift pinta o traço de shapes e textos',
 			error: 'O After Effects recusou a cor'
 		};
 
-		function applySwatch(sw, e) {
+		function applySwatch(sw, e, opts) {
 			var n = nodes[sw.id];
 			ripple(n, e && e.clientX, e && e.clientY);
-			Host.apply(sw.color).then(function (r) {
+			Host.apply(sw.color, opts).then(function (r) {
 				if (r && r.ok) {
 					var prev = S.last && nodes[S.last];
 					if (prev) prev.classList.remove('last');
@@ -2469,7 +2683,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 				flash(nodes[sw.id], 'ok', 700);
 				return toast(v + ' copiado', { color: sw.color, icon: 'copy' });
 			}
-			applySwatch(sw, e);
+			applySwatch(sw, e, e.shiftKey ? { stroke: true } : null);
 		}
 
 		// arrastar para reordenar (pointer capture fica na faixa, que nunca se move)
@@ -2697,6 +2911,10 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			else if (act === 'menu') toggleSide('settings');
 			else if (act === 'library') toggleSide('library');
 			else if (act === 'save-preset') savePreset();
+			else if (act === 'harmony') openHarmony(suggestColor(), b);
+			else if (act === 'import') { closeSettings(); importColors(); }
+			else if (act === 'export') { closeSettings(); exportAse(); }
+			else if (act === 'keys') openKeys();
 			else if (act === 'folder') chooseFolder(e);
 			else if (act === 'toggle-info') setPref('info', !S.prefs.info);
 			else if (act === 'toggle-names') setPref('names', !S.prefs.names);
@@ -2704,8 +2922,8 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		});
 
 		// ------------------------------------------------------------------ ajustes
-		function isSheetOpen() { return !settings.hidden || !library.hidden || !ed.hidden || !exSheet.hidden || !hm.hidden; }
-		function anyFull() { return !ed.hidden || !exSheet.hidden || !hm.hidden; }
+		function isSheetOpen() { return !settings.hidden || !library.hidden || !ed.hidden || !exSheet.hidden || !hm.hidden || !keysSheet.hidden; }
+		function anyFull() { return !ed.hidden || !exSheet.hidden || !hm.hidden || !keysSheet.hidden; }
 
 		// ajustes e presets ocupam a faixa; as docas continuam visíveis e o ícone vira ×
 		var SIDES = { settings: [settings, 'menu-open'], library: [library, 'lib-open'] };
@@ -4182,10 +4400,147 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 			} else if (e.key === 'Escape') { e.preventDefault(); closeHarmony(); }
 		});
 
+		// ------------------------------------------------------------------ colar, importar e exportar cores
+		// adiciona cores novas (as que já existem ficam de fora), com desfazer
+		function addColors(list, from) {
+			if (!list || !list.length) return toast('Nenhuma cor encontrada' + (from ? ' em ' + from : ''), { icon: 'alert' });
+			var have = {}, fresh = [];
+			S.swatches.forEach(function (s) { have[s.color] = true; });
+			list.forEach(function (c) {
+				var h = C.normHex(c.color);
+				if (!h || have[h]) return;
+				have[h] = true;
+				var lbl = String(c.label || '').trim().slice(0, 40), auto = N.isGeneric(lbl, h);
+				fresh.push({ id: newId(), color: h, label: auto ? '' : lbl, auto: auto });
+			});
+			if (!fresh.length) return toast('Essas cores já estão na paleta', { icon: 'alert' });
+			closeSettings();
+			pushUndo();
+			S.swatches = S.swatches.concat(fresh);
+			render();
+			save();
+			var last = nodes[fresh[fresh.length - 1].id];
+			if (last && last.scrollIntoView) last.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+			toast('+' + fresh.length + (fresh.length > 1 ? ' cores' : ' cor') + (from ? ' · ' + from : ''), { color: fresh[0].color, undo: true });
+		}
+
+		// colar: o evento de colar traz o texto; no CEP ele nem sempre chega, então o Ctrl/⌘+V também
+		// agenda uma leitura da área de transferência pelo sistema, cancelada se o evento vier
+		var pasteAt = 0;
+		function pasteText(t) { addColors(IO.parseText(t), 'colado'); }
+		el.addEventListener('paste', function (e) {
+			if (anyFull() || (e.target.closest && e.target.closest('input, textarea'))) return;
+			pasteAt = 0;
+			e.preventDefault();
+			pasteText((e.clipboardData || root.clipboardData).getData('text'));
+		});
+		function waitPaste() {
+			var at = pasteAt = Date.now();
+			setTimeout(function () {
+				if (pasteAt !== at) return;
+				pasteAt = 0;
+				Host.readClipboard().then(pasteText, function () { toast('Não foi possível ler a área de transferência', { icon: 'alert' }); });
+			}, 200);
+		}
+
+		// importar: .ase (Illustrator, Photoshop…) ou qualquer texto com cores (.css, .txt, .json…)
+		function importColors() {
+			Host.importColors().then(function (r) {
+				if (!r || !r.ok) { if (r && r.reason !== 'cancel') toast('Não foi possível ler o arquivo', { icon: 'alert' }); return; }
+				var list;
+				try { list = r.kind === 'ase' ? IO.parseAse(IO.hexToBytes(r.hex)).colors : IO.parseText(r.text); }
+				catch (err) { return toast('Esse .ase não pôde ser lido', { icon: 'alert' }); }
+				addColors(list, r.name);
+			}, function () { toast('Não foi possível ler o arquivo', { icon: 'alert' }); });
+		}
+
+		// exportar a paleta do projeto como .ase, com os nomes das cores
+		function exportAse() {
+			if (!S.swatches.length) return toast('A paleta do projeto está vazia', { icon: 'alert' });
+			var title = S.project && S.project !== 'sem título' ? S.project : 'El PALLETERO';
+			var bytes = IO.buildAse(S.swatches.map(function (s) { return { color: s.color, label: s.label }; }), title);
+			Host.exportAse(IO.bytesToHex(bytes), title).then(function (r) {
+				if (!r || !r.ok) { if (r && r.reason !== 'cancel') toast('Não foi possível gravar o arquivo', { icon: 'alert' }); return; }
+				toast('Exportada · ' + r.name, { icon: 'export' });
+			}, function () { toast('Não foi possível gravar o arquivo', { icon: 'alert' }); });
+		}
+
+		// ------------------------------------------------------------------ folha de atalhos
+		function keysHtml() {
+			function k(x) { return '<kbd>' + x + '</kbd>'; }
+			function combo(mod, x) { return k(mod) + '<i>+</i>' + k(x); }
+			var click = 'clique', cmdKey = IS_MAC ? '⌘' : 'Ctrl';
+			var groups = [
+				['Amostras', [
+					[k(click), 'aplicar no layer ou na propriedade'],
+					[combo(KEY.shift, click), 'aplicar no contorno'],
+					[combo(KEY.ctrl, click), 'copiar o valor'],
+					[combo(KEY.alt, click), 'excluir'],
+					[k('botão direito') + (IS_MAC ? '<i>ou</i>' + combo('Ctrl', click) : ''), 'editar'],
+					[k('arrastar'), 'reordenar'],
+					[k('Enter') + k('F2') + k('Delete'), 'em foco: aplicar · editar · excluir']
+				]],
+				['Painel', [
+					[k('+'), 'nova cor ou harmonia (o último modo)'],
+					[k('conta-gotas'), 'capturar cores dos layers'],
+					[combo(KEY.shift, 'conta-gotas'), 'capturar do projeto todo'],
+					[IS_MAC ? k('⌘V') : combo(cmdKey, 'V'), 'colar cores (hex, rgb, CSS, Coolors)'],
+					[IS_MAC ? k('⌘Z') : combo(cmdKey, 'Z'), 'desfazer'],
+					[k('?'), 'estes atalhos']
+				]],
+				['Presets', [
+					[k(click), 'substituir a paleta'],
+					[combo(KEY.shift, click), 'adicionar as cores que faltam'],
+					[k(click) + '<i>no projeto</i>', 'salvar como preset'],
+					[combo(KEY.shift, click) + '<i>no projeto</i>', 'atualizar o preset de origem'],
+					[k('F2') + k('Delete'), 'renomear · excluir'],
+					[k('⠿') + '<i>ou</i>' + k('↑↓'), 'reordenar']
+				]],
+				['Editor e harmonia', [
+					[k('Enter') + k('Esc'), 'confirmar · cancelar'],
+					[combo(KEY.shift, 'Enter'), 'harmonia: substituir a paleta'],
+					[k('←→↑↓'), 'ajustar (' + KEY.shift + ' anda mais)'],
+					[k('arrastar ponto'), 'girar a harmonia inteira']
+				]]
+			];
+			return groups.map(function (g) {
+				return '<section class="k-grp"><h4>' + g[0] + '</h4>' + g[1].map(function (r) {
+					return '<div class="k-row"><span class="k-keys">' + r[0] + '</span><span class="k-what">' + r[1] + '</span></div>';
+				}).join('') + '</section>';
+			}).join('');
+		}
+		function openKeys() {
+			if (anyFull()) return;
+			closeSettings();
+			hideTip();
+			keysSheet.querySelector('.k-body').innerHTML = '<div class="k-cols">' + keysHtml() + '</div>';
+			keysSheet.hidden = false;
+			el.classList.add('sheet-open');
+			keysSheet.animate([{ opacity: 0, transform: 'scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: EASE });
+			keysSheet.focus({ preventScroll: true });
+		}
+		function closeKeys() {
+			if (keysSheet.hidden || keysSheet.dataset.closing) return;
+			keysSheet.dataset.closing = '1';
+			keysSheet.animate([{ opacity: 1 }, { opacity: 0, transform: 'scale(.97)' }], { duration: 180, easing: EASE }).onfinish = function () {
+				delete keysSheet.dataset.closing;
+				keysSheet.hidden = true;
+				if (!isSheetOpen()) el.classList.remove('sheet-open');
+				el.focus({ preventScroll: true });
+			};
+		}
+		keysSheet.querySelector('.k-x').addEventListener('click', closeKeys);
+		keysSheet.addEventListener('keydown', function (e) {
+			if (e.key === 'Escape' || e.key === '?' || e.key === 'Enter') { e.preventDefault(); closeKeys(); }
+		});
+
 		// ------------------------------------------------------------------ teclado global
 		root.addEventListener('keydown', function (e) {
 			if (anyFull()) return;
+			var typing = e.target && e.target.closest && e.target.closest('input, textarea');
 			if (cmd(e) && !e.shiftKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
+			else if (cmd(e) && e.key.toLowerCase() === 'v' && !typing) waitPaste();
+			else if (e.key === '?' && !typing) { e.preventDefault(); openKeys(); }
 			else if (e.key === 'Escape') closeSettings();
 		});
 

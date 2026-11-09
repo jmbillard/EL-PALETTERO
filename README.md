@@ -20,6 +20,7 @@ o palletero guarda as cores do projeto num painel que você acopla em qualquer l
 - [criar harmonias](#-criar-harmonias)
 - [conta-gotas](#-conta-gotas)
 - [extrair cores de uma imagem](#-extrair-cores-de-uma-imagem)
+- [colar, importar e exportar](#-colar-importar-e-exportar)
 - [presets](#-presets)
 - [formatos do painel](#-formatos-do-painel)
 - [ajustes](#-ajustes)
@@ -93,8 +94,11 @@ o painel se chamava **O PALETTERO** até a v1.1. na primeira vez que o El PALLET
 
 - com **propriedades de cor selecionadas** (Fill, Stroke, Tint, a cor de um efeito, o Source Text…), só elas mudam.
 - sem propriedades selecionadas, cada layer ganha um efeito **Fill** com o nome da cor (`#FF4D4D`). aplicar outra cor **reaproveita** esse Fill em vez de empilhar outro.
+- `Shift` + `◖ clique` → **contorno**: pinta os traços (Stroke) dos shape layers e o contorno dos textos (o contorno do texto ganha 2 px se estava em zero). layers sem traço avisam em vez de ganhar um Fill. com o `Shift` seguro, o balde da amostra vira um anel.
 - com keyframes, a cor entra no tempo atual.
 - a última cor aplicada ganha um pontinho e passa a ser a cor de destaque do painel.
+
+com a paleta vazia, o painel oferece os caminhos para começar: **capturar**, **nova cor**, **presets**, **harmonia**, ou colar cores.
 
 > 🚩 *obs:*\
 > • cada aplicação é **um passo** de desfazer no After Effects (`El PALLETERO · aplicar #HEX`).\
@@ -245,6 +249,18 @@ o **conta-gotas**, com um layer de imagem selecionado (ou nada selecionado), lê
 
 <br>
 
+## 📍 colar, importar e exportar
+
+- **colar** → com o painel em foco, `Ctrl+V` / `⌘V` acha as cores em qualquer texto copiado: `#hex` (3, 6 ou 8 dígitos), `rgb()` / `rgba()`, `0xRRGGBB`, CSS, JSON, a URL do Coolors (`coolors.co/264653-2a9d8f-…`) ou uma lista de hex. em CSS e JSON o nome vem junto (`--primaria: #264653` → *primaria*). cores que já estão na paleta ficam de fora. tem desfazer.
+- **importar cores** (nos [ajustes](#-ajustes)) → abre um `.ase` (Illustrator, Photoshop, InDesign: RGB, CMYK, Lab e cinza) ou qualquer arquivo de texto com cores (`.css`, `.scss`, `.json`, `.txt`, `.svg`…). os nomes do arquivo viram os nomes das cores.
+- **exportar .ase** (nos ajustes) → grava a paleta do projeto como `.ase`, com os nomes, num grupo com o nome do projeto. abre no Illustrator, no Photoshop e no InDesign.
+
+<br>
+
+---
+
+<br>
+
 ## 📍 presets
 
 a paleta do projeto mora no `.aep`. os **presets** são uma biblioteca de paletas numa pasta que você escolhe, que pode ser uma pasta de rede da equipe.
@@ -292,8 +308,10 @@ o **⋯** (doca da direita) abre os ajustes no lugar das cores.
 - 👁 **valores sempre visíveis** → mostra os valores sem precisar passar o mouse (quando cabem).
 - 🏷 **mostrar nomes** → mostra o nome da cor nas amostras.
 - ⇅ **ordenar por matiz** → matiz → luminosidade → saturação, cinzas no fim.
+- ⤓ **importar cores** · ⤒ **exportar .ase** → veja [colar, importar e exportar](#-colar-importar-e-exportar).
 - 🗑 **segure para limpar** → segure o botão até a barra encher para esvaziar a paleta (tem desfazer).
-- **?** → esta documentação.
+- ⌨ **atalhos** → uma folha com todos os cliques e teclas (também com `?` no painel). `Esc` fecha.
+- **?** (o círculo) → esta documentação.
 
 <br>
 
@@ -306,6 +324,7 @@ o **⋯** (doca da direita) abre os ajustes no lugar das cores.
 | ação | Windows | macOS |
 | --- | --- | --- |
 | aplicar | `◖ clique` | `◖ clique` |
+| aplicar no contorno | `Shift` + `◖ clique` | `⇧` + `◖ clique` |
 | editar | `◗ clique direito` | `◗ clique direito` ou `Ctrl` + `◖ clique` |
 | copiar valor | `Ctrl` + `◖ clique` | `⌘` + `◖ clique` |
 | excluir | `Alt` + `◖ clique` | `⌥` + `◖ clique` |
@@ -313,6 +332,8 @@ o **⋯** (doca da direita) abre os ajustes no lugar das cores.
 | adicionar preset sem substituir | `Shift` + `◖ clique` no preset | `⇧` + `◖ clique` no preset |
 | harmonia: substituir a paleta | `Shift` + ✓ ou `Shift+Enter` | `⇧` + ✓ ou `⇧Return` |
 | desfazer (paleta) | `Ctrl+Z` | `⌘Z` |
+| colar cores | `Ctrl+V` | `⌘V` |
+| folha de atalhos | `?` | `?` |
 | confirmar / cancelar (editor, extração) | `Enter` / `Esc` | `Return` / `Esc` |
 | amostra em foco: aplicar · editar · excluir | `Enter` · `F2` · `Delete` | `Return` · `F2` · `Delete` |
 
