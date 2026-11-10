@@ -8,7 +8,13 @@ const ext = path.join(root, 'cep', 'com.jmbillard.elpalletero');
 const read = (p) => fs.readFileSync(p, 'utf8');
 
 const css = read(path.join(ext, 'css', 'panel.css'));
-const js = [
+// os .csv de idioma vão embutidos (no CEP o painel lê do disco)
+const csv = 'window.PAL_CSV = ' + JSON.stringify({
+	'i18n/strings.csv': read(path.join(ext, 'i18n', 'strings.csv')),
+	'i18n/colors.csv': read(path.join(ext, 'i18n', 'colors.csv'))
+}) + ';';
+const js = csv + '\n' + [
+	path.join(ext, 'js', 'i18n.js'),
 	path.join(ext, 'js', 'color.js'),
 	path.join(ext, 'js', 'names.js'),
 	path.join(ext, 'js', 'extract.js'),

@@ -1,0 +1,285 @@
+# El PALLETERO · textos da interface. Uma coluna por idioma (código de 2 letras).
+# Para um idioma novo, acrescente uma coluna (ex.: fr). Célula vazia usa a primeira coluna.
+# {n}, {name}… são trocados pelo valor; .one / .other são singular e plural.
+key,pt,en,es
+
+# painel
+lang.name,Português,English,Español
+tool.add,Nova cor,New color,Nuevo color
+tool.capture,Capturar cores,Capture colors,Capturar colores
+strip.label,Paleta,Palette,Paleta
+presets,Presets,Presets,Presets
+harmony,Harmonia,Harmony,Armonía
+settings,Ajustes,Settings,Ajustes
+btn.cancel,Cancelar,Cancel,Cancelar
+toast.undo,desfazer,undo,deshacer
+project.untitled,sem título,untitled,sin título
+colors.one,{n} cor,{n} color,{n} color
+colors.other,{n} cores,{n} colors,{n} colores
+
+# paleta vazia
+empty.title,Paleta vazia,Empty palette,Paleta vacía
+empty.capture,Capturar,Capture,Capturar
+empty.presets,Abrir um preset,Open a preset,Abrir un preset
+empty.harmony,Criar uma harmonia,Create a harmony,Crear una armonía
+empty.paste,ou cole cores,or paste colors,o pega colores
+
+# ajustes
+set.display,Exibir,Display,Mostrar
+set.format,Formato dos valores,Value format,Formato de los valores
+set.info,Valores sempre visíveis,Always show values,Valores siempre visibles
+set.names,Mostrar nomes,Show names,Mostrar nombres
+set.palette,Paleta,Palette,Paleta
+set.sort,Ordenar por matiz,Sort by hue,Ordenar por matiz
+set.import.tip,"Importar cores (.ase, .css, .txt…)","Import colors (.ase, .css, .txt…)","Importar colores (.ase, .css, .txt…)"
+set.import,Importar cores,Import colors,Importar colores
+set.export.tip,"Exportar .ase (Illustrator, Photoshop)","Export .ase (Illustrator, Photoshop)","Exportar .ase (Illustrator, Photoshop)"
+set.export,Exportar .ase,Export .ase,Exportar .ase
+set.clear,Segure para limpar,Hold to clear,Mantén pulsado para vaciar
+set.keys,Atalhos,Shortcuts,Atajos
+set.help.tip,Ajuda e documentação,Help and documentation,Ayuda y documentación
+set.help,Ajuda,Help,Ayuda
+set.lang,Idioma,Language,Idioma
+
+# dicas
+kbd.click,clique,click,clic
+kbd.right,botão dir.,right-click,clic der.
+tip.apply,aplicar,apply,aplicar
+tip.stroke,contorno,stroke,contorno
+tip.edit,editar,edit,editar
+tip.copy,copiar,copy,copiar
+tip.delete,excluir,delete,eliminar
+tip.add,adicionar,add,añadir
+tip.replace,substituir,replace,reemplazar
+tip.replacePalette,substituir a paleta,replace the palette,reemplazar la paleta
+tip.newHarmony,Nova harmonia,New harmony,Nueva armonía
+tip.closeSettings,Fechar ajustes,Close settings,Cerrar ajustes
+tip.closePresets,Fechar presets,Close presets,Cerrar presets
+tip.changeFolder,trocar pasta,change folder,cambiar carpeta
+tip.open,abrir,open,abrir
+sw.edit,Editar cor,Edit color,Editar color
+
+# aplicar e capturar
+reason.nocomp,Abra uma composição primeiro,Open a composition first,Abre una composición primero
+reason.nosel,Selecione um layer ou uma propriedade de cor,Select a layer or a color property,Selecciona una capa o una propiedad de color
+reason.nostroke,Nenhum contorno: o Shift pinta o traço de shapes e textos,No stroke: Shift paints the stroke of shapes and text,Sin contorno: Shift pinta el trazo de formas y textos
+reason.error,O After Effects recusou a cor,After Effects rejected the color,After Effects rechazó el color
+toast.removed,{name} removida,{name} removed,{name} eliminado
+toast.copied,{value} copiado,{value} copied,{value} copiado
+cap.wholeProject,projeto inteiro,whole project,proyecto entero
+cap.project,Capturar do projeto inteiro,Capture from the whole project,Capturar de todo el proyecto
+cap.frame,Extrair cores do frame,Extract colors from the frame,Extraer colores del fotograma
+cap.frameNote,nada selecionado: usa a comp,nothing selected: uses the comp,nada seleccionado: usa la composición
+cap.image,Extrair cores da imagem,Extract colors from the image,Extraer colores de la imagen
+cap.props,Capturar as propriedades selecionadas,Capture the selected properties,Capturar las propiedades seleccionadas
+cap.layers,Capturar as cores dos layers,Capture the layers' colors,Capturar los colores de las capas
+cap.nocomp,Abra uma composição,Open a composition,Abre una composición
+cap.noneNew,Nenhuma cor nova encontrada,No new colors found,No se encontraron colores nuevos
+cap.nosel,Selecione layers ou propriedades com cor,Select layers or color properties,Selecciona capas o propiedades con color
+cap.fromProject,do projeto,from the project,del proyecto
+cap.fail,Falha ao capturar cores,Couldn't capture colors,No se pudieron capturar los colores
+sort.already,A paleta já está em ordem,The palette is already sorted,La paleta ya está ordenada
+sort.done,Ordenada por matiz,Sorted by hue,Ordenada por matiz
+clear.done,Paleta limpa,Palette cleared,Paleta vaciada
+err.save,Não foi possível salvar no projeto,Couldn't save to the project,No se pudo guardar en el proyecto
+undo.none,Nada para desfazer,Nothing to undo,Nada que deshacer
+undo.preset,Preset restaurado,Preset restored,Preset restaurado
+undo.done,Desfeito,Undone,Deshecho
+added.from.one,+{n} cor de {name},+{n} color from {name},+{n} color de {name}
+added.from.other,+{n} cores de {name},+{n} colors from {name},+{n} colores de {name}
+
+# presets
+lib.readFail,Não foi possível ler a pasta de presets,Couldn't read the presets folder,No se pudo leer la carpeta de presets
+lib.savedIn,Salva em {name},Saved in {name},Guardada en {name}
+lib.savePreset,Salvar preset,Save preset,Guardar preset
+lib.update,Atualizar {name},Update {name},Actualizar {name}
+lib.shiftUpdates,atualiza {name},updates {name},actualiza {name}
+lib.project,Paleta deste projeto,This project's palette,Paleta de este proyecto
+lib.theFolder,A pasta,The folder,La carpeta
+lib.offline,{name} não está acessível,{name} is not accessible,{name} no está accesible
+lib.stillOffline,{name} continua inacessível,{name} is still not accessible,{name} sigue sin estar accesible
+lib.mount,Montar,Mount,Montar
+lib.retry,Tentar de novo,Try again,Reintentar
+lib.local,Usar a pasta local,Use the local folder,Usar la carpeta local
+lib.grip,Arraste para reordenar (ou use as setas),Drag to reorder (or use the arrow keys),Arrastra para reordenar (o usa las flechas)
+lib.rename,Renomear,Rename,Renombrar
+lib.default,Padrão para projetos sem paleta,Default for projects without a palette,Predeterminado para proyectos sin paleta
+lib.delete,Excluir preset,Delete preset,Eliminar preset
+lib.applied,{name} aplicado ao projeto,{name} applied to the project,{name} aplicado al proyecto
+lib.empty,A paleta do projeto está vazia,The project palette is empty,La paleta del proyecto está vacía
+lib.myPalette,minha paleta,my palette,mi paleta
+lib.folderOffline,A pasta de presets não está acessível,The presets folder is not accessible,La carpeta de presets no está accesible
+lib.readonly,A pasta de presets não aceita gravação,The presets folder is read-only,La carpeta de presets es de solo lectura
+lib.updated,{name} atualizado,{name} updated,{name} actualizado
+lib.isDefault,{name} é o padrão para projetos sem paleta,{name} is the default for projects without a palette,{name} es el predeterminado para proyectos sin paleta
+lib.noDefault,Sem preset padrão,No default preset,Sin preset predeterminado
+lib.deleteFail,Não foi possível excluir o preset,Couldn't delete the preset,No se pudo eliminar el preset
+lib.deleted,{name} excluído,{name} deleted,{name} eliminado
+lib.notAccessible,A pasta não está acessível,The folder is not accessible,La carpeta no está accesible
+lib.from,Presets de {path},Presets from {path},Presets de {path}
+lib.orderFail,Não foi possível salvar a ordem,Couldn't save the order,No se pudo guardar el orden
+lib.carry,Mova e clique para soltar · Esc cancela,Move and click to drop · Esc cancels,Mueve y haz clic para soltar · Esc cancela
+
+# extrair
+ex.title,Extrair cores,Extract colors,Extraer colores
+ex.less,Menos cores,Fewer colors,Menos colores
+ex.more,Mais cores,More colors,Más colores
+ex.ok,Adicionar à paleta,Add to palette,Añadir a la paleta
+ex.readFail,Não foi possível ler o frame,Couldn't read the frame,No se pudo leer el fotograma
+ex.frame,frame,frame,fotograma
+ex.reading,lendo imagem,reading image,leyendo imagen
+ex.rendering,renderizando frame,rendering frame,renderizando fotograma
+ex.timeout,O frame demorou demais para renderizar,The frame took too long to render,El fotograma tardó demasiado en renderizarse
+ex.noneSelected,Nenhuma cor nova selecionada,No new colors selected,No hay colores nuevos seleccionados
+
+# editor
+ed.title,Editor de cor,Color editor,Editor de color
+ed.old,Voltar à cor original,Back to the original color,Volver al color original
+ed.name,nome da cor,color name,nombre del color
+ed.auto,Nome automático,Automatic name,Nombre automático
+ed.sv,Saturação e brilho,Saturation and brightness,Saturación y brillo
+ed.hue,Matiz,Hue,Matiz
+ed.fmt,Alternar HEX · RGB · HSB,Switch HEX · RGB · HSB,Cambiar HEX · RGB · HSB
+ed.value,Valor da cor,Color value,Valor del color
+ed.harmony,Criar harmonia,Create harmony,Crear armonía
+ed.delete,Excluir cor,Delete color,Eliminar color
+ed.apply,Aplicar,Apply,Aplicar
+ed.added,Cor adicionada,Color added,Color añadido
+
+# harmonia
+hm.map,Matiz e saturação · arraste qualquer ponto para girar,Hue and saturation · drag any point to rotate,Matiz y saturación · arrastra cualquier punto para girar
+hm.bri,Brilho,Brightness,Brillo
+hm.gen,Cores geradas,Generated colors,Colores generados
+hm.open,Abertura,Spread,Apertura
+hm.openTip,Abertura · {deg}°,Spread · {deg}°,Apertura · {deg}°
+hm.steps,Degraus de brilho,Brightness steps,Escalones de brillo
+hm.steps.one,Um tom por cor,One shade per color,Un tono por color
+hm.steps.other,{n} tons por cor,{n} shades per color,{n} tonos por color
+hm.save,Salvar como preset,Save as preset,Guardar como preset
+hm.single,Editar 1 cor,Edit 1 color,Editar 1 color
+hm.add,Adicionar,Add,Añadir
+hm.out,fora,left out,fuera
+hm.already,Essas cores já estão na paleta,These colors are already in the palette,Estos colores ya están en la paleta
+hm.replaced,Paleta trocada por {colors} · {rule},Palette replaced with {colors} · {rule},Paleta reemplazada por {colors} · {rule}
+hm.presetName,{rule} {color},{color} {rule},{rule} {color}
+hm.saved,Preset salvo · {name},Preset saved · {name},Preset guardado · {name}
+hm.saveFail,Não foi possível salvar o preset,Couldn't save the preset,No se pudo guardar el preset
+rule.ana,análoga,analogous,análoga
+rule.mono,monocromática,monochromatic,monocromática
+rule.comp,complementar,complementary,complementaria
+rule.split,complementar dividida,split complementary,complementaria dividida
+rule.tri,tríade,triad,tríada
+rule.tet,tétrade,tetrad,tétrada
+rule.sq,quadrado,square,cuadrado
+
+# colar, importar e exportar
+io.none,Nenhuma cor encontrada,No colors found,No se encontraron colores
+io.noneIn,Nenhuma cor encontrada em {from},No colors found in {from},No se encontraron colores en {from}
+io.pasted,colado,pasted,pegado
+io.clipFail,Não foi possível ler a área de transferência,Couldn't read the clipboard,No se pudo leer el portapapeles
+io.readFail,Não foi possível ler o arquivo,Couldn't read the file,No se pudo leer el archivo
+io.aseFail,Esse .ase não pôde ser lido,This .ase couldn't be read,No se pudo leer este .ase
+io.writeFail,Não foi possível gravar o arquivo,Couldn't write the file,No se pudo guardar el archivo
+io.exported,Exportada · {name},Exported · {name},Exportada · {name}
+
+# folha de atalhos
+k.close,Fechar (Esc),Close (Esc),Cerrar (Esc)
+k.swatches,Amostras,Swatches,Muestras
+k.applyLayer,aplicar no layer ou na propriedade,apply to the layer or property,aplicar a la capa o propiedad
+k.applyStroke,aplicar no contorno,apply to the stroke,aplicar al contorno
+k.copy,copiar o valor,copy the value,copiar el valor
+k.right,botão direito,right-click,clic derecho
+k.or,ou,or,o
+k.drag,arrastar,drag,arrastrar
+k.reorder,reordenar,reorder,reordenar
+k.focus,em foco: aplicar · editar · excluir,focused: apply · edit · delete,con foco: aplicar · editar · eliminar
+k.panel,Painel,Panel,Panel
+k.add,nova cor ou harmonia (o último modo),new color or harmony (last mode used),nuevo color o armonía (el último modo)
+k.pipette,conta-gotas,eyedropper,cuentagotas
+k.capture,capturar cores dos layers,capture colors from layers,capturar colores de las capas
+k.captureAll,capturar do projeto todo,capture from the whole project,capturar de todo el proyecto
+k.paste,"colar cores (hex, rgb, CSS, Coolors)","paste colors (hex, rgb, CSS, Coolors)","pegar colores (hex, rgb, CSS, Coolors)"
+k.these,estes atalhos,these shortcuts,estos atajos
+k.addMissing,adicionar as cores que faltam,add the missing colors,añadir los colores que faltan
+k.onProject,no projeto,on the project,en el proyecto
+k.saveAs,salvar como preset,save as preset,guardar como preset
+k.updateOrigin,atualizar o preset de origem,update the source preset,actualizar el preset de origen
+k.renameDelete,renomear · excluir,rename · delete,renombrar · eliminar
+k.editor,Editor e harmonia,Editor and harmony,Editor y armonía
+k.confirmCancel,confirmar · cancelar,confirm · cancel,confirmar · cancelar
+k.hmReplace,harmonia: substituir a paleta,harmony: replace the palette,armonía: reemplazar la paleta
+k.adjust,ajustar ({shift} anda mais),adjust ({shift} for bigger steps),ajustar ({shift} avanza más)
+k.dragPoint,arrastar ponto,drag a point,arrastrar un punto
+k.rotate,girar a harmonia inteira,rotate the whole harmony,girar toda la armonía
+
+# nomes automáticos
+names.lighter,suave,soft,suave
+names.deeper,forte,deep,intenso
+
+# After Effects (host.jsx)
+host.undo.apply,El PALLETERO · aplicar {hex},El PALLETERO · apply {hex},El PALLETERO · aplicar {hex}
+host.undo.frame,El PALLETERO · extrair frame,El PALLETERO · extract frame,El PALLETERO · extraer fotograma
+host.dlg.folder,Pasta de presets do El PALLETERO,El PALLETERO presets folder,Carpeta de presets de El PALLETERO
+host.dlg.import,"Importar cores (.ase, .css, .txt…)","Import colors (.ase, .css, .txt…)","Importar colores (.ase, .css, .txt…)"
+host.dlg.export,Exportar paleta (.ase),Export palette (.ase),Exportar paleta (.ase)
+host.filter.colors,Cores,Colors,Colores
+host.filter.all,Todos,All files,Todos
+host.ex.por-do-sol,Pôr do sol,Sunset,Atardecer
+host.ex.sorveteria,Sorveteria,Ice cream parlor,Heladería
+host.ex.neon,Neon,Neon,Neón
+host.ex.oceano,Oceano,Ocean,Océano
+host.ex.floresta,Floresta,Forest,Bosque
+host.ex.terroso,Terroso,Earthy,Terroso
+host.ex.tropical,Tropical,Tropical,Tropical
+host.ex.retro-70,Retrô 70,Retro 70s,Retro 70
+host.ex.noite-urbana,Noite urbana,City night,Noche urbana
+host.ex.brasil,Brasil,Brazil,Brasil
+host.ex.pastel,Pastel,Pastel,Pastel
+host.ex.monocromatico,Monocromático,Monochrome,Monocromático
+
+# instalador (INSTALAR El PALLETERO.jsx) · \n = quebra de linha
+inst.title,instalador,installer,instalador
+inst.welcome,"olá! vamos instalar o El PALLETERO no After Effects.\n\na extensão será copiada para este computador: depois de instalada ela não depende mais desta pasta. para atualizar, rode o instalador da versão nova.","hi! let's install El PALLETERO in After Effects.\n\nthe extension will be copied to this computer: once installed, it no longer depends on this folder. to update, run the installer of the new version.","¡hola! vamos a instalar El PALLETERO en After Effects.\n\nla extensión se copiará a este ordenador: una vez instalada, ya no depende de esta carpeta. para actualizar, ejecuta el instalador de la versión nueva."
+inst.legacyNote,"a versão com o nome antigo (O PALETTERO) será substituída. paletas, presets e preferências são mantidos.","the version with the old name (O PALETTERO) will be replaced. palettes, presets and preferences are kept.","la versión con el nombre antiguo (O PALETTERO) será reemplazada. se conservan las paletas, los presets y las preferencias."
+inst.checking,conferindo o que o El PALLETERO precisa:,checking what El PALLETERO needs:,comprobando lo que El PALLETERO necesita:
+inst.chk.ae,After Effects 2022 ou mais novo,After Effects 2022 or newer,After Effects 2022 o más reciente
+inst.chk.ae.help,o El PALLETERO precisa do After Effects 2022 (22.0) ou mais novo.,El PALLETERO needs After Effects 2022 (22.0) or newer.,El PALLETERO necesita After Effects 2022 (22.0) o más reciente.
+inst.chk.write,acesso à rede e escrita de arquivos,network access and file writing,acceso a la red y escritura de archivos
+inst.chk.write.help,"habilite ""Allow Scripts to Write Files and Access Network"" nas preferências de scripts e expressões.","turn on ""Allow Scripts to Write Files and Access Network"" in the Scripting & Expressions preferences.","activa ""Allow Scripts to Write Files and Access Network"" en las preferencias de scripts y expresiones."
+inst.chk.files,"pasta ""cep/{id}"" ao lado do instalador","""cep/{id}"" folder next to the installer","carpeta ""cep/{id}"" junto al instalador"
+inst.chk.files.help,"rode o instalador direto da pasta do El PALLETERO (a que tem a pasta ""cep"").","run the installer straight from the El PALLETERO folder (the one with the ""cep"" folder).","ejecuta el instalador directamente desde la carpeta de El PALLETERO (la que tiene la carpeta ""cep"")."
+inst.prefs,› abrir preferências de scripts e expressões,› open the Scripting & Expressions preferences,› abrir las preferencias de scripts y expresiones
+inst.recheck,› verificar de novo,› check again,› comprobar de nuevo
+inst.allGood,tudo certo!,all good!,¡todo listo!
+inst.ready,tudo certo por aqui! a extensão será copiada para este computador e não depende mais desta pasta.,all good! the extension will be copied to this computer and no longer depends on this folder.,¡todo listo! la extensión se copiará a este ordenador y ya no dependerá de esta carpeta.
+inst.installedMsg,o El PALLETERO{ver} já está instalado neste computador,El PALLETERO{ver} is already installed on this computer,El PALLETERO{ver} ya está instalado en este ordenador
+inst.folderHas,(esta pasta tem a v{ver}),(this folder has v{ver}),(esta carpeta tiene la v{ver})
+inst.whatToDo,o que você quer fazer?,what do you want to do?,¿qué quieres hacer?
+inst.legacyMsg,o O PALETTERO (nome antigo) está instalado: ele será trocado pelo El PALLETERO.,O PALETTERO (the old name) is installed: it will be replaced by El PALLETERO.,O PALETTERO (nombre antiguo) está instalado: será reemplazado por El PALLETERO.
+inst.install,instalar,install,instalar
+inst.reinstall,reinstalar,reinstall,reinstalar
+inst.update,atualizar,update,actualizar
+inst.remove,remover,remove,eliminar
+inst.install.tip,copia a extensão para este computador.,copies the extension to this computer.,copia la extensión a este ordenador.
+inst.remove.tip,remove o El PALLETERO deste computador (paletas nos projetos e presets ficam).,removes El PALLETERO from this computer (palettes in projects and presets stay).,elimina El PALLETERO de este ordenador (las paletas de los proyectos y los presets se quedan).
+inst.source,origem: {path},source: {path},origen: {path}
+inst.dest,destino: {path},destination: {path},destino: {path}
+inst.cancel,cancelar,cancel,cancelar
+inst.back,anterior,back,anterior
+inst.start,começar,start,empezar
+inst.next,próximo,next,siguiente
+inst.finish,concluir,finish,finalizar
+inst.removingOld,removendo a cópia anterior…,removing the previous copy…,eliminando la copia anterior…
+inst.failed,não foi possível instalar,installation failed,no se pudo instalar
+inst.removeOldFail,"não foi possível remover a versão anterior em:\n{path}\n\nfeche o After Effects, apague a pasta ""{id}"" (e ""{old}"", se existir) e rode o instalador de novo.","couldn't remove the previous version in:\n{path}\n\nclose After Effects, delete the ""{id}"" folder (and ""{old}"", if it exists) and run the installer again.","no se pudo eliminar la versión anterior en:\n{path}\n\ncierra After Effects, borra la carpeta ""{id}"" (y ""{old}"", si existe) y vuelve a ejecutar el instalador."
+inst.copying,copiando a extensão…,copying the extension…,copiando la extensión…
+inst.copyFail,não foi possível copiar {n} arquivo(s) para:\n{path},couldn't copy {n} file(s) to:\n{path},no se pudieron copiar {n} archivo(s) a:\n{path}
+inst.debug,liberando extensões sem assinatura…,allowing unsigned extensions…,permitiendo extensiones sin firmar…
+inst.done,pronto!,done!,¡listo!
+inst.installedOk,{name} instalado! ({n} arquivos),{name} installed! ({n} files),¡{name} instalado! ({n} archivos)
+inst.updatedOk,{name} atualizado! ({n} arquivos),{name} updated! ({n} files),¡{name} actualizado! ({n} archivos)
+inst.restart,reinicie o After Effects e abra o painel em:\nWindow > Extensions > El PALLETERO,restart After Effects and open the panel at:\nWindow > Extensions > El PALLETERO,reinicia After Effects y abre el panel en:\nWindow > Extensions > El PALLETERO
+inst.macNote,"se não aparecer, reinicie o computador (no macOS a liberação das extensões às vezes só vale depois disso).","if it doesn't show up, restart the computer (on macOS, allowing extensions sometimes only takes effect after that).","si no aparece, reinicia el ordenador (en macOS, a veces la autorización de extensiones solo surte efecto después)."
+inst.removing,removendo…,removing…,eliminando…
+inst.removed,o El PALLETERO foi removido deste computador.\n\nas paletas salvas nos projetos e os presets continuam onde estão.\nreinicie o After Effects.,El PALLETERO was removed from this computer.\n\npalettes saved in projects and presets stay where they are.\nrestart After Effects.,El PALLETERO se eliminó de este ordenador.\n\nlas paletas guardadas en los proyectos y los presets siguen donde están.\nreinicia After Effects.
+inst.removeFail,não foi possível remover:\n{path}\n\nfeche o After Effects e apague essa pasta manualmente.,couldn't remove:\n{path}\n\nclose After Effects and delete that folder manually.,no se pudo eliminar:\n{path}\n\ncierra After Effects y borra esa carpeta manualmente.

@@ -42,13 +42,13 @@ function run(opts) {
 	Folder.temp = new Folder(os.tmpdir());
 	const ctx = {
 		$: { os: opts.os || 'Windows', fileName: SCRIPT }, File, Folder, decodeURI, encodeURI,
-		app: { version: opts.ae || '25.1.0', preferences: { getPrefAsLong: () => 1 }, executeCommand() { } },
+		app: { version: opts.ae || '25.1.0', isoLanguage: opts.lang || 'pt_BR', preferences: { getPrefAsLong: () => 1 }, executeCommand() { } },
 		system: { callSystem: c => { calls.push(c); const m = c.match(/^rm -rf "(.*)"$/); if (m) fs.rmSync(m[1], { recursive: true, force: true }); return ''; } },
 		Window: function (t, title) { win = ctrl('window', title); return win; }
 	};
 	vm.createContext(ctx);
 	vm.runInContext(fs.readFileSync(SCRIPT, 'utf8'), ctx);
-	const nextBtn = () => Object.values(buttons).find(b => b.type === 'button' && !['cancelar', 'anterior'].includes(b.text) && b.onClick);
+	const nextBtn = () => Object.values(buttons).find(b => b.type === 'button' && !['cancelar', 'anterior', 'cancel', 'back', 'cancelar', 'anterior'].includes(b.text) && b.onClick);
 	const log = [];
 	for (const step of opts.clicks) {
 		if (step === 'opção:remover') { buttons['remover'].value = true; const i = Object.values(buttons).find(b => b.type === 'radiobutton' && b.text !== 'remover'); i.value = false; continue; }
@@ -107,6 +107,17 @@ console.log('6. After Effects 2021');
 r = run({ userData: path.join(tmp, 'old'), ae: '18.4.1', clicks: ['começar', 'próximo'] });
 assert(r.log.includes('(bloqueado)')); ok('checagem bloqueia o "próximo"');
 assert(r.texts.some(t => /2022/.test(t))); ok('explica: precisa do 2022');
+
+console.log('7. After Effects em inglês e em espanhol');
+r = run({ userData: path.join(tmp, 'en'), lang: 'en_US', clicks: ['install'] });
+assert(r.radios.includes('install')); ok('opções: ' + r.radios.join(' · '));
+assert(r.texts.some(t => /installed!/.test(t))); ok('conclusão: "' + r.texts.find(t => /installed!/.test(t)).split('\n')[0] + '"');
+assert(r.texts.some(t => /^restart After Effects/m.test(t))); ok('quebras de linha do CSV viram linhas');
+r = run({ userData: path.join(tmp, 'es'), lang: 'es_ES', clicks: [] });
+assert(r.radios.includes('instalar') && r.radios.includes('eliminar (desligado)')); ok('opções: ' + r.radios.join(' · '));
+assert(r.texts.some(t => /necesita|todo listo/.test(t))); ok('textos em espanhol');
+r = run({ userData: path.join(tmp, 'fr'), lang: 'fr_FR', clicks: [] });
+assert(r.radios.includes('install')); ok('idioma sem coluna (francês): inglês');
 
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log('\ntudo certo.');

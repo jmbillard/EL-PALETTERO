@@ -147,6 +147,7 @@
 		savePalette: function (swatches, preset) { return call('savePalette', JSON.stringify(swatches), preset); },
 		loadPrefs: function () { return call('loadPrefs'); },
 		savePrefs: function (prefs) { return call('savePrefs', JSON.stringify(prefs)); },
+		setStrings: function (map) { return call('setStrings', JSON.stringify(map)); },
 		apply: function (hex, opts) { return call('apply', hex, JSON.stringify(opts || {})); },
 		capture: function (scope) { return call('capture', scope); },
 		inspect: function () { return call('inspect'); },

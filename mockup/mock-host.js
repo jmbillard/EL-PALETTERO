@@ -154,12 +154,22 @@
 			if (preset !== undefined) p.preset = preset;
 			return { ok: true };
 		},
-		loadPrefs: function () { return prefs; },
+		// idioma: guardado no navegador (o mockup recarrega ao trocar); ?lang=en na URL simula o After em inglês
+		loadPrefs: function () {
+			var out = {}, k;
+			for (k in prefs) out[k] = prefs[k];
+			try { out.lang = localStorage.getItem('mock.lang') || ''; } catch (e) {}
+			var m = /[?&]lang=([\w-]+)/.exec(root.location.search);
+			out.aeLang = m ? m[1] : root.navigator.language;
+			return out;
+		},
 		savePrefs: function (json) {
 			var n = JSON.parse(json);
 			for (var k in n) prefs[k] = n[k];
+			if (n.lang) { try { localStorage.setItem('mock.lang', n.lang); } catch (e) {} }
 			return { ok: true };
 		},
+		setStrings: function () { return { ok: true }; },
 		savePresetOrder: function (json) { orders[prefs.presetFolder] = JSON.parse(json); return { ok: true }; },
 		listPresets: function () {
 			if (prefs.presetFolder === OFFLINE && !mounted) return { folder: OFFLINE, offline: true, volume: 'PROMO', canMount: true, presets: [] };

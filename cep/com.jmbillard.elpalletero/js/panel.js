@@ -8,7 +8,10 @@
 	var N = root.PalNames;
 	var X = root.PalExtract;
 	var IO = root.PalIO;
-	var VERSION = 'v1.4.0';
+	var I18N = root.PalI18n;
+	function T(k, v) { return I18N.t(k, v); }
+	function Tn(k, n, v) { return I18N.n(k, n, v); }
+	var VERSION = 'v1.5.0';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
@@ -102,94 +105,97 @@
 		el.tabIndex = -1;
 		el.innerHTML = [
 			'<div class="dock dock-a">',
-			'  <button class="tool" data-act="add" aria-label="Nova cor">' + ic('plus') + '</button>',
-			'  <button class="tool" data-act="capture" aria-label="Capturar cores"><span class="swap">' + ic('pipette') + ic('image') + ic('layers') + '</span></button>',
+			'  <button class="tool" data-act="add" aria-label="{{tool.add}}">' + ic('plus') + '</button>',
+			'  <button class="tool" data-act="capture" aria-label="{{tool.capture}}"><span class="swap">' + ic('pipette') + ic('image') + ic('layers') + '</span></button>',
 			'</div>',
-			'<div class="strip" role="list" aria-label="Paleta"></div>',
-			'<div class="empty" hidden>' + LOGO + '<span>Paleta vazia</span>',
-			'  <button class="row-btn" data-act="capture">' + ic('pipette') + '<span class="lbl">Capturar</span></button>',
-			'  <button class="row-btn" data-act="add">' + ic('plus') + '<span class="lbl">Nova cor</span></button>',
-			'  <button class="row-btn" data-act="library" data-tip="Abrir um preset">' + ic('library') + '<span class="lbl">Presets</span></button>',
-			'  <button class="row-btn" data-act="harmony" data-tip="Criar uma harmonia">' + ic('wheel') + '<span class="lbl">Harmonia</span></button>',
-			'  <span class="empty-hint">ou cole cores <kbd>' + (IS_MAC ? '⌘V' : 'Ctrl+V') + '</kbd></span>',
+			'<div class="strip" role="list" aria-label="{{strip.label}}"></div>',
+			'<div class="empty" hidden>' + LOGO + '<span>{{empty.title}}</span>',
+			'  <button class="row-btn" data-act="capture">' + ic('pipette') + '<span class="lbl">{{empty.capture}}</span></button>',
+			'  <button class="row-btn" data-act="add">' + ic('plus') + '<span class="lbl">{{tool.add}}</span></button>',
+			'  <button class="row-btn" data-act="library" data-tip="{{empty.presets}}">' + ic('library') + '<span class="lbl">{{presets}}</span></button>',
+			'  <button class="row-btn" data-act="harmony" data-tip="{{empty.harmony}}">' + ic('wheel') + '<span class="lbl">{{harmony}}</span></button>',
+			'  <span class="empty-hint">{{empty.paste}} <kbd>' + (IS_MAC ? '⌘V' : 'Ctrl+V') + '</kbd></span>',
 			'</div>',
 			'<div class="dock dock-b">',
-			'  <button class="tool" data-act="library" aria-label="Presets"><span class="swap">' + ic('library') + ic('x') + '</span></button>',
-			'  <button class="tool" data-act="menu" aria-label="Ajustes"><span class="swap">' + ic('more') + ic('x') + '</span></button>',
+			'  <button class="tool" data-act="library" aria-label="{{presets}}"><span class="swap">' + ic('library') + ic('x') + '</span></button>',
+			'  <button class="tool" data-act="menu" aria-label="{{settings}}"><span class="swap">' + ic('more') + ic('x') + '</span></button>',
 			'</div>',
 			'<div class="sheet settings" hidden>',
-			'  <div class="grp"><span class="grp-title">Exibir</span>',
-			'    <div class="seg" data-tip="Formato dos valores"><span class="seg-pill"></span>',
+			'  <div class="grp"><span class="grp-title">{{set.display}}</span>',
+			'    <div class="seg" data-tip="{{set.format}}"><span class="seg-pill"></span>',
 			'      <button data-fmt="HEX">HEX</button><button data-fmt="RGB">RGB</button><button data-fmt="HSB">HSB</button></div>',
-			'    <button class="row-btn" data-act="toggle-info" data-tip="Valores sempre visíveis">' + ic('eye') + '<span class="lbl">Valores sempre visíveis</span></button>',
-			'    <button class="row-btn" data-act="toggle-names" data-tip="Mostrar nomes">' + ic('tag') + '<span class="lbl">Mostrar nomes</span></button>',
+			'    <button class="row-btn" data-act="toggle-info" data-tip="{{set.info}}">' + ic('eye') + '<span class="lbl">{{set.info}}</span></button>',
+			'    <button class="row-btn" data-act="toggle-names" data-tip="{{set.names}}">' + ic('tag') + '<span class="lbl">{{set.names}}</span></button>',
 			'  </div>',
 			'  <span class="vr"></span>',
-			'  <div class="grp"><span class="grp-title">Paleta</span>',
-			'    <button class="row-btn" data-act="sort" data-tip="Ordenar por matiz">' + ic('sort') + '<span class="lbl">Ordenar por matiz</span></button>',
-			'    <button class="row-btn" data-act="import" data-tip="Importar cores (.ase, .css, .txt…)">' + ic('import') + '<span class="lbl">Importar cores</span></button>',
-			'    <button class="row-btn" data-act="export" data-tip="Exportar .ase (Illustrator, Photoshop)">' + ic('export') + '<span class="lbl">Exportar .ase</span></button>',
-			'    <button class="row-btn danger" data-act="clear" data-tip="Segure para limpar">' + ic('trash') + '<span class="lbl">Segure para limpar</span><i class="hold"></i></button>',
+			'  <div class="grp"><span class="grp-title">{{set.palette}}</span>',
+			'    <button class="row-btn" data-act="sort" data-tip="{{set.sort}}">' + ic('sort') + '<span class="lbl">{{set.sort}}</span></button>',
+			'    <button class="row-btn" data-act="import" data-tip="{{set.import.tip}}">' + ic('import') + '<span class="lbl">{{set.import}}</span></button>',
+			'    <button class="row-btn" data-act="export" data-tip="{{set.export.tip}}">' + ic('export') + '<span class="lbl">{{set.export}}</span></button>',
+			'    <button class="row-btn danger" data-act="clear" data-tip="{{set.clear}}">' + ic('trash') + '<span class="lbl">{{set.clear}}</span><i class="hold"></i></button>',
 			'  </div>',
 			'  <span class="vr"></span>',
-			'  <div class="grp"><button class="row-btn" data-act="keys" data-tip="Atalhos" data-kbd="?">' + ic('keyboard') + '<span class="lbl">Atalhos</span></button><button class="row-btn" data-act="help" data-tip="Ajuda e documentação">' + ic('help') + '<span class="lbl">Ajuda</span></button><span class="ver">' + VERSION + '</span></div>',
+			'  <div class="grp"><button class="row-btn" data-act="keys" data-tip="{{set.keys}}" data-kbd="?">' + ic('keyboard') + '<span class="lbl">{{set.keys}}</span></button><button class="row-btn" data-act="help" data-tip="{{set.help.tip}}">' + ic('help') + '<span class="lbl">{{set.help}}</span></button><span class="ver">' + VERSION + '</span></div>',
+			'  <span class="vr"></span>',
+			'  <div class="grp"><span class="grp-title">{{set.lang}}</span><div class="seg lang-seg" data-tip="{{set.lang}}"><span class="seg-pill"></span>' +
+				I18N.langs().map(function (l) { return '<button data-lang="' + l + '" aria-label="' + esc(I18N.name(l)) + '">' + l.toUpperCase() + '</button>'; }).join('') + '</div></div>',
 			'</div>',
 			'<div class="sheet library" hidden>',
 			'  <div class="lib-list" role="list"></div>',
 			'  <button class="lib-folder" data-act="folder">' + ic('folder') + '<span class="lib-path"></span></button>',
 			'</div>',
-			'<div class="sheet extract" hidden tabindex="-1" role="dialog" aria-label="Extrair cores">',
+			'<div class="sheet extract" hidden tabindex="-1" role="dialog" aria-label="{{ex.title}}">',
 			'  <div class="ed-flood"></div>',
 			'  <div class="ex-img"><div class="ex-stage"><img alt=""><div class="ex-marks"></div><span class="ex-loupe"><i></i></span></div><span class="ex-wait"><span class="ex-wait-txt"></span></span></div>',
 			'  <div class="ex-side">',
 			'    <div class="ex-head">' + ic('image') + '<span class="ex-label"></span></div>',
 			'    <div class="ex-chips"></div>',
 			'    <div class="ex-ctrl">',
-			'      <div class="ex-count"><button class="ex-step" data-d="-1" data-tip="Menos cores">' + ic('minus') + '</button><span class="ex-n">6</span><button class="ex-step" data-d="1" data-tip="Mais cores">' + ic('plus') + '</button></div>',
-			'      <button class="ed-btn cancel" data-tip="Cancelar" data-kbd="Esc">' + ic('x') + '</button>',
-			'      <button class="ed-btn ok" data-tip="Adicionar à paleta" data-kbd="Enter">' + ic('check') + '</button>',
+			'      <div class="ex-count"><button class="ex-step" data-d="-1" data-tip="{{ex.less}}">' + ic('minus') + '</button><span class="ex-n">6</span><button class="ex-step" data-d="1" data-tip="{{ex.more}}">' + ic('plus') + '</button></div>',
+			'      <button class="ed-btn cancel" data-tip="{{btn.cancel}}" data-kbd="Esc">' + ic('x') + '</button>',
+			'      <button class="ed-btn ok" data-tip="{{ex.ok}}" data-kbd="Enter">' + ic('check') + '</button>',
 			'    </div>',
 			'  </div>',
 			'</div>',
-			'<div class="sheet editor" hidden tabindex="-1" role="dialog" aria-label="Editor de cor">',
+			'<div class="sheet editor" hidden tabindex="-1" role="dialog" aria-label="{{ed.title}}">',
 			'  <div class="ed-flood"></div>',
-			'  <div class="ed-prev"><button class="ed-old" data-tip="Voltar à cor original">' + ic('undo') + '</button>',
-			'    <div class="ed-new"><input class="ed-name" id="pal-ed-name" placeholder="nome da cor" maxlength="40" spellcheck="false" autocomplete="off"><button class="ed-auto" type="button" data-tip="Nome automático">' + ic('sparkle') + '</button></div></div>',
-			'  <div class="ed-sv" tabindex="0" aria-label="Saturação e brilho"><span class="knob"></span></div>',
-			'  <div class="ed-hue" tabindex="0" aria-label="Matiz"><span class="knob"></span></div>',
+			'  <div class="ed-prev"><button class="ed-old" data-tip="{{ed.old}}">' + ic('undo') + '</button>',
+			'    <div class="ed-new"><input class="ed-name" id="pal-ed-name" placeholder="{{ed.name}}" maxlength="40" spellcheck="false" autocomplete="off"><button class="ed-auto" type="button" data-tip="{{ed.auto}}">' + ic('sparkle') + '</button></div></div>',
+			'  <div class="ed-sv" tabindex="0" aria-label="{{ed.sv}}"><span class="knob"></span></div>',
+			'  <div class="ed-hue" tabindex="0" aria-label="{{ed.hue}}"><span class="knob"></span></div>',
 			'  <div class="ed-ctrl">',
-			'    <div class="ed-field"><button class="ed-fmt" type="button" data-tip="Alternar HEX · RGB · HSB">HEX</button><input class="ed-val" id="pal-ed-val" spellcheck="false" autocomplete="off" aria-label="Valor da cor"></div>',
+			'    <div class="ed-field"><button class="ed-fmt" type="button" data-tip="{{ed.fmt}}">HEX</button><input class="ed-val" id="pal-ed-val" spellcheck="false" autocomplete="off" aria-label="{{ed.value}}"></div>',
 			'    <div class="ed-actions">',
-			'      <button class="ed-btn mode" data-tip="Criar harmonia">' + ic('wheel') + '</button>',
-			'      <button class="ed-btn del" data-tip="Excluir cor">' + ic('trash') + '</button>',
-			'      <button class="ed-btn cancel" data-tip="Cancelar" data-kbd="Esc">' + ic('x') + '</button>',
-			'      <button class="ed-btn ok" data-tip="Aplicar" data-kbd="Enter">' + ic('check') + '</button>',
+			'      <button class="ed-btn mode" data-tip="{{ed.harmony}}">' + ic('wheel') + '</button>',
+			'      <button class="ed-btn del" data-tip="{{ed.delete}}">' + ic('trash') + '</button>',
+			'      <button class="ed-btn cancel" data-tip="{{btn.cancel}}" data-kbd="Esc">' + ic('x') + '</button>',
+			'      <button class="ed-btn ok" data-tip="{{ed.apply}}" data-kbd="Enter">' + ic('check') + '</button>',
 			'    </div>',
 			'  </div>',
 			'</div>',
-			'<div class="sheet harmony" hidden tabindex="-1" role="dialog" aria-label="Criar harmonia">',
+			'<div class="sheet harmony" hidden tabindex="-1" role="dialog" aria-label="{{ed.harmony}}">',
 			'  <div class="ed-flood"></div>',
-			'  <div class="hm-map" tabindex="0" aria-label="Matiz e saturação · arraste qualquer ponto para girar"><div class="hm-disk"></div><svg class="hm-geo" aria-hidden="true"></svg></div>',
-			'  <div class="hm-bri" tabindex="0" aria-label="Brilho"><span class="knob"></span></div>',
-			'  <div class="hm-gen" role="list" aria-label="Cores geradas"></div>',
+			'  <div class="hm-map" tabindex="0" aria-label="{{hm.map}}"><div class="hm-disk"></div><svg class="hm-geo" aria-hidden="true"></svg></div>',
+			'  <div class="hm-bri" tabindex="0" aria-label="{{hm.bri}}"><span class="knob"></span></div>',
+			'  <div class="hm-gen" role="list" aria-label="{{hm.gen}}"></div>',
 			'  <div class="hm-ctrl">',
 			'    <div class="hm-rules"></div>',
 			'    <div class="hm-opts">',
-			'      <div class="hm-open" data-tip="Abertura">' + ic('fan') + '<div class="hm-range" tabindex="0" aria-label="Abertura"><i></i><span class="knob"></span></div></div>',
-			'      <div class="hm-steps" role="group" aria-label="Degraus de brilho"></div>',
+			'      <div class="hm-open" data-tip="{{hm.open}}">' + ic('fan') + '<div class="hm-range" tabindex="0" aria-label="{{hm.open}}"><i></i><span class="knob"></span></div></div>',
+			'      <div class="hm-steps" role="group" aria-label="{{hm.steps}}"></div>',
 			'    </div>',
 			'    <div class="ed-actions">',
-			'      <button class="ed-btn save" data-tip="Salvar como preset">' + ic('bookmark') + '</button>',
-			'      <button class="ed-btn mode" data-tip="Editar 1 cor">' + ic('drop') + '</button>',
-			'      <button class="ed-btn cancel" data-tip="Cancelar" data-kbd="Esc">' + ic('x') + '</button>',
-			'      <button class="ed-btn ok" data-tip="Adicionar">' + ic('check') + '<span class="hm-n"></span></button>',
+			'      <button class="ed-btn save" data-tip="{{hm.save}}">' + ic('bookmark') + '</button>',
+			'      <button class="ed-btn mode" data-tip="{{hm.single}}">' + ic('drop') + '</button>',
+			'      <button class="ed-btn cancel" data-tip="{{btn.cancel}}" data-kbd="Esc">' + ic('x') + '</button>',
+			'      <button class="ed-btn ok" data-tip="{{hm.add}}">' + ic('check') + '<span class="hm-n"></span></button>',
 			'    </div>',
 			'  </div>',
 			'</div>',
-			'<div class="sheet keys" hidden tabindex="-1" role="dialog" aria-label="Atalhos"><div class="k-body"></div><button class="tool k-x" aria-label="Fechar (Esc)">' + ic('x') + '</button></div>',
-			'<div class="toast" role="status"><span class="chip"></span><span class="toast-ic"></span><span class="toast-msg"></span><button type="button">desfazer</button></div>',
+			'<div class="sheet keys" hidden tabindex="-1" role="dialog" aria-label="{{set.keys}}"><div class="k-body"></div><button class="tool k-x" aria-label="{{k.close}}">' + ic('x') + '</button></div>',
+			'<div class="toast" role="status"><span class="chip"></span><span class="toast-ic"></span><span class="toast-msg"></span><button type="button">{{toast.undo}}</button></div>',
 			'<div class="tip"></div>'
-		].join('\n');
+		].join('\n').replace(/\{\{([\w.]+)\}\}/g, function (m, k) { return esc(T(k)); });
 
 		function q(s) { return el.querySelector(s); }
 		var strip = q('.strip');
@@ -273,7 +279,7 @@
 			n.dataset.id = sw.id;
 			n.tabIndex = 0;
 			n.setAttribute('role', 'listitem');
-			n.innerHTML = '<button class="sw-edit" tabindex="-1" aria-label="Editar cor">' + ic('pencil') + '</button>' +
+			n.innerHTML = '<button class="sw-edit" tabindex="-1" aria-label="' + esc(T('sw.edit')) + '">' + ic('pencil') + '</button>' +
 				'<span class="sw-glyph">' + ic('bucket', 'g-fill') + ic('ring', 'g-stroke') + ic('copy', 'g-copy') + ic('x', 'g-del') + ic('check', 'g-ok') + '</span>' +
 				'<span class="sw-meta"><span class="sw-line"><span class="sw-name"></span><span class="sw-val"></span></span></span><i class="sw-dot"></i>';
 			return n;
@@ -401,7 +407,7 @@
 			clearTimeout(saveTimer);
 			saveTimer = setTimeout(function () {
 				Host.savePalette(plain(S.swatches), S.preset)
-					.catch(function () { toast('Não foi possível salvar no projeto', { icon: 'alert' }); });
+					.catch(function () { toast(T('err.save'), { icon: 'alert' }); });
 			}, 200);
 		}
 
@@ -413,11 +419,11 @@
 		}
 		function undo() {
 			var prev = S.undo.pop();
-			if (!prev) return toast('Nada para desfazer');
+			if (!prev) return toast(T('undo.none'));
 			if (prev.restorePreset) {
 				return Host.savePreset(prev.restorePreset).then(function () {
 					loadPresets(prev.restorePreset.id);
-					toast('Preset restaurado', { icon: 'undo' });
+					toast(T('undo.preset'), { icon: 'undo' });
 				});
 			}
 			S.swatches = prev.palette;
@@ -425,7 +431,7 @@
 			render({ slow: true });
 			save();
 			if (!library.hidden) renderLibrary();
-			toast('Desfeito', { icon: 'undo' });
+			toast(T('undo.done'), { icon: 'undo' });
 		}
 
 		function toSwatches(list) {
@@ -472,26 +478,26 @@
 				// as dicas das amostras somem depois que você já viu algumas vezes
 				if (learned >= 6 && !mods.alt && !mods.ctrl) return '';
 				return [
-					kbd('clique', 'aplicar', !mods.alt && !mods.ctrl && !mods.shift),
-					kbd(KEY.shift, 'contorno', mods.shift && !mods.alt && !mods.ctrl),
-					kbd('botão dir.', 'editar'),
-					kbd(KEY.ctrl, 'copiar', mods.ctrl),
-					kbd(KEY.alt, 'excluir', mods.alt)
+					kbd(T('kbd.click'), T('tip.apply'), !mods.alt && !mods.ctrl && !mods.shift),
+					kbd(KEY.shift, T('tip.stroke'), mods.shift && !mods.alt && !mods.ctrl),
+					kbd(T('kbd.right'), T('tip.edit')),
+					kbd(KEY.ctrl, T('tip.copy'), mods.ctrl),
+					kbd(KEY.alt, T('tip.delete'), mods.alt)
 				].join('');
 			}
 			var act = t.dataset.act;
-			if (act === 'add' && t.classList.contains('tool')) return '<b>' + (hPrefs.on ? 'Nova harmonia' : 'Nova cor') + '</b>';
+			if (act === 'add' && t.classList.contains('tool')) return '<b>' + esc(hPrefs.on ? T('tip.newHarmony') : T('tool.add')) + '</b>';
 			if (t === hmOk && H) {
 				var n = harmonyColors().length;
-				return '<b>' + n + (n === 1 ? ' cor' : ' cores') + '</b>' + kbd('Enter', 'adicionar', !mods.shift) + kbd(KEY.shift, 'substituir a paleta', mods.shift);
+				return '<b>' + esc(Tn('colors', n)) + '</b>' + kbd('Enter', T('tip.add'), !mods.shift) + kbd(KEY.shift, T('tip.replacePalette'), mods.shift);
 			}
 			if (act === 'capture' && t.classList.contains('tool')) return captureTip();
-			if (act === 'menu') return el.classList.contains('menu-open') ? '<b>Fechar ajustes</b>' : '<b>Ajustes</b>';
-			if (act === 'library') return el.classList.contains('lib-open') ? '<b>Fechar presets</b>' : '<b>Presets</b>';
-			if (act === 'folder') return '<b>' + esc(S.folder) + '</b>' + kbd('clique', 'trocar pasta') + kbd(KEY.alt, 'abrir');
+			if (act === 'menu') return '<b>' + esc(el.classList.contains('menu-open') ? T('tip.closeSettings') : T('settings')) + '</b>';
+			if (act === 'library') return '<b>' + esc(el.classList.contains('lib-open') ? T('tip.closePresets') : T('presets')) + '</b>';
+			if (act === 'folder') return '<b>' + esc(S.folder) + '</b>' + kbd(T('kbd.click'), T('tip.changeFolder')) + kbd(KEY.alt, T('tip.open'));
 			if (t.dataset.pid) {
 				var pr = presetById(t.dataset.pid);
-				return '<b>' + esc(pr ? pr.name : '') + '</b>' + kbd('clique', 'substituir', !mods.shift) + kbd(KEY.shift, 'adicionar', mods.shift);
+				return '<b>' + esc(pr ? pr.name : '') + '</b>' + kbd(T('kbd.click'), T('tip.replace'), !mods.shift) + kbd(KEY.shift, T('tip.add'), mods.shift);
 			}
 			if (t.dataset.tip) {
 				// em layouts largos os rótulos estão escondidos: a dica assume o papel
@@ -597,10 +603,10 @@
 		}
 
 		var REASONS = {
-			nocomp: 'Abra uma composição primeiro',
-			nosel: 'Selecione um layer ou uma propriedade de cor',
-			nostroke: 'Nenhum contorno: o Shift pinta o traço de shapes e textos',
-			error: 'O After Effects recusou a cor'
+			nocomp: T('reason.nocomp'),
+			nosel: T('reason.nosel'),
+			nostroke: T('reason.nostroke'),
+			error: T('reason.error')
 		};
 
 		function applySwatch(sw, e, opts) {
@@ -629,7 +635,7 @@
 			S.swatches = S.swatches.filter(function (s) { return s !== sw; });
 			render();
 			save();
-			toast((sw.label || sw.color) + ' removida', { color: sw.color, undo: true });
+			toast(T('toast.removed', { name: sw.label || sw.color }), { color: sw.color, undo: true });
 		}
 
 		function copyText(text) {
@@ -654,7 +660,7 @@
 				var v = C.format(sw.color, S.prefs.format);
 				copyText(v);
 				flash(nodes[sw.id], 'ok', 700);
-				return toast(v + ' copiado', { color: sw.color, icon: 'copy' });
+				return toast(T('toast.copied', { value: v }), { color: sw.color, icon: 'copy' });
 			}
 			applySwatch(sw, e, e.shiftKey ? { stroke: true } : null);
 		}
@@ -821,18 +827,18 @@
 		capTool.addEventListener('pointerenter', inspect);
 
 		function captureTip() {
-			var shift = kbd(KEY.shift, 'projeto inteiro');
-			if (mods.shift) return '<b>Capturar do projeto inteiro</b>';
+			var shift = kbd(KEY.shift, T('cap.wholeProject'));
+			if (mods.shift) return '<b>' + esc(T('cap.project')) + '</b>';
 			var m = INSPECT ? INSPECT.mode : '';
 			if (m === 'image') {
 				return INSPECT.source === 'comp' ?
-					'<b>Extrair cores do frame</b><span>nada selecionado: usa a comp</span>' + shift :
-					'<b>Extrair cores da imagem</b><span>' + esc(INSPECT.label || '') + '</span>' + shift;
+					'<b>' + esc(T('cap.frame')) + '</b><span>' + esc(T('cap.frameNote')) + '</span>' + shift :
+					'<b>' + esc(T('cap.image')) + '</b><span>' + esc(INSPECT.label || '') + '</span>' + shift;
 			}
-			if (m === 'props') return '<b>Capturar as propriedades selecionadas</b>' + shift;
-			if (m === 'layers') return '<b>Capturar as cores dos layers</b>' + shift;
-			if (m === 'none') return '<b>Abra uma composição</b>' + shift;
-			return '<b>Capturar cores</b>' + shift;
+			if (m === 'props') return '<b>' + esc(T('cap.props')) + '</b>' + shift;
+			if (m === 'layers') return '<b>' + esc(T('cap.layers')) + '</b>' + shift;
+			if (m === 'none') return '<b>' + esc(T('cap.nocomp')) + '</b>' + shift;
+			return '<b>' + esc(T('tool.capture')) + '</b>' + shift;
 		}
 
 		function capture(btn, e) {
@@ -854,24 +860,24 @@
 				var fresh = ((r && r.colors) || []).filter(function (c) { c = C.normHex(c); if (!c || have[c]) return false; have[c] = true; return true; });
 				if (!fresh.length) {
 					flash(tool, 'nope', 420);
-					return toast(r && r.ok ? 'Nenhuma cor nova encontrada' : 'Selecione layers ou propriedades com cor', { icon: 'pipette' });
+					return toast(r && r.ok ? T('cap.noneNew') : T('cap.nosel'), { icon: 'pipette' });
 				}
 				pushUndo();
 				fresh.forEach(function (c) { S.swatches.push({ id: newId(), color: C.normHex(c), label: '', auto: true }); });
 				render({ from: rect(btn) });
 				save();
-				toast('+' + fresh.length + (fresh.length > 1 ? ' cores' : ' cor') + (scope === 'project' ? ' do projeto' : ''), { color: C.normHex(fresh[0]), undo: true });
-			}).catch(function () { busy(tool, false); toast('Falha ao capturar cores', { icon: 'alert' }); });
+				toast('+' + Tn('colors', fresh.length) + (scope === 'project' ? ' ' + T('cap.fromProject') : ''), { color: C.normHex(fresh[0]), undo: true });
+			}).catch(function () { busy(tool, false); toast(T('cap.fail'), { icon: 'alert' }); });
 		}
 
 		function sortPalette() {
 			var sorted = C.sortSwatches(S.swatches.slice());
-			if (sorted.every(function (s, i) { return s === S.swatches[i]; })) return toast('A paleta já está em ordem', { icon: 'sort' });
+			if (sorted.every(function (s, i) { return s === S.swatches[i]; })) return toast(T('sort.already'), { icon: 'sort' });
 			pushUndo();
 			S.swatches = sorted;
 			render({ slow: true });
 			save();
-			toast('Ordenada por matiz', { icon: 'sort', undo: true });
+			toast(T('sort.done'), { icon: 'sort', undo: true });
 		}
 
 		el.addEventListener('click', function (e) {
@@ -930,25 +936,39 @@
 			Array.prototype.forEach.call(settings.querySelectorAll('[data-fmt]'), function (b) {
 				b.setAttribute('aria-pressed', b.dataset.fmt === S.prefs.format);
 			});
+			Array.prototype.forEach.call(settings.querySelectorAll('[data-lang]'), function (b) {
+				b.setAttribute('aria-pressed', b.dataset.lang === I18N.lang());
+			});
 			el.classList.toggle('show-info', S.prefs.info);
 			el.classList.toggle('show-names', S.prefs.names);
 		}
 
-		function placePill(animate) {
-			var b = settings.querySelector('[data-fmt="' + S.prefs.format + '"]');
-			var pill = settings.querySelector('.seg-pill');
-			if (!b) return;
-			if (!animate) pill.style.transition = 'none';
-			pill.style.width = b.offsetWidth + 'px';
-			pill.style.transform = 'translateX(' + b.offsetLeft + 'px)';
-			if (!animate) { void pill.offsetWidth; pill.style.transition = ''; }
+		// pílula dos seletores (formato e idioma) embaixo do botão escolhido
+		function placePill(animate, langCode) {
+			[settings.querySelector('[data-fmt="' + S.prefs.format + '"]'), settings.querySelector('[data-lang="' + (langCode || I18N.lang()) + '"]')].forEach(function (b) {
+				if (!b) return;
+				var pill = b.parentNode.querySelector('.seg-pill');
+				if (!animate) pill.style.transition = 'none';
+				pill.style.width = b.offsetWidth + 'px';
+				pill.style.transform = 'translateX(' + b.offsetLeft + 'px)';
+				if (!animate) { void pill.offsetWidth; pill.style.transition = ''; }
+			});
 		}
 
 		settings.addEventListener('click', function (e) {
 			var b = e.target.closest('[data-fmt]');
-			if (!b) return;
-			setPref('format', b.dataset.fmt);
-			placePill(true);
+			if (b) {
+				setPref('format', b.dataset.fmt);
+				placePill(true);
+				return;
+			}
+			// idioma: grava e recarrega o painel (a paleta fica no projeto, nada se perde)
+			var l = e.target.closest('[data-lang]');
+			if (!l || l.dataset.lang === I18N.lang()) return;
+			placePill(true, l.dataset.lang);
+			Host.savePrefs({ lang: l.dataset.lang }).then(function () {
+				setTimeout(function () { root.location.reload(); }, 220);
+			}, function () {});
 		});
 
 		function setPref(k, v) {
@@ -979,7 +999,7 @@
 					S.swatches = [];
 					render();
 					save();
-					toast('Paleta limpa', { icon: 'trash', undo: true });
+					toast(T('clear.done'), { icon: 'trash', undo: true });
 				}, 900);
 			});
 			btn.addEventListener('pointerleave', cancel);
@@ -1009,7 +1029,7 @@
 
 		function loadPresets(focusId, rename) {
 			return Host.listPresets().then(function (r) { gotPresets(r, focusId, rename); })
-				.catch(function () { toast('Não foi possível ler a pasta de presets', { icon: 'alert' }); });
+				.catch(function () { toast(T('lib.readFail'), { icon: 'alert' }); });
 		}
 		function gotPresets(r, focusId, rename) {
 			{
@@ -1024,32 +1044,32 @@
 			// o cartão do projeto faz o papel do antigo "salvar preset": no hover mostra o que o clique faz.
 			// sem preset de origem, ou mudada desde ele, a paleta "não está salva": um fio a separa dos presets
 			var st = projectState(), src = st.p ? esc(st.p.name) : '';
-			var over = st.k === 'saved' ? '<span class="pc-save is-saved"><span class="pc-sv">' + ic('check') + '<b>Salva em ' + src + '</b></span></span>'
+			var over = st.k === 'saved' ? '<span class="pc-save is-saved"><span class="pc-sv">' + ic('check') + '<b>' + T('lib.savedIn', { name: src }) + '</b></span></span>'
 				: st.k === 'empty' ? ''
-				: '<span class="pc-save"><span class="pc-sv pc-sv-a">' + ic('bookmark') + '<b>Salvar preset</b></span>' +
-					(st.k === 'changed' ? '<span class="pc-sv pc-sv-b">' + ic('reset') + '<b>Atualizar ' + src + '</b></span><small><kbd>' + KEY.shift + '</kbd> atualiza ' + src + '</small>' : '') + '</span>';
-			var html = '<div class="pcard is-project st-' + st.k + '" role="listitem" tabindex="0" aria-label="Paleta deste projeto">' + bars(S.swatches) +
-				'<span class="pc-name">' + ic('file') + '<span>' + esc(S.project || 'projeto') + '</span></span>' + over + '</div>' +
+				: '<span class="pc-save"><span class="pc-sv pc-sv-a">' + ic('bookmark') + '<b>' + esc(T('lib.savePreset')) + '</b></span>' +
+					(st.k === 'changed' ? '<span class="pc-sv pc-sv-b">' + ic('reset') + '<b>' + T('lib.update', { name: src }) + '</b></span><small><kbd>' + KEY.shift + '</kbd> ' + T('lib.shiftUpdates', { name: src }) + '</small>' : '') + '</span>';
+			var html = '<div class="pcard is-project st-' + st.k + '" role="listitem" tabindex="0" aria-label="' + esc(T('lib.project')) + '">' + bars(S.swatches) +
+				'<span class="pc-name">' + ic('file') + '<span>' + esc(S.project || T('project.untitled')) + '</span></span>' + over + '</div>' +
 				(st.k === 'new' || st.k === 'changed' ? '<span class="lib-sep" aria-hidden="true"></span>' : '');
 			if (S.offline) {
 				// volume de rede desmontado / unidade desconectada: explica e oferece saída
 				html += '<div class="pcard offline" role="listitem">' +
 					'<span class="off-ic">' + ic('unplug') + '</span>' +
-					'<span class="off-txt"><b>' + esc(S.offline.volume || 'pasta') + '</b> não está acessível</span>' +
+					'<span class="off-txt">' + T('lib.offline', { name: '<b>' + esc(S.offline.volume || T('lib.theFolder')) + '</b>' }) + '</span>' +
 					'<span class="off-acts">' +
-					(S.offline.canMount ? '<button class="off-btn" data-off="mount">Montar</button>' : '') +
-					'<button class="off-btn" data-off="retry" data-tip="Tentar de novo">' + ic('reset') + '</button>' +
-					'<button class="off-btn" data-off="local" data-tip="Usar a pasta local">' + ic('folder') + '</button>' +
+					(S.offline.canMount ? '<button class="off-btn" data-off="mount">' + esc(T('lib.mount')) + '</button>' : '') +
+					'<button class="off-btn" data-off="retry" data-tip="' + esc(T('lib.retry')) + '">' + ic('reset') + '</button>' +
+					'<button class="off-btn" data-off="local" data-tip="' + esc(T('lib.local')) + '">' + ic('folder') + '</button>' +
 					'</span></div>';
 			}
 			S.presets.forEach(function (p, i) {
 				var cls = 'pcard' + (p.id === S.prefs.defaultPreset ? ' is-default' : '') + (p.name === S.preset ? ' is-origin' + (st.k === 'changed' ? ' drift' : '') : '');
 				html += '<div class="' + cls + '" role="listitem" tabindex="0" data-pid="' + esc(p.id) + '" style="--i:' + i + '">' + bars(p.swatches) +
 					'<span class="pc-row"><span class="pc-name">' + esc(p.name) + '</span>' +
-					'<button type="button" class="pc-grip" aria-label="Arraste para reordenar (ou use as setas)">' + GRIP + '</button></span>' +
-					'<span class="pc-acts"><button class="pc-btn pc-ren" aria-label="Renomear">' + ic('pencil') + '</button>' +
-					'<button class="pc-btn pc-star" aria-label="Padrão para projetos sem paleta">' + ic('star') + '</button>' +
-					'<button class="pc-btn pc-del" aria-label="Excluir preset">' + ic('trash') + '</button></span></div>';
+					'<button type="button" class="pc-grip" aria-label="' + esc(T('lib.grip')) + '">' + GRIP + '</button></span>' +
+					'<span class="pc-acts"><button class="pc-btn pc-ren" aria-label="' + esc(T('lib.rename')) + '">' + ic('pencil') + '</button>' +
+					'<button class="pc-btn pc-star" aria-label="' + esc(T('lib.default')) + '">' + ic('star') + '</button>' +
+					'<button class="pc-btn pc-del" aria-label="' + esc(T('lib.delete')) + '">' + ic('trash') + '</button></span></div>';
 			});
 			libList.innerHTML = html;
 			q('.lib-path').textContent = shortPath(S.folder);
@@ -1078,15 +1098,15 @@
 			closeSettings();
 			render({ from: from });
 			save();
-			toast(merge ? '+' + added + (added === 1 ? ' cor de ' : ' cores de ') + p.name : p.name + ' aplicado ao projeto', { color: (p.swatches[0] || {}).color, undo: true });
+			toast(merge ? Tn('added.from', added, { name: p.name }) : T('lib.applied', { name: p.name }), { color: (p.swatches[0] || {}).color, undo: true });
 		}
 
 		function savePreset() {
-			if (!S.swatches.length) return toast('A paleta do projeto está vazia', { icon: 'alert' });
-			if (S.offline) return toast((S.offline.volume || 'A pasta') + ' não está acessível', { icon: 'unplug' });
-			var name = N.unique(S.project && S.project !== 'sem título' ? S.project : 'minha paleta', S.presets.map(function (p) { return p.name; }));
+			if (!S.swatches.length) return toast(T('lib.empty'), { icon: 'alert' });
+			if (S.offline) return toast(T('lib.offline', { name: S.offline.volume || T('lib.theFolder') }), { icon: 'unplug' });
+			var name = N.unique(S.project || T('lib.myPalette'), S.presets.map(function (p) { return p.name; }));
 			Host.savePreset({ name: name, swatches: plain(S.swatches) }).then(function (r) {
-				if (!r || !r.ok) return toast(r && r.reason === 'offline' ? 'A pasta de presets não está acessível' : 'A pasta de presets não aceita gravação', { icon: 'alert' });
+				if (!r || !r.ok) return toast(r && r.reason === 'offline' ? T('lib.folderOffline') : T('lib.readonly'), { icon: 'alert' });
 				S.preset = name;
 				save();
 				loadPresets(r.id, true);
@@ -1106,13 +1126,13 @@
 
 		// Shift + clique no cartão do projeto: grava a paleta por cima do preset de origem (com desfazer)
 		function updatePreset(p) {
-			if (S.offline) return toast((S.offline.volume || 'A pasta') + ' não está acessível', { icon: 'unplug' });
+			if (S.offline) return toast(T('lib.offline', { name: S.offline.volume || T('lib.theFolder') }), { icon: 'unplug' });
 			var old = { id: p.id, name: p.name, swatches: p.swatches };
 			Host.savePreset({ id: p.id, name: p.name, swatches: plain(S.swatches) }).then(function (r) {
-				if (!r || !r.ok) return toast('A pasta de presets não aceita gravação', { icon: 'alert' });
+				if (!r || !r.ok) return toast(T('lib.readonly'), { icon: 'alert' });
 				pushUndo({ restorePreset: old });
 				loadPresets(p.id);
-				toast(p.name + ' atualizado', { icon: 'bookmark', undo: true });
+				toast(T('lib.updated', { name: p.name }), { icon: 'bookmark', undo: true });
 			});
 		}
 
@@ -1158,12 +1178,12 @@
 			});
 			card.querySelector('.pc-star').animate([{ transform: 'scale(.4) rotate(-72deg)' }, { transform: 'none' }], { duration: 480, easing: SPRING });
 			Host.savePrefs({ defaultPreset: S.prefs.defaultPreset }).catch(function () {});
-			toast(on ? p.name + ' é o padrão para projetos sem paleta' : 'Sem preset padrão', { icon: 'star' });
+			toast(on ? T('lib.isDefault', { name: p.name }) : T('lib.noDefault'), { icon: 'star' });
 		}
 
 		function deletePreset(p, card) {
 			Host.deletePreset(p.id).then(function (r) {
-				if (!r || !r.ok) return toast('Não foi possível excluir o preset', { icon: 'alert' });
+				if (!r || !r.ok) return toast(T('lib.deleteFail'), { icon: 'alert' });
 				pushUndo({ restorePreset: { id: p.id, name: p.name, swatches: p.swatches } });
 				S.presets = S.presets.filter(function (x) { return x !== p; });
 				if (S.prefs.defaultPreset === p.id) { S.prefs.defaultPreset = ''; Host.savePrefs({ defaultPreset: '' }); }
@@ -1173,20 +1193,20 @@
 					[{ opacity: 1, height: r0.height + 'px' }, { opacity: 0, height: '0px', marginTop: '-6px', transform: 'scale(.9)' }] :
 					[{ opacity: 1, width: r0.width + 'px' }, { opacity: 0, width: '0px', marginLeft: '-6px', transform: 'scale(.9)' }],
 					{ duration: 300, easing: EASE }).onfinish = function () { card.remove(); };
-				toast(p.name + ' excluído', { icon: 'trash', undo: true });
+				toast(T('lib.deleted', { name: p.name }), { icon: 'trash', undo: true });
 			});
 		}
 
 		function chooseFolder(e) {
-			if (e.altKey) return Host.revealPresetFolder().then(function (r) { if (!r || !r.ok) toast('A pasta não está acessível', { icon: 'unplug' }); });
+			if (e.altKey) return Host.revealPresetFolder().then(function (r) { if (!r || !r.ok) toast(T('lib.notAccessible'), { icon: 'unplug' }); });
 			Host.choosePresetFolder().then(function (r) {
 				if (!r || !r.ok) return;
 				S.folder = r.folder;
 				q('.lib-path').textContent = shortPath(S.folder);
 				return Host.listPresets().then(function (l) {
 					gotPresets(l);
-					if (S.offline) toast((S.offline.volume || 'A pasta') + ' não está acessível', { icon: 'unplug' });
-					else toast('Presets de ' + shortPath(S.folder), { icon: 'folder' });
+					if (S.offline) toast(T('lib.offline', { name: S.offline.volume || T('lib.theFolder') }), { icon: 'unplug' });
+					else toast(T('lib.from', { path: shortPath(S.folder) }), { icon: 'folder' });
 				});
 			});
 		}
@@ -1215,7 +1235,7 @@
 			libList.insertBefore(card, to > from ? all[to].nextSibling : all[to]);
 			var ids = presetCards().map(function (c) { return c.dataset.pid; });
 			S.presets = ids.map(presetById);
-			Host.savePresetOrder(ids).catch(function () { toast('Não foi possível salvar a ordem', { icon: 'alert' }); });
+			Host.savePresetOrder(ids).catch(function () { toast(T('lib.orderFail'), { icon: 'alert' }); });
 			return card;
 		}
 
@@ -1352,7 +1372,7 @@
 				root.addEventListener('pointerdown', drop, true);
 				root.addEventListener('mousedown', drop, true);
 				root.addEventListener('keydown', key, true);
-				toast('Mova e clique para soltar · Esc cancela', { icon: 'library' });
+				toast(T('lib.carry'), { icon: 'library' });
 			}
 
 			function drop(ev) {
@@ -1413,9 +1433,9 @@
 					if (S.offline) {
 						card0 = libList.querySelector('.offline');
 						if (card0) card0.animate([{ transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' }, { transform: 'none' }], { duration: 300 });
-						toast((S.offline.volume || 'A pasta') + ' continua inacessível', { icon: 'unplug' });
+						toast(T('lib.stillOffline', { name: S.offline.volume || T('lib.theFolder') }), { icon: 'unplug' });
 					} else {
-						toast('Presets de ' + shortPath(S.folder), { icon: 'folder' });
+						toast(T('lib.from', { path: shortPath(S.folder) }), { icon: 'folder' });
 					}
 				});
 			}
@@ -1471,10 +1491,10 @@
 				if (!r || !r.ok) {
 					busy(tool, false);
 					flash(tool, 'nope', 420);
-					return toast(REASONS[r && r.reason] || 'Não foi possível ler o frame', { icon: 'alert' });
+					return toast(REASONS[r && r.reason] || T('ex.readFail'), { icon: 'alert' });
 				}
 				var job = XS = { grab: r, chips: [], data: null };
-				q('.ex-label').textContent = r.label || 'frame';
+				q('.ex-label').textContent = r.label || T('ex.frame');
 				exSheet.classList.add('loading');
 				exSheet.classList.remove('slow');
 				exImg.removeAttribute('src');
@@ -1494,7 +1514,7 @@
 					var sec = (Date.now() - t0) / 1000;
 					if (sec < 0.7) return;
 					exSheet.classList.add('slow');
-					waitTxt.textContent = (r.kind === 'image' && !r.temp ? 'lendo imagem' : 'renderizando frame') + (sec >= 2 ? ' · ' + Math.floor(sec) + 's' : '…');
+					waitTxt.textContent = (r.kind === 'image' && !r.temp ? T('ex.reading') : T('ex.rendering')) + (sec >= 2 ? ' · ' + Math.floor(sec) + 's' : '…');
 				}, 250);
 
 				function done() {
@@ -1517,11 +1537,11 @@
 					done();
 					if (XS !== job) return; // cancelado com Esc/×: sem aviso
 					closeExtract();
-					toast(/tempo/.test(err && err.message) ? 'O frame demorou demais para renderizar' : 'Não foi possível ler o frame', { icon: 'alert' });
+					toast(/tempo/.test(err && err.message) ? T('ex.timeout') : T('ex.readFail'), { icon: 'alert' });
 				});
 			}).catch(function () {
 				busy(tool, false);
-				toast('Não foi possível ler o frame', { icon: 'alert' });
+				toast(T('ex.readFail'), { icon: 'alert' });
 			});
 		}
 
@@ -1618,7 +1638,7 @@
 			var have = {}, fresh = [];
 			S.swatches.forEach(function (s) { have[s.color] = true; });
 			XS.chips.forEach(function (c) { if (c.on && !have[c.color]) { have[c.color] = true; fresh.push(c.color); } });
-			if (!fresh.length) return toast('Nenhuma cor nova selecionada', { icon: 'image' });
+			if (!fresh.length) return toast(T('ex.noneSelected'), { icon: 'image' });
 			var from = rect(exStage), label = XS.grab.label;
 			closeExtract();
 			pushUndo();
@@ -1627,7 +1647,7 @@
 				render({ from: from });
 				save();
 			}, 120);
-			toast('+' + fresh.length + (fresh.length > 1 ? ' cores de ' : ' cor de ') + label, { color: fresh[0], undo: true });
+			toast(Tn('added.from', fresh.length, { name: label }), { color: fresh[0], undo: true });
 		}
 
 		function closeExtract() {
@@ -1766,7 +1786,7 @@
 					S.swatches.push(nsw);
 					render({ noEnter: nsw.id });
 					E.id = nsw.id;
-					toast('Cor adicionada', { color: hex, undo: true });
+					toast(T('ed.added'), { color: hex, undo: true });
 				}
 				save();
 				target = nodes[E.id];
@@ -1944,6 +1964,7 @@
 		// roda aberta num quadrado (matiz na horizontal, saturação na vertical). Arrastar qualquer
 		// ponto gira o conjunto inteiro e a regra continua valendo.
 		var HM = root.PalHarmony;
+		function ruleName(id) { return T('rule.' + id); }
 		var H = null;
 		var hm = q('.harmony'), hmMap = q('.hm-map'), hmDisk = q('.hm-disk'), hmGeo = q('.hm-geo'), hmBri = q('.hm-bri');
 		var hmGen = q('.hm-gen'), hmRules = q('.hm-rules'), hmOpen = q('.hm-open'), hmRange = q('.hm-range'), hmSteps = q('.hm-steps');
@@ -1953,10 +1974,10 @@
 		var REDUCED = !!(root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
 		hmRules.innerHTML = HM.RULES.map(function (r) {
-			return '<button class="hm-rule" data-rule="' + r.id + '" data-tip="' + r.name + '" aria-label="' + r.name + '">' + HM.icon(r) + '</button>';
+			return '<button class="hm-rule" data-rule="' + r.id + '" data-tip="' + esc(ruleName(r.id)) + '" aria-label="' + esc(ruleName(r.id)) + '">' + HM.icon(r) + '</button>';
 		}).join('');
 		hmSteps.innerHTML = [1, 2, 3].map(function (n) {
-			return '<button data-steps="' + n + '" data-tip="' + (n === 1 ? 'Um tom por cor' : n + ' tons por cor') + '">' + HM.stepsIcon(n) + '</button>';
+			return '<button data-steps="' + n + '" data-tip="' + esc(Tn('hm.steps', n)) + '">' + HM.stepsIcon(n) + '</button>';
 		}).join('');
 
 		// troca de folha (editor ⇄ harmonia) sem a animação de abrir
@@ -2129,7 +2150,7 @@
 			var t = (H.open - HM.OPEN_MIN) / (HM.OPEN_MAX - HM.OPEN_MIN);
 			hmRange.querySelector('.knob').style.left = (t * 100) + '%';
 			hmRange.querySelector('i').style.width = (t * 100) + '%';
-			hmOpen.dataset.tip = 'Abertura · ' + H.open + '°';
+			hmOpen.dataset.tip = T('hm.openTip', { deg: H.open });
 			Array.prototype.forEach.call(hmSteps.children, function (b) {
 				b.setAttribute('aria-pressed', +b.dataset.steps === H.steps ? 'true' : 'false');
 			});
@@ -2163,7 +2184,7 @@
 					b.style.setProperty('--ink', C.ink(c.hex));
 					b.classList.toggle('off', off);
 					b.classList.toggle('base', c.base);
-					b.dataset.tip = N.nearest(c.hex) + ' · ' + c.hex + (off ? ' · fora' : '');
+					b.dataset.tip = N.nearest(c.hex) + ' · ' + c.hex + (off ? ' · ' + T('hm.out') : '');
 				});
 			});
 		}
@@ -2334,8 +2355,8 @@
 			var have = {}, fresh = [];
 			if (!replace) S.swatches.forEach(function (s) { have[s.color] = true; });
 			list.forEach(function (c) { if (!have[c]) { have[c] = true; fresh.push(c); } });
-			if (!fresh.length) { flash(hmOk, 'nope', 420); return toast('Essas cores já estão na paleta', { icon: 'alert' }); }
-			var from = rect(hmGen), name = HM.rule(H.rule).name;
+			if (!fresh.length) { flash(hmOk, 'nope', 420); return toast(T('hm.already'), { icon: 'alert' }); }
+			var from = rect(hmGen), name = ruleName(H.rule);
 			closeHarmony();
 			pushUndo();
 			if (replace) { S.swatches = []; S.preset = ''; }
@@ -2344,23 +2365,23 @@
 				render({ from: from });
 				save();
 			}, 120);
-			toast((replace ? 'Paleta trocada por ' : '+') + fresh.length + (fresh.length > 1 ? ' cores' : ' cor') + ' · ' + name, { color: fresh[0], undo: true });
+			toast(replace ? T('hm.replaced', { colors: Tn('colors', fresh.length), rule: name }) : '+' + Tn('colors', fresh.length) + ' · ' + name, { color: fresh[0], undo: true });
 		}
 
 		// salvar as cores ligadas como um preset novo, com o nome da regra e da cor base
 		function saveHarmonyPreset(btn) {
 			var list = harmonyColors();
 			if (!list.length) return flash(btn, 'nope', 420);
-			if (S.offline) return toast((S.offline.volume || 'A pasta') + ' não está acessível', { icon: 'unplug' });
-			var name = N.unique(HM.rule(H.rule).name + ' ' + N.nearest(baseHex()), S.presets.map(function (p) { return p.name; }));
+			if (S.offline) return toast(T('lib.offline', { name: S.offline.volume || T('lib.theFolder') }), { icon: 'unplug' });
+			var name = N.unique(T('hm.presetName', { rule: ruleName(H.rule), color: N.nearest(baseHex()) }), S.presets.map(function (p) { return p.name; }));
 			var taken = [];
 			var sws = list.map(function (c) { var l = N.pick(c, taken); taken.push(l); return { color: c, label: l, auto: true }; });
 			Host.savePreset({ name: name, swatches: sws }).then(function (r) {
-				if (!r || !r.ok) return toast(r && r.reason === 'offline' ? 'A pasta de presets não está acessível' : 'A pasta de presets não aceita gravação', { icon: 'alert' });
+				if (!r || !r.ok) return toast(r && r.reason === 'offline' ? T('lib.folderOffline') : T('lib.readonly'), { icon: 'alert' });
 				S.presets.push({ id: r.id, name: name, swatches: sws });
 				flash(btn, 'saved', 900);
-				toast('Preset salvo · ' + name, { icon: 'bookmark' });
-			}, function () { toast('Não foi possível salvar o preset', { icon: 'alert' }); });
+				toast(T('hm.saved', { name: name }), { icon: 'bookmark' });
+			}, function () { toast(T('hm.saveFail'), { icon: 'alert' }); });
 		}
 
 		hm.addEventListener('keydown', function (e) {
@@ -2376,7 +2397,7 @@
 		// ------------------------------------------------------------------ colar, importar e exportar cores
 		// adiciona cores novas (as que já existem ficam de fora), com desfazer
 		function addColors(list, from) {
-			if (!list || !list.length) return toast('Nenhuma cor encontrada' + (from ? ' em ' + from : ''), { icon: 'alert' });
+			if (!list || !list.length) return toast(from ? T('io.noneIn', { from: from }) : T('io.none'), { icon: 'alert' });
 			var have = {}, fresh = [];
 			S.swatches.forEach(function (s) { have[s.color] = true; });
 			list.forEach(function (c) {
@@ -2386,7 +2407,7 @@
 				var lbl = String(c.label || '').trim().slice(0, 40), auto = N.isGeneric(lbl, h);
 				fresh.push({ id: newId(), color: h, label: auto ? '' : lbl, auto: auto });
 			});
-			if (!fresh.length) return toast('Essas cores já estão na paleta', { icon: 'alert' });
+			if (!fresh.length) return toast(T('hm.already'), { icon: 'alert' });
 			closeSettings();
 			pushUndo();
 			S.swatches = S.swatches.concat(fresh);
@@ -2394,13 +2415,13 @@
 			save();
 			var last = nodes[fresh[fresh.length - 1].id];
 			if (last && last.scrollIntoView) last.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-			toast('+' + fresh.length + (fresh.length > 1 ? ' cores' : ' cor') + (from ? ' · ' + from : ''), { color: fresh[0].color, undo: true });
+			toast('+' + Tn('colors', fresh.length) + (from ? ' · ' + from : ''), { color: fresh[0].color, undo: true });
 		}
 
 		// colar: o evento de colar traz o texto; no CEP ele nem sempre chega, então o Ctrl/⌘+V também
 		// agenda uma leitura da área de transferência pelo sistema, cancelada se o evento vier
 		var pasteAt = 0;
-		function pasteText(t) { addColors(IO.parseText(t), 'colado'); }
+		function pasteText(t) { addColors(IO.parseText(t), T('io.pasted')); }
 		el.addEventListener('paste', function (e) {
 			if (anyFull() || (e.target.closest && e.target.closest('input, textarea'))) return;
 			pasteAt = 0;
@@ -2412,68 +2433,68 @@
 			setTimeout(function () {
 				if (pasteAt !== at) return;
 				pasteAt = 0;
-				Host.readClipboard().then(pasteText, function () { toast('Não foi possível ler a área de transferência', { icon: 'alert' }); });
+				Host.readClipboard().then(pasteText, function () { toast(T('io.clipFail'), { icon: 'alert' }); });
 			}, 200);
 		}
 
 		// importar: .ase (Illustrator, Photoshop…) ou qualquer texto com cores (.css, .txt, .json…)
 		function importColors() {
 			Host.importColors().then(function (r) {
-				if (!r || !r.ok) { if (r && r.reason !== 'cancel') toast('Não foi possível ler o arquivo', { icon: 'alert' }); return; }
+				if (!r || !r.ok) { if (r && r.reason !== 'cancel') toast(T('io.readFail'), { icon: 'alert' }); return; }
 				var list;
 				try { list = r.kind === 'ase' ? IO.parseAse(IO.hexToBytes(r.hex)).colors : IO.parseText(r.text); }
-				catch (err) { return toast('Esse .ase não pôde ser lido', { icon: 'alert' }); }
+				catch (err) { return toast(T('io.aseFail'), { icon: 'alert' }); }
 				addColors(list, r.name);
-			}, function () { toast('Não foi possível ler o arquivo', { icon: 'alert' }); });
+			}, function () { toast(T('io.readFail'), { icon: 'alert' }); });
 		}
 
 		// exportar a paleta do projeto como .ase, com os nomes das cores
 		function exportAse() {
-			if (!S.swatches.length) return toast('A paleta do projeto está vazia', { icon: 'alert' });
-			var title = S.project && S.project !== 'sem título' ? S.project : 'El PALLETERO';
+			if (!S.swatches.length) return toast(T('lib.empty'), { icon: 'alert' });
+			var title = S.project || 'El PALLETERO';
 			var bytes = IO.buildAse(S.swatches.map(function (s) { return { color: s.color, label: s.label }; }), title);
 			Host.exportAse(IO.bytesToHex(bytes), title).then(function (r) {
-				if (!r || !r.ok) { if (r && r.reason !== 'cancel') toast('Não foi possível gravar o arquivo', { icon: 'alert' }); return; }
-				toast('Exportada · ' + r.name, { icon: 'export' });
-			}, function () { toast('Não foi possível gravar o arquivo', { icon: 'alert' }); });
+				if (!r || !r.ok) { if (r && r.reason !== 'cancel') toast(T('io.writeFail'), { icon: 'alert' }); return; }
+				toast(T('io.exported', { name: r.name }), { icon: 'export' });
+			}, function () { toast(T('io.writeFail'), { icon: 'alert' }); });
 		}
 
 		// ------------------------------------------------------------------ folha de atalhos
 		function keysHtml() {
 			function k(x) { return '<kbd>' + x + '</kbd>'; }
 			function combo(mod, x) { return k(mod) + '<i>+</i>' + k(x); }
-			var click = 'clique', cmdKey = IS_MAC ? '⌘' : 'Ctrl';
+			var click = T('kbd.click'), cmdKey = IS_MAC ? '⌘' : 'Ctrl', or = '<i>' + T('k.or') + '</i>', onProj = '<i>' + T('k.onProject') + '</i>';
 			var groups = [
-				['Amostras', [
-					[k(click), 'aplicar no layer ou na propriedade'],
-					[combo(KEY.shift, click), 'aplicar no contorno'],
-					[combo(KEY.ctrl, click), 'copiar o valor'],
-					[combo(KEY.alt, click), 'excluir'],
-					[k('botão direito') + (IS_MAC ? '<i>ou</i>' + combo('Ctrl', click) : ''), 'editar'],
-					[k('arrastar'), 'reordenar'],
-					[k('Enter') + k('F2') + k('Delete'), 'em foco: aplicar · editar · excluir']
+				[T('k.swatches'), [
+					[k(click), T('k.applyLayer')],
+					[combo(KEY.shift, click), T('k.applyStroke')],
+					[combo(KEY.ctrl, click), T('k.copy')],
+					[combo(KEY.alt, click), T('tip.delete')],
+					[k(T('k.right')) + (IS_MAC ? or + combo('Ctrl', click) : ''), T('tip.edit')],
+					[k(T('k.drag')), T('k.reorder')],
+					[k('Enter') + k('F2') + k('Delete'), T('k.focus')]
 				]],
-				['Painel', [
-					[k('+'), 'nova cor ou harmonia (o último modo)'],
-					[k('conta-gotas'), 'capturar cores dos layers'],
-					[combo(KEY.shift, 'conta-gotas'), 'capturar do projeto todo'],
-					[IS_MAC ? k('⌘V') : combo(cmdKey, 'V'), 'colar cores (hex, rgb, CSS, Coolors)'],
-					[IS_MAC ? k('⌘Z') : combo(cmdKey, 'Z'), 'desfazer'],
-					[k('?'), 'estes atalhos']
+				[T('k.panel'), [
+					[k('+'), T('k.add')],
+					[k(T('k.pipette')), T('k.capture')],
+					[combo(KEY.shift, T('k.pipette')), T('k.captureAll')],
+					[IS_MAC ? k('⌘V') : combo(cmdKey, 'V'), T('k.paste')],
+					[IS_MAC ? k('⌘Z') : combo(cmdKey, 'Z'), T('toast.undo')],
+					[k('?'), T('k.these')]
 				]],
-				['Presets', [
-					[k(click), 'substituir a paleta'],
-					[combo(KEY.shift, click), 'adicionar as cores que faltam'],
-					[k(click) + '<i>no projeto</i>', 'salvar como preset'],
-					[combo(KEY.shift, click) + '<i>no projeto</i>', 'atualizar o preset de origem'],
-					[k('F2') + k('Delete'), 'renomear · excluir'],
-					[k('⠿') + '<i>ou</i>' + k('↑↓'), 'reordenar']
+				[T('presets'), [
+					[k(click), T('tip.replacePalette')],
+					[combo(KEY.shift, click), T('k.addMissing')],
+					[k(click) + onProj, T('k.saveAs')],
+					[combo(KEY.shift, click) + onProj, T('k.updateOrigin')],
+					[k('F2') + k('Delete'), T('k.renameDelete')],
+					[k('⠿') + or + k('↑↓'), T('k.reorder')]
 				]],
-				['Editor e harmonia', [
-					[k('Enter') + k('Esc'), 'confirmar · cancelar'],
-					[combo(KEY.shift, 'Enter'), 'harmonia: substituir a paleta'],
-					[k('←→↑↓'), 'ajustar (' + KEY.shift + ' anda mais)'],
-					[k('arrastar ponto'), 'girar a harmonia inteira']
+				[T('k.editor'), [
+					[k('Enter') + k('Esc'), T('k.confirmCancel')],
+					[combo(KEY.shift, 'Enter'), T('k.hmReplace')],
+					[k('←→↑↓'), T('k.adjust', { shift: KEY.shift })],
+					[k(T('k.dragPoint')), T('k.rotate')]
 				]]
 			];
 			return groups.map(function (g) {

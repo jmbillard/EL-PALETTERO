@@ -1,0 +1,136 @@
+# El PALLETERO · nomes automáticos das cores. O nome vem da cor de referência mais próxima (CIELAB).
+# Uma coluna por idioma, com o mesmo código de strings.csv.
+hex,pt,en,es
+#E53935,vermelho,red,rojo
+#FF6347,tomate,tomato,tomate
+#9B111E,cereja,cherry,cereza
+#960018,carmim,carmine,carmín
+#6E0B0B,sangue,blood,sangre
+#FC5A8D,morango,strawberry,fresa
+#FD4659,melancia,watermelon,sandía
+#C72C48,framboesa,raspberry,frambuesa
+#FF7F50,coral,coral,coral
+#FA8072,salmão,salmon,salmón
+#F1707B,goiaba,guava,guayaba
+#FF8CCD,chiclete,bubblegum,chicle
+#FF9EC4,rosa,pink,rosa
+#F8C8DC,algodão-doce,cotton candy,algodón de azúcar
+#E4007C,magenta,magenta,magenta
+#FF1493,pink,hot pink,rosa neón
+#5E1224,vinho,wine,vino
+#800020,bordô,burgundy,burdeos
+#C41E3A,rubi,ruby,rubí
+#C08081,rosa-antigo,dusty rose,rosa viejo
+#B7410E,ferrugem,rust,óxido
+#B5503C,tijolo,brick,ladrillo
+#E2725B,terracota,terracotta,terracota
+#C8553D,telha,roof tile,teja
+#B66A50,argila,clay,arcilla
+#FF8C1A,laranja,orange,naranja
+#F28500,tangerina,tangerine,mandarina
+#FF7518,abóbora,pumpkin,calabaza
+#FFCBA4,pêssego,peach,melocotón
+#FBCEB1,damasco,apricot,albaricoque
+#FFA66B,mamão,papaya,papaya
+#C68E17,caramelo,caramel,caramelo
+#9C5A3C,canela,cinnamon,canela
+#5C3317,chocolate,chocolate,chocolate
+#4B2E20,café,coffee,café
+#6B4226,cacau,cocoa,cacao
+#8B5A2B,castanha,chestnut,castaña
+#D8C39A,areia,sand,arena
+#E8D9B5,bege,beige,beige
+#C19A6B,camelo,camel,camello
+#B87333,cobre,copper,cobre
+#CD7F32,bronze,bronze,bronce
+#C3B091,cáqui,khaki,caqui
+#8B7D6B,taupe,taupe,topo
+#FFBF00,âmbar,amber,ámbar
+#E8A33D,mel,honey,miel
+#CC7722,ocre,ochre,ocre
+#E1AD01,mostarda,mustard,mostaza
+#F4C430,açafrão,saffron,azafrán
+#FFE01B,amarelo,yellow,amarillo
+#FFF44F,limão-siciliano,lemon,limón
+#FFC72C,gema,yolk,yema
+#FFE135,banana,banana,plátano
+#FFF1A8,manteiga,butter,mantequilla
+#E4D96F,palha,straw,paja
+#F3E5AB,baunilha,vanilla,vainilla
+#FFFDD0,creme,cream,crema
+#F7E7CE,champanhe,champagne,champán
+#D4AF37,ouro,gold,oro
+#BFFF00,lima,chartreuse,lima
+#9ACD32,limão,lime,limón verde
+#93C572,pistache,pistachio,pistacho
+#5DE6A2,menta,mint,menta
+#98FF98,hortelã,spearmint,hierbabuena
+#9CAF88,sálvia,sage,salvia
+#708238,oliva,olive,oliva
+#4A5D23,musgo,moss,musgo
+#3A7D2C,folha,leaf,hoja
+#009C3B,bandeira,flag green,verde bandera
+#50C878,esmeralda,emerald,esmeralda
+#00A86B,jade,jade,jade
+#006A4E,garrafa,bottle green,verde botella
+#1F4D2B,floresta,forest,bosque
+#568203,abacate,avocado,aguacate
+#C5E1A5,chá-verde,green tea,té verde
+#5F8575,eucalipto,eucalyptus,eucalipto
+#01796F,pinho,pine,pino
+#87A96B,aspargo,asparagus,espárrago
+#40E0D0,turquesa,turquoise,turquesa
+#3BC4E2,piscina,pool,piscina
+#7FFFD4,água-marinha,aquamarine,aguamarina
+#005F6A,petróleo,petrol,petróleo
+#00B7EB,ciano,cyan,cian
+#00B2A9,caribe,caribbean,caribe
+#2A9D8F,lagoa,lagoon,laguna
+#DDF3F5,gelo,ice,hielo
+#80C0FE,céu,sky,cielo
+#87CEEB,celeste,sky blue,celeste
+#1E6FFF,azul,blue,azul
+#0047AB,cobalto,cobalt,cobalto
+#4169E1,royal,royal blue,azul rey
+#0B1F4B,marinho,navy,marino
+#4F6D99,jeans,jeans,vaquero
+#1560BD,denim,denim,mezclilla
+#1B4F72,oceano,ocean,océano
+#0F52BA,safira,sapphire,zafiro
+#1E2A44,noite,night,noche
+#121A33,meia-noite,midnight,medianoche
+#4682B4,aço,steel,acero
+#6A7B8C,ardósia,slate,pizarra
+#DCE6F0,nuvem,cloud,nube
+#A7C7E7,azul-bebê,baby blue,azul bebé
+#3F3FA8,índigo,indigo,índigo
+#B5ADFF,lavanda,lavender,lavanda
+#C8A2C8,lilás,lilac,lila
+#7F00FF,violeta,violet,violeta
+#6A0DAD,roxo,purple,morado
+#6F2DA8,uva,grape,uva
+#673147,ameixa,plum,ciruela
+#3D0C45,berinjela,eggplant,berenjena
+#DA70D6,orquídea,orchid,orquídea
+#E0B0FF,malva,mauve,malva
+#800080,púrpura,royal purple,púrpura
+#4A1942,açaí,açaí,asaí
+#9966CC,ametista,amethyst,amatista
+#C9A0DC,glicínia,wisteria,glicina
+#FF00FF,fúcsia,fuchsia,fucsia
+#FFFFFF,branco,white,blanco
+#F5F3EE,papel,paper,papel
+#FFFFF0,marfim,ivory,marfil
+#E3DAC9,osso,bone,hueso
+#D9DCE1,névoa,mist,niebla
+#C0C0C0,prata,silver,plata
+#A6A6A6,concreto,concrete,hormigón
+#8D8D8D,cimento,cement,cemento
+#808080,cinza,gray,gris
+#6E6E6E,fumaça,smoke,humo
+#4A4A4A,chumbo,lead,plomo
+#383838,grafite,graphite,grafito
+#2B2B2B,carvão,charcoal,carbón
+#1F1F1F,asfalto,asphalt,asfalto
+#111111,nanquim,india ink,tinta china
+#000000,preto,black,negro

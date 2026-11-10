@@ -24,6 +24,7 @@ o palletero guarda as cores do projeto num painel que você acopla em qualquer l
 - [presets](#-presets)
 - [formatos do painel](#-formatos-do-painel)
 - [ajustes](#-ajustes)
+- [idiomas](#-idiomas)
 - [teclado e atalhos](#-teclado-e-atalhos)
 - [desenvolvimento](#-desenvolvimento)
 
@@ -311,7 +312,32 @@ o **⋯** (doca da direita) abre os ajustes no lugar das cores.
 - ⤓ **importar cores** · ⤒ **exportar .ase** → veja [colar, importar e exportar](#-colar-importar-e-exportar).
 - 🗑 **segure para limpar** → segure o botão até a barra encher para esvaziar a paleta (tem desfazer).
 - ⌨ **atalhos** → uma folha com todos os cliques e teclas (também com `?` no painel). `Esc` fecha.
+- **idioma** → `PT · EN · ES`. sem escolha, o painel segue o idioma do After Effects. veja [idiomas](#-idiomas).
 - **?** (o círculo) → esta documentação.
+
+<br>
+
+---
+
+<br>
+
+## 📍 idiomas
+
+o painel, o After Effects (nomes do desfazer, janelas de abrir/salvar, presets de exemplo) e o instalador falam **português, inglês e espanhol**. os nomes automáticos das cores também: *menta* / *mint* / *menta*, *tijolo* / *brick* / *ladrillo*…
+
+- **qual idioma** → o escolhido nos [ajustes](#-ajustes); sem escolha, o do After Effects. idioma sem tradução usa inglês.
+- **trocar** → nos ajustes. o painel recarrega na hora (a paleta está no projeto, nada se perde). nomes automáticos das cores acompanham; nomes que você digitou ficam como estão.
+
+as traduções ficam em dois `.csv` dentro da extensão (UTF-8, uma coluna por idioma):
+
+| arquivo | o que tem |
+| --- | --- |
+| `cep/com.jmbillard.elpalletero/i18n/strings.csv` | todos os textos: painel (`chave,pt,en,es`), After Effects (`host.*`) e instalador (`inst.*`) |
+| `cep/com.jmbillard.elpalletero/i18n/colors.csv` | as cores de referência dos nomes automáticos (`hex,pt,en,es`) |
+
+- `{n}`, `{name}`… são trocados pelo valor; `.one` / `.other` são singular e plural; no instalador, `\n` é quebra de linha.
+- **idioma novo** → acrescente uma coluna com o código de 2 letras (`fr`, `de`, `it`…) **nos dois arquivos**. ele aparece sozinho nos ajustes. célula vazia usa a primeira coluna.
+- depois de editar, `node tools/check-i18n.js` confere chaves faltando ou sobrando, células vazias e `{variáveis}` diferentes entre idiomas.
 
 <br>
 
@@ -371,6 +397,7 @@ INSTALAR El PALLETERO.jsx, instalar_mac.command, instalar_windows.bat → instal
 - **GIFs:** `node tools/gifs/record.js` grava todos de novo a partir do mockup (ou `node tools/gifs/record.js editor presets` para alguns). precisa do Playwright e do `ffmpeg`.
 - **registro de eventos:** nos ajustes (⋯), 3 cliques no número da versão mostram ao vivo os eventos de mouse que chegam ao painel. foi assim que descobrimos que o CEP do After Effects entrega `mousedown`/`mouseup`, mas nem sempre `pointerdown`/`pointerup`: por isso todo "apertar e arrastar" do painel escuta os dois (`onPress` e `follow` em `panel.js`).
 - **ExtendScript:** `node tools/check-es3.js` procura palavras reservadas do ES3 nos `.jsx` (o After Effects recusa `native`, `int`, `class`, `char`… como nomes de variável, mesmo que o Node aceite). rode antes de publicar uma mudança no `host.jsx` ou no instalador.
+- **idiomas:** `node tools/check-i18n.js` confere os `.csv` de tradução contra o código (chaves faltando ou sobrando, células vazias, `{variáveis}`). o mockup embute os `.csv`; no After Effects o painel lê do disco.
 - **logo:** `docs/img/logo.svg` é a fonte. depois de mudar o logo, rode `node tools/installer/make-banner.js` (banner do instalador) e `node tools/installer/make-icons.js` (ícones do painel); o mockup e o estado de paleta vazia usam o mesmo desenho.
 - **instalador:** `node tools/installer/test-installer.js` executa o `INSTALAR El PALLETERO.jsx` em Node, com File/Folder/ScriptUI simulados (instalação nova, troca do nome antigo, reinstalar, remover, macOS e AE antigo). `node tools/installer/make-banner.js` gera o banner e grava no instalador.
 - os instaladores seguem o modelo do [ABRIDOR](https://github.com/jmbillard/ABRIDOR).

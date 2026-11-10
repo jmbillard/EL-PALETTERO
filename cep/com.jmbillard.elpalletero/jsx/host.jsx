@@ -43,6 +43,20 @@ function PAL_parse(s) {
 	return eval('(' + s + ')');
 }
 
+// ---------------------------------------------------------------- textos (vêm do painel, de i18n/strings.csv)
+
+var PAL_STR = {};
+function PAL_setStrings(json) {
+	try { PAL_STR = PAL_parse(json) || {}; } catch (e) { PAL_STR = {}; }
+	return PAL_json({ ok: true });
+}
+// PAL_T('undo.apply', 'padrão', { hex: '#FFF' })
+function PAL_T(key, fallback, vars) {
+	var s = PAL_STR.hasOwnProperty(key) ? String(PAL_STR[key]) : fallback;
+	if (vars) for (var k in vars) if (vars.hasOwnProperty(k)) s = s.split('{' + k + '}').join(vars[k]);
+	return s;
+}
+
 function PAL_has(arr, v) {
 	for (var i = 0; i < arr.length; i++) if (arr[i] == v) return true;
 	return false;
@@ -101,7 +115,7 @@ function PAL_projectKey() {
 
 function PAL_projectName() {
 	var f = app.project.file;
-	return f ? decodeURI(f.name).replace(/\.aep[x]?$/i, '') : 'sem título';
+	return f ? decodeURI(f.name).replace(/\.aep[x]?$/i, '') : ''; // sem título: o painel mostra no idioma dele
 }
 
 function PAL_legacyPalette(meta) {
@@ -173,7 +187,9 @@ function PAL_loadPrefs() {
 		showColorInfo: p.showColorInfo !== false,
 		labelType: p.labelType || '#HEX',
 		defaultPreset: p.defaultPreset || '',
-		presetFolder: PAL_presetLocation().path
+		presetFolder: PAL_presetLocation().path,
+		lang: p.lang || '',
+		aeLang: app.isoLanguage || ''
 	});
 }
 
@@ -448,7 +464,7 @@ function PAL_seedExamples(loc) {
 			if (new File(loc.folder.fsName + '/' + e[0] + '.json').exists) continue;
 			var sw = [];
 			for (var c = 0; c < e[2].length; c++) sw.push({ color: e[2][c], label: '', auto: true });
-			PAL_savePreset(PAL_json({ id: e[0], name: e[1], swatches: sw }));
+			PAL_savePreset(PAL_json({ id: e[0], name: PAL_T('ex.' + e[0].replace(/^exemplo-/, ''), e[1]), swatches: sw }));
 		}
 	}
 	PAL_savePrefs(PAL_json({ presetsSeeded: PAL_EXAMPLES_VERSION }));
@@ -525,7 +541,7 @@ function PAL_deletePreset(id) {
 function PAL_choosePresetFolder() {
 	var loc = PAL_presetLocation();
 	var start = loc.folder || new Folder(Folder.myDocuments);
-	var f = Folder.selectDialog('Pasta de presets do El PALLETERO', start);
+	var f = Folder.selectDialog(PAL_T('dlg.folder', 'Pasta de presets do El PALLETERO'), start);
 	if (!f) return PAL_json({ ok: false });
 	PAL_MOUNTS = null;
 	var net = PAL_toNet(f.fsName);
@@ -564,7 +580,7 @@ function PAL_releaseFrame(tmpId, path) {
 	try {
 		if (tmpId) {
 			var item = app.project.itemByID(tmpId);
-			if (item) { app.beginUndoGroup('El PALLETERO · extrair frame'); item.remove(); app.endUndoGroup(); }
+			if (item) { app.beginUndoGroup(PAL_T('undo.frame', 'El PALLETERO · extrair frame')); item.remove(); app.endUndoGroup(); }
 		}
 		if (path) { var f = new File(path); if (f.exists) f.remove(); }
 	} catch (e) {}
@@ -593,7 +609,7 @@ function PAL_grabFrame() {
 		}
 		if (src instanceof FootageItem && !(src.mainSource instanceof SolidSource)) {
 			// vídeo, PSD, sequência…: renderiza o frame numa comp temporária
-			app.beginUndoGroup('El PALLETERO · extrair frame');
+			app.beginUndoGroup(PAL_T('undo.frame', 'El PALLETERO · extrair frame'));
 			var fps = src.frameRate || comp.frameRate;
 			var dur = Math.max(src.duration || 0, 1 / fps);
 			var tmp = app.project.items.addComp('El PALLETERO tmp', src.width, src.height, src.pixelAspect || 1, dur, fps);
@@ -670,7 +686,7 @@ function PAL_apply(hex, optsJson) {
 		}
 	}
 
-	app.beginUndoGroup('El PALLETERO · aplicar ' + hex);
+	app.beginUndoGroup(PAL_T('undo.apply', 'El PALLETERO · aplicar {hex}', { hex: hex }));
 	try {
 		if (props.length || texts.length) {
 			for (p = 0; p < props.length; p++) PAL_setProp(props[p], color, comp.time);
@@ -719,9 +735,9 @@ var PAL_COLOR_FILES = /\.(ase|txt|css|scss|less|json|hex|svg)$/i;
 
 // abre um arquivo de cores: .ase vem em bytes (hex), o resto como texto (o painel acha as cores)
 function PAL_importColors() {
-	var filter = PAL_OS == 'Win' ? 'Cores:*.ase;*.txt;*.css;*.scss;*.less;*.json;*.hex;*.svg,Todos:*.*'
+	var filter = PAL_OS == 'Win' ? PAL_T('filter.colors', 'Cores') + ':*.ase;*.txt;*.css;*.scss;*.less;*.json;*.hex;*.svg,' + PAL_T('filter.all', 'Todos') + ':*.*'
 		: function (f) { return f instanceof Folder || PAL_COLOR_FILES.test(f.name); };
-	var f = File.openDialog('Importar cores (.ase, .css, .txt…)', filter, false);
+	var f = File.openDialog(PAL_T('dlg.import', 'Importar cores (.ase, .css, .txt…)'), filter, false);
 	if (!f) return PAL_json({ ok: false, reason: 'cancel' });
 	var ase = /\.ase$/i.test(f.name);
 	f.encoding = ase ? 'BINARY' : 'UTF-8';
@@ -741,7 +757,7 @@ function PAL_importColors() {
 // grava um .ase (bytes em hex, montados pelo painel)
 function PAL_exportAse(hex, name) {
 	var start = new File(Folder.desktop.fsName + '/' + String(name || 'paleta').replace(/[\\\/:*?"<>|]+/g, '-') + '.ase');
-	var f = start.saveDlg('Exportar paleta (.ase)', PAL_OS == 'Win' ? 'Adobe Swatch Exchange:*.ase' : undefined);
+	var f = start.saveDlg(PAL_T('dlg.export', 'Exportar paleta (.ase)'), PAL_OS == 'Win' ? 'Adobe Swatch Exchange:*.ase' : undefined);
 	if (!f) return PAL_json({ ok: false, reason: 'cancel' });
 	if (!/\.ase$/i.test(f.name)) f = new File(f.fsName + '.ase');
 	f.encoding = 'BINARY';
