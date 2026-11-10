@@ -282,7 +282,8 @@
 	box-shadow: 0 0 0 1px var(--line);
 }
 .pal[data-orient='row'] .settings { flex-wrap: nowrap; }
-.pal:not([data-orient='row']) .settings { align-content: flex-start; flex-direction: column; align-items: stretch; }
+.pal:not([data-orient='row']) .settings { align-content: flex-start; flex-direction: column; flex-wrap: nowrap; align-items: stretch; }
+.pal:not([data-orient='row']) .settings > * { flex: none; }
 .settings > * { animation: pal-rise .35s var(--ease) backwards; }
 .settings > *:nth-child(2) { animation-delay: .04s; } .settings > *:nth-child(3) { animation-delay: .08s; }
 .settings > *:nth-child(4) { animation-delay: .12s; } .settings > *:nth-child(5) { animation-delay: .16s; }
@@ -293,6 +294,8 @@
 .pal:not([data-orient='row']) .grp-title { width: 100%; margin: 4px 0 2px; }
 .vr { width: 1px; align-self: stretch; background: var(--line); flex: none; }
 .pal:not([data-orient='row']) .vr { width: auto; height: 1px; }
+.pal[data-orient='row'] .vr-end { margin-left: auto; }
+.pal:not([data-orient='row']) .vr-end { margin-top: auto; }
 
 .seg { display: inline-flex; padding: 2px; border-radius: 8px; background: var(--bg); position: relative; }
 .seg button {
@@ -306,7 +309,7 @@
 .seg button[aria-pressed='true'] { color: var(--accent-ink); }
 .seg-pill { position: absolute; top: 2px; bottom: 2px; left: 0; border-radius: 6px; background: var(--accent); transition: transform .35s var(--spring), width .35s var(--spring), background .4s; }
 /* cor de destaque: automática (anel de cores com a última aplicada no meio) ou fixa */
-.acc-chips { display: flex; align-items: center; gap: 3px; padding: 2px; border-radius: 8px; background: var(--bg); }
+.acc-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; padding: 2px; border-radius: 8px; background: var(--bg); }
 .acc-chip { position: relative; width: 22px; height: 24px; padding: 0; border: 0; border-radius: 6px; background: transparent; cursor: pointer; transition: transform .25s var(--spring); }
 .acc-chip::before { content: ''; position: absolute; left: 50%; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--c); transition: transform .3s var(--spring), box-shadow .2s; }
 .acc-chip:hover::before { transform: scale(1.2); }

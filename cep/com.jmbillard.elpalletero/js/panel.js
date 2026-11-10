@@ -11,7 +11,7 @@
 	var I18N = root.PalI18n;
 	function T(k, v) { return I18N.t(k, v); }
 	function Tn(k, n, v) { return I18N.n(k, n, v); }
-	var VERSION = 'v1.5.1';
+	var VERSION = 'v1.5.2';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
@@ -138,14 +138,15 @@
 			'    <button class="row-btn danger" data-act="clear" data-tip="{{set.clear}}">' + ic('trash') + '<span class="lbl">{{set.clear}}</span><i class="hold"></i></button>',
 			'  </div>',
 			'  <span class="vr"></span>',
-			'  <div class="grp"><button class="row-btn" data-act="keys" data-tip="{{set.keys}}" data-kbd="?">' + ic('keyboard') + '<span class="lbl">{{set.keys}}</span></button><button class="row-btn" data-act="help" data-tip="{{set.help.tip}}">' + ic('help') + '<span class="lbl">{{set.help}}</span></button><span class="ver">' + VERSION + '</span></div>',
-			'  <span class="vr"></span>',
 			'  <div class="grp acc-grp"><span class="grp-title">{{set.accent}}</span><div class="acc-chips">' +
 				'<button class="acc-chip acc-auto" data-accent="auto" data-tip="{{set.accent.auto}}"><i></i></button>' +
 				ACCENTS.map(function (h) { return '<button class="acc-chip" data-accent="' + h + '" style="--c:' + h + '"></button>'; }).join('') + '</div></div>',
 			'  <span class="vr"></span>',
 			'  <div class="grp"><span class="grp-title">{{set.lang}}</span><div class="seg lang-seg" data-tip="{{set.lang}}"><span class="seg-pill"></span>' +
 				I18N.langs().map(function (l) { return '<button data-lang="' + l + '" aria-label="' + esc(I18N.name(l)) + '">' + l.toUpperCase() + '</button>'; }).join('') + '</div></div>',
+			// atalhos, ajuda e versão: no fim (à direita na faixa, embaixo na coluna)
+			'  <span class="vr vr-end"></span>',
+			'  <div class="grp grp-end"><button class="row-btn" data-act="keys" data-tip="{{set.keys}}" data-kbd="?">' + ic('keyboard') + '<span class="lbl">{{set.keys}}</span></button><button class="row-btn" data-act="help" data-tip="{{set.help.tip}}">' + ic('help') + '<span class="lbl">{{set.help}}</span></button><span class="ver">' + VERSION + '</span></div>',
 			'</div>',
 			'<div class="sheet library" hidden>',
 			'  <div class="lib-list" role="list"></div>',

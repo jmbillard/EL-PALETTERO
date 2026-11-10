@@ -399,7 +399,8 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	box-shadow: 0 0 0 1px var(--line);
 }
 .pal[data-orient='row'] .settings { flex-wrap: nowrap; }
-.pal:not([data-orient='row']) .settings { align-content: flex-start; flex-direction: column; align-items: stretch; }
+.pal:not([data-orient='row']) .settings { align-content: flex-start; flex-direction: column; flex-wrap: nowrap; align-items: stretch; }
+.pal:not([data-orient='row']) .settings > * { flex: none; }
 .settings > * { animation: pal-rise .35s var(--ease) backwards; }
 .settings > *:nth-child(2) { animation-delay: .04s; } .settings > *:nth-child(3) { animation-delay: .08s; }
 .settings > *:nth-child(4) { animation-delay: .12s; } .settings > *:nth-child(5) { animation-delay: .16s; }
@@ -410,6 +411,8 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 .pal:not([data-orient='row']) .grp-title { width: 100%; margin: 4px 0 2px; }
 .vr { width: 1px; align-self: stretch; background: var(--line); flex: none; }
 .pal:not([data-orient='row']) .vr { width: auto; height: 1px; }
+.pal[data-orient='row'] .vr-end { margin-left: auto; }
+.pal:not([data-orient='row']) .vr-end { margin-top: auto; }
 
 .seg { display: inline-flex; padding: 2px; border-radius: 8px; background: var(--bg); position: relative; }
 .seg button {
@@ -423,7 +426,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 .seg button[aria-pressed='true'] { color: var(--accent-ink); }
 .seg-pill { position: absolute; top: 2px; bottom: 2px; left: 0; border-radius: 6px; background: var(--accent); transition: transform .35s var(--spring), width .35s var(--spring), background .4s; }
 /* cor de destaque: automática (anel de cores com a última aplicada no meio) ou fixa */
-.acc-chips { display: flex; align-items: center; gap: 3px; padding: 2px; border-radius: 8px; background: var(--bg); }
+.acc-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; padding: 2px; border-radius: 8px; background: var(--bg); }
 .acc-chip { position: relative; width: 22px; height: 24px; padding: 0; border: 0; border-radius: 6px; background: transparent; cursor: pointer; transition: transform .25s var(--spring); }
 .acc-chip::before { content: ''; position: absolute; left: 50%; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--c); transition: transform .3s var(--spring), box-shadow .2s; }
 .acc-chip:hover::before { transform: scale(1.2); }
@@ -2165,7 +2168,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 	var I18N = root.PalI18n;
 	function T(k, v) { return I18N.t(k, v); }
 	function Tn(k, n, v) { return I18N.n(k, n, v); }
-	var VERSION = 'v1.5.1';
+	var VERSION = 'v1.5.2';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
@@ -2292,14 +2295,15 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 			'    <button class="row-btn danger" data-act="clear" data-tip="{{set.clear}}">' + ic('trash') + '<span class="lbl">{{set.clear}}</span><i class="hold"></i></button>',
 			'  </div>',
 			'  <span class="vr"></span>',
-			'  <div class="grp"><button class="row-btn" data-act="keys" data-tip="{{set.keys}}" data-kbd="?">' + ic('keyboard') + '<span class="lbl">{{set.keys}}</span></button><button class="row-btn" data-act="help" data-tip="{{set.help.tip}}">' + ic('help') + '<span class="lbl">{{set.help}}</span></button><span class="ver">' + VERSION + '</span></div>',
-			'  <span class="vr"></span>',
 			'  <div class="grp acc-grp"><span class="grp-title">{{set.accent}}</span><div class="acc-chips">' +
 				'<button class="acc-chip acc-auto" data-accent="auto" data-tip="{{set.accent.auto}}"><i></i></button>' +
 				ACCENTS.map(function (h) { return '<button class="acc-chip" data-accent="' + h + '" style="--c:' + h + '"></button>'; }).join('') + '</div></div>',
 			'  <span class="vr"></span>',
 			'  <div class="grp"><span class="grp-title">{{set.lang}}</span><div class="seg lang-seg" data-tip="{{set.lang}}"><span class="seg-pill"></span>' +
 				I18N.langs().map(function (l) { return '<button data-lang="' + l + '" aria-label="' + esc(I18N.name(l)) + '">' + l.toUpperCase() + '</button>'; }).join('') + '</div></div>',
+			// atalhos, ajuda e versão: no fim (à direita na faixa, embaixo na coluna)
+			'  <span class="vr vr-end"></span>',
+			'  <div class="grp grp-end"><button class="row-btn" data-act="keys" data-tip="{{set.keys}}" data-kbd="?">' + ic('keyboard') + '<span class="lbl">{{set.keys}}</span></button><button class="row-btn" data-act="help" data-tip="{{set.help.tip}}">' + ic('help') + '<span class="lbl">{{set.help}}</span></button><span class="ver">' + VERSION + '</span></div>',
 			'</div>',
 			'<div class="sheet library" hidden>',
 			'  <div class="lib-list" role="list"></div>',
