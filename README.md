@@ -312,6 +312,7 @@ o **⋯** (doca da direita) abre os ajustes no lugar das cores.
 - ⤓ **importar cores** · ⤒ **exportar .ase** → veja [colar, importar e exportar](#-colar-importar-e-exportar).
 - 🗑 **segure para limpar** → segure o botão até a barra encher para esvaziar a paleta (tem desfazer).
 - ⌨ **atalhos** → uma folha com todos os cliques e teclas (também com `?` no painel). `Esc` fecha.
+- 🎨 **destaque** → a cor de destaque da interface (botões ligados, contornos, foco). o primeiro, com o anel de cores, é o **automático**: o destaque acompanha a última cor aplicada (a bolinha do meio mostra qual). as outras deixam uma cor fixa.
 - **idioma** → `PT · EN · ES`. sem escolha, o painel segue o idioma do After Effects. veja [idiomas](#-idiomas).
 - **?** (o círculo) → esta documentação.
 

@@ -40,6 +40,8 @@ set.keys,Atalhos,Shortcuts,Atajos
 set.help.tip,Ajuda e documentação,Help and documentation,Ayuda y documentación
 set.help,Ajuda,Help,Ayuda
 set.lang,Idioma,Language,Idioma
+set.accent,Destaque,Accent,Color de acento
+set.accent.auto,Automático: a última cor aplicada,Automatic: the last applied color,Automático: el último color aplicado
 
 # dicas
 kbd.click,clique,click,clic

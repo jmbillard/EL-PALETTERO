@@ -11,7 +11,7 @@
 	var I18N = root.PalI18n;
 	function T(k, v) { return I18N.t(k, v); }
 	function Tn(k, n, v) { return I18N.n(k, n, v); }
-	var VERSION = 'v1.5.0';
+	var VERSION = 'v1.5.1';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
@@ -100,6 +100,9 @@
 			key: null
 		};
 		var mods = { alt: false, ctrl: false, shift: false };
+		// cor de destaque da interface: 'auto' (a última cor aplicada) ou uma fixa
+		var ACCENTS = ['#FFC44E', '#FF5A68', '#FF8CCD', '#B5ADFF', '#80C0FE', '#5DE6A2', '#E8E9EC'];
+		S.prefs.accent = store('pal.accent') || 'auto'; // cópia local: o painel já nasce com a cor certa
 
 		el.classList.add('pal');
 		el.tabIndex = -1;
@@ -136,6 +139,10 @@
 			'  </div>',
 			'  <span class="vr"></span>',
 			'  <div class="grp"><button class="row-btn" data-act="keys" data-tip="{{set.keys}}" data-kbd="?">' + ic('keyboard') + '<span class="lbl">{{set.keys}}</span></button><button class="row-btn" data-act="help" data-tip="{{set.help.tip}}">' + ic('help') + '<span class="lbl">{{set.help}}</span></button><span class="ver">' + VERSION + '</span></div>',
+			'  <span class="vr"></span>',
+			'  <div class="grp acc-grp"><span class="grp-title">{{set.accent}}</span><div class="acc-chips">' +
+				'<button class="acc-chip acc-auto" data-accent="auto" data-tip="{{set.accent.auto}}"><i></i></button>' +
+				ACCENTS.map(function (h) { return '<button class="acc-chip" data-accent="' + h + '" style="--c:' + h + '"></button>'; }).join('') + '</div></div>',
 			'  <span class="vr"></span>',
 			'  <div class="grp"><span class="grp-title">{{set.lang}}</span><div class="seg lang-seg" data-tip="{{set.lang}}"><span class="seg-pill"></span>' +
 				I18N.langs().map(function (l) { return '<button data-lang="' + l + '" aria-label="' + esc(I18N.name(l)) + '">' + l.toUpperCase() + '</button>'; }).join('') + '</div></div>',
@@ -207,6 +214,7 @@
 		var keysSheet = q('.keys');
 		var toastEl = q('.toast');
 		var tipEl = q('.tip');
+		setAccent(null, true); // destaque fixo já na abertura
 		var nodes = {}; // id → elemento
 
 		// ------------------------------------------------------------------ apertar e arrastar no CEP
@@ -597,9 +605,22 @@
 			setTimeout(function () { n.classList.remove(cls); }, ms || 900);
 		}
 
-		function setAccent(hex) {
-			el.style.setProperty('--accent', hex);
-			el.style.setProperty('--accent-ink', C.ink(hex));
+		var lastApplied = '#FFC44E';
+		// no modo automático o destaque acompanha a última cor aplicada; com uma cor fixa, fica nela
+		function setAccent(hex, force) {
+			if (hex && !force) lastApplied = hex;
+			var c = S.prefs.accent !== 'auto' ? S.prefs.accent : (lastApplied || '#FFC44E');
+			el.style.setProperty('--accent', c);
+			el.style.setProperty('--accent-ink', C.ink(c));
+			var dot = q('.acc-auto i');
+			if (dot) dot.style.background = lastApplied || '#FFC44E';
+		}
+		function chooseAccent(v) {
+			S.prefs.accent = v;
+			store('pal.accent', v);
+			Host.savePrefs({ accent: v }).catch(function () {});
+			setAccent(null, true);
+			syncSettings();
 		}
 
 		var REASONS = {
@@ -936,6 +957,10 @@
 			Array.prototype.forEach.call(settings.querySelectorAll('[data-fmt]'), function (b) {
 				b.setAttribute('aria-pressed', b.dataset.fmt === S.prefs.format);
 			});
+			Array.prototype.forEach.call(settings.querySelectorAll('[data-accent]'), function (b) {
+				b.setAttribute('aria-pressed', b.dataset.accent === S.prefs.accent);
+				if (b.dataset.accent !== 'auto') b.dataset.tip = N.nearest(b.dataset.accent);
+			});
 			Array.prototype.forEach.call(settings.querySelectorAll('[data-lang]'), function (b) {
 				b.setAttribute('aria-pressed', b.dataset.lang === I18N.lang());
 			});
@@ -956,6 +981,12 @@
 		}
 
 		settings.addEventListener('click', function (e) {
+			var a = e.target.closest('[data-accent]');
+			if (a) {
+				if (a.dataset.accent !== S.prefs.accent) chooseAccent(a.dataset.accent);
+				a.animate([{ transform: 'scale(.7)' }, { transform: 'none' }], { duration: 380, easing: SPRING });
+				return;
+			}
 			var b = e.target.closest('[data-fmt]');
 			if (b) {
 				setPref('format', b.dataset.fmt);
@@ -2571,6 +2602,8 @@
 			S.prefs.names = p.showColorLabels !== false;
 			S.prefs.defaultPreset = p.defaultPreset || '';
 			S.folder = p.presetFolder || '';
+			if (p.accent && p.accent !== S.prefs.accent) { S.prefs.accent = p.accent; store('pal.accent', p.accent); }
+			setAccent(null, true);
 			syncSettings();
 		}).catch(function () {}).then(function () {
 			measure();

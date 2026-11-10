@@ -189,6 +189,7 @@ function PAL_loadPrefs() {
 		defaultPreset: p.defaultPreset || '',
 		presetFolder: PAL_presetLocation().path,
 		lang: p.lang || '',
+		accent: p.accent || 'auto',
 		aeLang: app.isoLanguage || ''
 	});
 }
