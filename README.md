@@ -17,11 +17,14 @@ o palletero guarda as cores do projeto num painel que você acopla em qualquer l
 - [aplicar cores](#-aplicar-cores)
 - [organizar a paleta](#-organizar-a-paleta)
 - [editor de cor e nomes automáticos](#-editor-de-cor-e-nomes-automáticos)
+- [criar harmonias](#-criar-harmonias)
 - [conta-gotas](#-conta-gotas)
 - [extrair cores de uma imagem](#-extrair-cores-de-uma-imagem)
+- [colar, importar e exportar](#-colar-importar-e-exportar)
 - [presets](#-presets)
 - [formatos do painel](#-formatos-do-painel)
 - [ajustes](#-ajustes)
+- [idiomas](#-idiomas)
 - [teclado e atalhos](#-teclado-e-atalhos)
 - [desenvolvimento](#-desenvolvimento)
 
@@ -42,8 +45,8 @@ requer After Effects **2022 (22.0)** ou mais novo, no Windows ou no macOS.
 > • **cep/com.jmbillard.elpalletero/** → a extensão (painel CEP).\
 > • **instalar_windows.bat** / **instalar_mac.command** → instaladores alternativos, sem abrir o After Effects.
 
-1. no After Effects, abra `File` > `Scripts` > `Run Script File...` e escolha o **INSTALAR El PALLETERO.jsx** direto da pasta do El PALLETERO (a que tem a pasta `cep` dentro). o instalador abre com as boas-vindas: clique em **começar**.
-2. o instalador confere o que é necessário. bolinha 🟢 = ok, 🔴 = precisa resolver. se a escrita de arquivos estiver bloqueada, use o link **› abrir preferências de scripts e expressões**, marque *Allow Scripts to Write Files and Access Network* e clique em **› verificar de novo**.
+1. no After Effects, abra `File` > `Scripts` > `Run Script File...` e escolha o **INSTALAR El PALLETERO.jsx** direto da pasta do El PALLETERO (a que tem a pasta `cep` dentro).
+2. o instalador confere o que é necessário. **se estiver tudo certo, ele abre direto no passo 3** (o botão **anterior** mostra a checagem). senão, abre nas boas-vindas e depois mostra a checagem: bolinha 🟢 = ok, 🔴 = precisa resolver. se a escrita de arquivos estiver bloqueada, use o link **› abrir preferências de scripts e expressões**, marque *Allow Scripts to Write Files and Access Network* e clique em **› verificar de novo**.
 3. escolha **instalar** (ou **atualizar** / **reinstalar**, se já houver uma versão no computador; **remover** desinstala). a tela mostra de onde a extensão vai ser copiada e para onde.
 4. pronto! **reinicie o After Effects** e abra o painel em `Window` > `Extensions` > `El PALLETERO`. acople onde preferir.
 
@@ -92,8 +95,11 @@ o painel se chamava **O PALETTERO** até a v1.1. na primeira vez que o El PALLET
 
 - com **propriedades de cor selecionadas** (Fill, Stroke, Tint, a cor de um efeito, o Source Text…), só elas mudam.
 - sem propriedades selecionadas, cada layer ganha um efeito **Fill** com o nome da cor (`#FF4D4D`). aplicar outra cor **reaproveita** esse Fill em vez de empilhar outro.
+- `Shift` + `◖ clique` → **contorno**: pinta os traços (Stroke) dos shape layers e o contorno dos textos (o contorno do texto ganha 2 px se estava em zero). layers sem traço avisam em vez de ganhar um Fill. com o `Shift` seguro, o balde da amostra vira um anel.
 - com keyframes, a cor entra no tempo atual.
 - a última cor aplicada ganha um pontinho e passa a ser a cor de destaque do painel.
+
+com a paleta vazia, o painel oferece os caminhos para começar: **capturar**, **nova cor**, **presets**, **harmonia**, ou colar cores.
 
 > 🚩 *obs:*\
 > • cada aplicação é **um passo** de desfazer no After Effects (`El PALLETERO · aplicar #HEX`).\
@@ -134,6 +140,7 @@ o editor nasce da própria amostra e volta para ela quando você confirma.
 - **campo de valor** → digite ou cole a cor. o botão `HEX` alterna para `RGB` e `HSB`. colar em qualquer lugar do editor também funciona (`#ff4d4d`, `rgb(255, 77, 77)`, `0 70 100`…).
 - **metade esquerda da prévia** → a cor original. `◖ clique` volta para ela.
 - `Enter` confirma, `Esc` cancela. o 🗑️ exclui a cor.
+- o botão da **roda** troca para o [criador de harmonias](#-criar-harmonias), partindo da cor do editor.
 
 ### nomes automáticos
 
@@ -147,6 +154,43 @@ cada cor ganha um nome em português, do mundo real: *menta*, *tijolo*, *céu*, 
 > 🚩 *obs:*\
 > • nomes antigos como `cor 3`, vazios ou iguais ao hex viram automáticos.\
 > • para ver os nomes nas amostras, ligue **mostrar nomes** nos [ajustes](#-ajustes).
+
+<br>
+
+---
+
+<br>
+
+## 📍 criar harmonias
+
+o segundo modo do editor: você escolhe uma **cor base** e uma **regra**, e as cores irmãs aparecem juntas. entra pela roda no rodapé do editor; o 💧 volta para o editor de uma cor. o **+** abre no último modo usado.
+
+- **roda** → o ângulo é o matiz e a distância do centro é a saturação. com pouco espaço ela vira um **quadrado** (matiz na horizontal, saturação na vertical), com os mesmos gestos.
+  - arraste **qualquer ponto**: o conjunto inteiro gira junto e a regra continua valendo.
+  - clicar num lugar vazio leva a cor base até lá.
+  - com a roda em foco, ← → giram (`Shift` gira mais) e ↑ ↓ mudam a saturação.
+- **barra ao lado** → brilho de todas as cores.
+- **regras** (cada ícone é uma mini-roda com os pontos da regra):
+
+  | regra | cores |
+  | --- | --- |
+  | análoga | 5 vizinhas no círculo (com **abertura**) |
+  | monocromática | 5 tons da mesma cor |
+  | complementar | a base e a oposta |
+  | complementar dividida | a base e as duas vizinhas da oposta (com **abertura**) |
+  | tríade | 3, a 120° |
+  | tétrade | 4, em retângulo |
+  | quadrado | 4, a 90° |
+
+- **degraus** → 1, 2 ou 3 tons por cor (claro, a cor, escuro). somem na monocromática, que já é feita de tons.
+- **cores geradas** → `◖ clique` deixa uma cor de fora (e de novo traz de volta). o ponto da roda esmaece quando todas as cores dele estão de fora.
+- **rodapé**:
+  - 🔖 → salva as cores como um **preset** novo, com o nome da regra e da cor base (*tríade mostarda*).
+  - ✓ → **adiciona** à paleta as cores que ainda não estão lá. o número no canto conta quantas são.
+  - `Shift` + ✓ → **substitui** a paleta.
+  - `Enter` / `Shift+Enter` fazem o mesmo; `Esc` cancela. tudo tem desfazer.
+
+> 🚩 *obs:* a regra, a abertura e os degraus ficam guardados para a próxima vez.
 
 <br>
 
@@ -206,6 +250,18 @@ o **conta-gotas**, com um layer de imagem selecionado (ou nada selecionado), lê
 
 <br>
 
+## 📍 colar, importar e exportar
+
+- **colar** → com o painel em foco, `Ctrl+V` / `⌘V` acha as cores em qualquer texto copiado: `#hex` (3, 6 ou 8 dígitos), `rgb()` / `rgba()`, `0xRRGGBB`, CSS, JSON, a URL do Coolors (`coolors.co/264653-2a9d8f-…`) ou uma lista de hex. em CSS e JSON o nome vem junto (`--primaria: #264653` → *primaria*). cores que já estão na paleta ficam de fora. tem desfazer.
+- **importar cores** (nos [ajustes](#-ajustes)) → abre um `.ase` (Illustrator, Photoshop, InDesign: RGB, CMYK, Lab e cinza) ou qualquer arquivo de texto com cores (`.css`, `.scss`, `.json`, `.txt`, `.svg`…). os nomes do arquivo viram os nomes das cores.
+- **exportar .ase** (nos ajustes) → grava a paleta do projeto como `.ase`, com os nomes, num grupo com o nome do projeto. abre no Illustrator, no Photoshop e no InDesign.
+
+<br>
+
+---
+
+<br>
+
 ## 📍 presets
 
 a paleta do projeto mora no `.aep`. os **presets** são uma biblioteca de paletas numa pasta que você escolhe, que pode ser uma pasta de rede da equipe.
@@ -214,8 +270,10 @@ a paleta do projeto mora no `.aep`. os **presets** são uma biblioteca de paleta
 
 - `◖ clique` num preset → **substitui** a paleta do projeto.
 - `Shift` + `◖ clique` → **adiciona** as cores que faltam.
-- **salvar preset** → a paleta do projeto vira um preset novo.
+- **cartão do projeto** (o primeiro) → `◖ clique` salva a paleta como preset novo. quando ela mudou desde o preset de origem, `Shift` + `◖ clique` atualiza aquele preset. um fio separa a paleta quando ela ainda não está salva.
 - ✏️ renomeia, ★ define o preset usado em projetos sem paleta, 🗑️ exclui.
+- para reordenar, clique na alça ⠿ à direita do nome, mova e clique de novo (ou arraste).
+- já vêm 12 paletas de exemplo (Pôr do sol, Sorveteria, Neon, Oceano, Floresta, Terroso, Tropical, Retrô 70, Noite urbana, Brasil, Pastel, Monocromático).
 
 a pasta de presets entende caminhos de rede do Windows e do Mac, volumes montados de novo (`VFX-1`) e volumes desmontados → [documentação completa](docs/presets.md).
 
@@ -250,9 +308,37 @@ o **⋯** (doca da direita) abre os ajustes no lugar das cores.
 - **HEX · RGB · HSB** → formato dos valores nas amostras e do que é copiado.
 - 👁 **valores sempre visíveis** → mostra os valores sem precisar passar o mouse (quando cabem).
 - 🏷 **mostrar nomes** → mostra o nome da cor nas amostras.
-- ⇅ **ordenar por matiz** → matiz → luminosidade → saturação, cinzas no fim.
+- ⇅ **ordenar por matiz** → segue o círculo de cores a partir dos vermelhos. cores de matiz parecido (até 18° de diferença) ficam juntas, do escuro ao claro. brancos, cinzas e pretos, inclusive os levemente tingidos, vão para o fim, também do escuro ao claro.
+- ⤓ **importar cores** · ⤒ **exportar .ase** → veja [colar, importar e exportar](#-colar-importar-e-exportar).
 - 🗑 **segure para limpar** → segure o botão até a barra encher para esvaziar a paleta (tem desfazer).
-- **?** → esta documentação.
+- ⌨ **atalhos** → uma folha com todos os cliques e teclas (também com `?` no painel). `Esc` fecha.
+- 🎨 **destaque** → a cor de destaque da interface (botões ligados, contornos, foco). o primeiro, com o anel de cores, é o **automático**: o destaque acompanha a última cor aplicada (a bolinha do meio mostra qual). as outras deixam uma cor fixa.
+- **idioma** → `PT · EN · ES`. sem escolha, o painel segue o idioma do After Effects. veja [idiomas](#-idiomas).
+- **?** (o círculo) → esta documentação.
+
+<br>
+
+---
+
+<br>
+
+## 📍 idiomas
+
+o painel, o After Effects (nomes do desfazer, janelas de abrir/salvar, presets de exemplo) e o instalador falam **português, inglês e espanhol**. os nomes automáticos das cores também: *menta* / *mint* / *menta*, *tijolo* / *brick* / *ladrillo*…
+
+- **qual idioma** → o escolhido nos [ajustes](#-ajustes); sem escolha, o do After Effects. idioma sem tradução usa inglês.
+- **trocar** → nos ajustes. o painel recarrega na hora (a paleta está no projeto, nada se perde). nomes automáticos das cores acompanham; nomes que você digitou ficam como estão.
+
+as traduções ficam em dois `.csv` dentro da extensão (UTF-8, uma coluna por idioma):
+
+| arquivo | o que tem |
+| --- | --- |
+| `cep/com.jmbillard.elpalletero/i18n/strings.csv` | todos os textos: painel (`chave,pt,en,es`), After Effects (`host.*`) e instalador (`inst.*`) |
+| `cep/com.jmbillard.elpalletero/i18n/colors.csv` | as cores de referência dos nomes automáticos (`hex,pt,en,es`) |
+
+- `{n}`, `{name}`… são trocados pelo valor; `.one` / `.other` são singular e plural; no instalador, `\n` é quebra de linha.
+- **idioma novo** → acrescente uma coluna com o código de 2 letras (`fr`, `de`, `it`…) **nos dois arquivos**. ele aparece sozinho nos ajustes. célula vazia usa a primeira coluna.
+- depois de editar, `node tools/check-i18n.js` confere chaves faltando ou sobrando, células vazias e `{variáveis}` diferentes entre idiomas.
 
 <br>
 
@@ -265,12 +351,16 @@ o **⋯** (doca da direita) abre os ajustes no lugar das cores.
 | ação | Windows | macOS |
 | --- | --- | --- |
 | aplicar | `◖ clique` | `◖ clique` |
+| aplicar no contorno | `Shift` + `◖ clique` | `⇧` + `◖ clique` |
 | editar | `◗ clique direito` | `◗ clique direito` ou `Ctrl` + `◖ clique` |
 | copiar valor | `Ctrl` + `◖ clique` | `⌘` + `◖ clique` |
 | excluir | `Alt` + `◖ clique` | `⌥` + `◖ clique` |
 | capturar do projeto inteiro | `Shift` + conta-gotas | `⇧` + conta-gotas |
 | adicionar preset sem substituir | `Shift` + `◖ clique` no preset | `⇧` + `◖ clique` no preset |
+| harmonia: substituir a paleta | `Shift` + ✓ ou `Shift+Enter` | `⇧` + ✓ ou `⇧Return` |
 | desfazer (paleta) | `Ctrl+Z` | `⌘Z` |
+| colar cores | `Ctrl+V` | `⌘V` |
+| folha de atalhos | `?` | `?` |
 | confirmar / cancelar (editor, extração) | `Enter` / `Esc` | `Return` / `Esc` |
 | amostra em foco: aplicar · editar · excluir | `Enter` · `F2` · `Delete` | `Return` · `F2` · `Delete` |
 
@@ -306,6 +396,9 @@ INSTALAR El PALLETERO.jsx, instalar_mac.command, instalar_windows.bat → instal
 - **depurar:** com o painel aberto, acesse `http://localhost:8099` no Chrome.
 - **mockup:** depois de mudar o painel, rode `node tools/build-mockup.js`.
 - **GIFs:** `node tools/gifs/record.js` grava todos de novo a partir do mockup (ou `node tools/gifs/record.js editor presets` para alguns). precisa do Playwright e do `ffmpeg`.
+- **registro de eventos:** nos ajustes (⋯), 3 cliques no número da versão mostram ao vivo os eventos de mouse que chegam ao painel. foi assim que descobrimos que o CEP do After Effects entrega `mousedown`/`mouseup`, mas nem sempre `pointerdown`/`pointerup`: por isso todo "apertar e arrastar" do painel escuta os dois (`onPress` e `follow` em `panel.js`).
+- **ExtendScript:** `node tools/check-es3.js` procura palavras reservadas do ES3 nos `.jsx` (o After Effects recusa `native`, `int`, `class`, `char`… como nomes de variável, mesmo que o Node aceite). rode antes de publicar uma mudança no `host.jsx` ou no instalador.
+- **idiomas:** `node tools/check-i18n.js` confere os `.csv` de tradução contra o código (chaves faltando ou sobrando, células vazias, `{variáveis}`). o mockup embute os `.csv`; no After Effects o painel lê do disco.
 - **logo:** `docs/img/logo.svg` é a fonte. depois de mudar o logo, rode `node tools/installer/make-banner.js` (banner do instalador) e `node tools/installer/make-icons.js` (ícones do painel); o mockup e o estado de paleta vazia usam o mesmo desenho.
 - **instalador:** `node tools/installer/test-installer.js` executa o `INSTALAR El PALLETERO.jsx` em Node, com File/Folder/ScriptUI simulados (instalação nova, troca do nome antigo, reinstalar, remover, macOS e AE antigo). `node tools/installer/make-banner.js` gera o banner e grava no instalador.
 - os instaladores seguem o modelo do [ABRIDOR](https://github.com/jmbillard/ABRIDOR).

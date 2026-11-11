@@ -72,7 +72,7 @@
 	function format(hex, fmt) {
 		var rgb = hexToRgb(hex);
 		if (fmt === 'RGB') return rgb.join(' ');
-		if (fmt === 'HSB') return rgbToHsb(rgb).map(Math.round).join(' ');
+		if (fmt === 'HSB') { var h = rgbToHsb(rgb).map(Math.round); h[0] %= 360; return h.join(' '); } // 359,6° arredonda para 0, não 360
 		return normHex(hex);
 	}
 
@@ -89,7 +89,8 @@
 			}
 			return rgbToHex(n);
 		}
-		return hex;
+		// só números no modo RGB/HSB ("255", "100"): ainda não é uma cor, não um hex de 3 dígitos
+		return hex && (fmt === 'HEX' || /^#|[a-f]/i.test(s)) ? hex : null;
 	}
 
 
@@ -123,15 +124,31 @@
 	}
 
 	// mesmo critério do script: cores por matiz → luminosidade → saturação; cinzas no fim
+	// Ordenar por matiz:
+	// - neutros (croma CIELAB baixo: brancos, cinzas, pretos, inclusive os levemente tingidos) vão
+	//   para o fim, do escuro ao claro;
+	// - as cores seguem o círculo de matiz começando nos vermelhos (o círculo é girado 15°, então
+	//   um vermelho de 350° fica junto do de 5°, e os rosas/magentas fecham a fila);
+	// - matizes vizinhos (até 18° do primeiro do grupo) formam um grupo, ordenado do escuro ao claro
+	//   (L* CIELAB) e, empatando, do mais saturado ao menos. Assim uma diferença de 1° no matiz não
+	//   passa na frente da luminosidade, e não há fronteira fixa separando cores quase iguais.
+	var HUE_START = 15, HUE_GROUP = 18, NEUTRAL_C = 9;
 	function sortSwatches(list) {
-		function key(sw) { return rgbToHsl(hexToRgb(sw.color)); }
-		function cmp(a, b) {
-			var A = key(a), B = key(b);
-			return (A[0] - B[0]) || (A[2] - B[2]) || (A[1] - B[1]);
-		}
-		var colors = [], grays = [];
-		list.forEach(function (sw) { (key(sw)[1] < 0.15 ? grays : colors).push(sw); });
-		return colors.sort(cmp).concat(grays.sort(cmp));
+		var colors = [], neutrals = [];
+		list.forEach(function (sw, i) {
+			var rgb = hexToRgb(sw.color), lab = rgbToLab(rgb);
+			var it = { sw: sw, i: i, L: lab[0], C: Math.sqrt(lab[1] * lab[1] + lab[2] * lab[2]), h: (rgbToHsb(rgb)[0] + HUE_START) % 360 };
+			(it.C < NEUTRAL_C ? neutrals : colors).push(it);
+		});
+		function byLight(a, b) { return (a.L - b.L) || (b.C - a.C) || (a.i - b.i); } // o índice deixa a ordem estável
+		colors.sort(function (a, b) { return (a.h - b.h) || (a.i - b.i); });
+		var out = [], group = [];
+		colors.forEach(function (it) {
+			if (group.length && it.h - group[0].h > HUE_GROUP) { out = out.concat(group.sort(byLight)); group = []; }
+			group.push(it);
+		});
+		out = out.concat(group.sort(byLight), neutrals.sort(byLight));
+		return out.map(function (it) { return it.sw; });
 	}
 
 	root.PalColor = {

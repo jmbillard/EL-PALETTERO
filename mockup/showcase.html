@@ -229,6 +229,6 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 
 	var pal = document.getElementById('pal');
 	draw();
-	window.PalApp.mount(pal);
+	window.PalI18n.boot(window.PalHost).then(function () { window.PalApp.mount(pal); });
 })();
 </script>

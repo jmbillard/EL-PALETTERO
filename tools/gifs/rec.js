@@ -109,7 +109,9 @@ function helpers(p) {
       cx = x; cy = y;
     },
     async to(sel, fx = .5, fy = .5, ms) {
-      const b = await (typeof sel === 'string' ? p.locator(sel).first() : sel).boundingBox();
+      const loc = typeof sel === 'string' ? p.locator(sel).first() : sel;
+      await loc.scrollIntoViewIfNeeded().catch(() => {});
+      const b = await loc.boundingBox();
       await H.glide(b.x + b.width * fx, b.y + b.height * fy, ms);
     },
     async click(sel, o = {}) {

@@ -83,6 +83,7 @@
 		var x = Math.min(data.w - 1, Math.max(0, Math.floor(fx * data.w)));
 		var y = Math.min(data.h - 1, Math.max(0, Math.floor(fy * data.h)));
 		var d = data.ctx.getImageData(x, y, 1, 1).data;
+		if (d[3] < 128) return null; // transparente: não é uma cor da imagem
 		return C.rgbToHex([d[0], d[1], d[2]]);
 	}
 

@@ -7,14 +7,18 @@
 	var Host = root.PalHost;
 	var N = root.PalNames;
 	var X = root.PalExtract;
-	var VERSION = 'v1.2';
+	var IO = root.PalIO;
+	var I18N = root.PalI18n;
+	function T(k, v) { return I18N.t(k, v); }
+	function Tn(k, n, v) { return I18N.n(k, n, v); }
+	var VERSION = 'v1.5.4';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
 	// Windows × Mac: no Mac o "Ctrl" do painel é ⌘ (Ctrl+clique lá é clique direito) e as teclas
 	// aparecem com os símbolos do sistema
 	var IS_MAC = /Mac/i.test(root.navigator.platform || root.navigator.userAgent);
-	var KEY = IS_MAC ? { ctrl: '⌘', alt: '⌥', shift: '⇧' } : { ctrl: 'Ctrl', alt: 'Alt', shift: 'Shift' };
+	var KEY = IS_MAC ? { ctrl: '⌘', alt: '⌥', shift: '⇧ Shift' } : { ctrl: 'Ctrl', alt: 'Alt', shift: 'Shift' };
 	function cmd(e) { return IS_MAC ? !!e.metaKey : !!e.ctrlKey; }
 	function macRightClick(e) { return IS_MAC && e.ctrlKey && !e.metaKey; }
 	var SPRING = 'cubic-bezier(.34,1.56,.64,1)';
@@ -45,12 +49,22 @@
 		folder: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
 		sparkle: '<path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.13-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.13a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.13 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.13a.5.5 0 0 1-.96 0z"/>',
 		minus: '<path d="M5 12h14"/>',
+		wheel: '<circle cx="12" cy="12" r="9"/><g class="i-orbit"><circle cx="12" cy="3" r="2" fill="currentColor"/><circle cx="19.8" cy="16.5" r="2" fill="currentColor"/><circle cx="4.2" cy="16.5" r="2" fill="currentColor"/></g>',
+		drop: '<path d="M12 2.7c3.5 4.1 6 7.1 6 10.3a6 6 0 0 1-12 0c0-3.2 2.5-6.2 6-10.3z"/>',
+		fan: '<path d="M12 21 5 5M12 21l7-16M12 21V3"/>',
+		ring: '<circle cx="12" cy="12" r="7.5" stroke-width="3.2"/>',
+		import: '<path class="i-arrow" d="M12 3v11m-4.5-4.5L12 14l4.5-4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
+		export: '<path class="i-arrow i-up" d="M12 14V3M7.5 7.5 12 3l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
+		keyboard: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M18 13h.01M9 15.5h6"/>',
 		unplug: '<path d="m19 5 3-3"/><path d="m2 22 3-3"/><path d="M6.3 20.3a2.4 2.4 0 0 0 3.4 0L12 18l-6-6-2.3 2.3a2.4 2.4 0 0 0 0 3.4Z"/><path d="M7.5 13.5 10 11"/><path d="M10.5 16.5 13 14"/><path d="m12 6 6 6 2.3-2.3a2.4 2.4 0 0 0 0-3.4l-2.6-2.6a2.4 2.4 0 0 0-3.4 0Z"/>',
 		file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>'
 	};
 
 	// logo (picolé com mordida) para o estado de paleta vazia · mesmo desenho de docs/img/logo.svg
 	var LOGO = '<svg class="empty-logo" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="9.12 9.12 101.76 101.76"><defs><linearGradient id="pal-lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF4D4D"/><stop offset=".25" stop-color="#FF8F4D"/><stop offset=".5" stop-color="#FFC44E"/><stop offset=".75" stop-color="#5DE6A2"/><stop offset="1" stop-color="#80C0FE"/></linearGradient><mask id="pal-lm"><rect x="-20" y="-20" width="160" height="160" fill="#fff"/><g fill="#000"><circle cx="90.5" cy="32" r="13"/></g></mask></defs><rect x="53.0" y="80" width="14" height="28" rx="7.0" fill="#E9CFA0"/><g mask="url(#pal-lm)"><path d="M33.0,77 L37.0,21 Q37.0,12 46.0,12 L74.0,12 Q83.0,12 83.0,21 L87.0,77 Q87.0,86 78.0,86 L42.0,86 Q33.0,86 33.0,77 Z" fill="url(#pal-lg)"/><path d="M42.0,26 L41.0,58" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".35"/></g></svg>';
+
+	// pontinhos do puxador: SVG (como no O PADEIRO). Grid dentro de <button> não funciona no Chromium do CEP.
+	var GRIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>';
 
 	function ic(name, cls) {
 		return '<svg class="ic ' + (cls || '') + '" viewBox="0 0 24 24" aria-hidden="true">' + ICONS[name] + '</svg>';
@@ -86,73 +100,110 @@
 			key: null
 		};
 		var mods = { alt: false, ctrl: false, shift: false };
+		// cor de destaque da interface: 'auto' (a última cor aplicada) ou uma fixa
+		var ACCENTS = ['#FFC44E', '#FF5A68', '#FF8CCD', '#B5ADFF', '#80C0FE', '#5DE6A2', '#E8E9EC'];
+		S.prefs.accent = store('pal.accent') || 'auto'; // cópia local: o painel já nasce com a cor certa
 
 		el.classList.add('pal');
 		el.tabIndex = -1;
 		el.innerHTML = [
 			'<div class="dock dock-a">',
-			'  <button class="tool" data-act="add" aria-label="Nova cor">' + ic('plus') + '</button>',
-			'  <button class="tool" data-act="capture" aria-label="Capturar cores"><span class="swap">' + ic('pipette') + ic('image') + ic('layers') + '</span></button>',
+			'  <button class="tool" data-act="add" aria-label="{{tool.add}}">' + ic('plus') + '</button>',
+			'  <button class="tool" data-act="capture" aria-label="{{tool.capture}}"><span class="swap">' + ic('pipette') + ic('image') + ic('layers') + '</span></button>',
 			'</div>',
-			'<div class="strip" role="list" aria-label="Paleta"></div>',
-			'<div class="empty" hidden>' + LOGO + '<span>Paleta vazia</span>',
-			'  <button class="row-btn" data-act="capture">' + ic('pipette') + '<span class="lbl">Capturar</span></button>',
-			'  <button class="row-btn" data-act="add">' + ic('plus') + '<span class="lbl">Nova cor</span></button>',
+			'<div class="strip" role="list" aria-label="{{strip.label}}"></div>',
+			'<div class="empty" hidden>' + LOGO + '<span>{{empty.title}}</span>',
+			'  <button class="row-btn" data-act="capture">' + ic('pipette') + '<span class="lbl">{{empty.capture}}</span></button>',
+			'  <button class="row-btn" data-act="add">' + ic('plus') + '<span class="lbl">{{tool.add}}</span></button>',
+			'  <button class="row-btn" data-act="library" data-tip="{{empty.presets}}">' + ic('library') + '<span class="lbl">{{presets}}</span></button>',
+			'  <button class="row-btn" data-act="harmony" data-tip="{{empty.harmony}}">' + ic('wheel') + '<span class="lbl">{{harmony}}</span></button>',
+			'  <span class="empty-hint">{{empty.paste}} <kbd>' + (IS_MAC ? '⌘V' : 'Ctrl+V') + '</kbd></span>',
 			'</div>',
 			'<div class="dock dock-b">',
-			'  <button class="tool" data-act="library" aria-label="Presets"><span class="swap">' + ic('library') + ic('x') + '</span></button>',
-			'  <button class="tool" data-act="menu" aria-label="Ajustes"><span class="swap">' + ic('more') + ic('x') + '</span></button>',
+			'  <button class="tool" data-act="library" aria-label="{{presets}}"><span class="swap">' + ic('library') + ic('x') + '</span></button>',
+			'  <button class="tool" data-act="menu" aria-label="{{settings}}"><span class="swap">' + ic('more') + ic('x') + '</span></button>',
 			'</div>',
 			'<div class="sheet settings" hidden>',
-			'  <div class="grp"><span class="grp-title">Exibir</span>',
-			'    <div class="seg" data-tip="Formato dos valores"><span class="seg-pill"></span>',
+			'  <div class="grp"><span class="grp-title">{{set.display}}</span>',
+			'    <div class="seg" data-tip="{{set.format}}"><span class="seg-pill"></span>',
 			'      <button data-fmt="HEX">HEX</button><button data-fmt="RGB">RGB</button><button data-fmt="HSB">HSB</button></div>',
-			'    <button class="row-btn" data-act="toggle-info" data-tip="Valores sempre visíveis">' + ic('eye') + '<span class="lbl">Valores sempre visíveis</span></button>',
-			'    <button class="row-btn" data-act="toggle-names" data-tip="Mostrar nomes">' + ic('tag') + '<span class="lbl">Mostrar nomes</span></button>',
+			'    <button class="row-btn" data-act="toggle-info" data-tip="{{set.info}}">' + ic('eye') + '<span class="lbl">{{set.info}}</span></button>',
+			'    <button class="row-btn" data-act="toggle-names" data-tip="{{set.names}}">' + ic('tag') + '<span class="lbl">{{set.names}}</span></button>',
 			'  </div>',
 			'  <span class="vr"></span>',
-			'  <div class="grp"><span class="grp-title">Paleta</span>',
-			'    <button class="row-btn" data-act="sort" data-tip="Ordenar por matiz">' + ic('sort') + '<span class="lbl">Ordenar por matiz</span></button>',
-			'    <button class="row-btn danger" data-act="clear" data-tip="Segure para limpar">' + ic('trash') + '<span class="lbl">Segure para limpar</span><i class="hold"></i></button>',
+			'  <div class="grp"><span class="grp-title">{{set.palette}}</span>',
+			'    <button class="row-btn" data-act="sort" data-tip="{{set.sort}}">' + ic('sort') + '<span class="lbl">{{set.sort}}</span></button>',
+			'    <button class="row-btn" data-act="import" data-tip="{{set.import.tip}}">' + ic('import') + '<span class="lbl">{{set.import}}</span></button>',
+			'    <button class="row-btn" data-act="export" data-tip="{{set.export.tip}}">' + ic('export') + '<span class="lbl">{{set.export}}</span></button>',
+			'    <button class="row-btn danger" data-act="clear" data-tip="{{set.clear}}">' + ic('trash') + '<span class="lbl">{{set.clear}}</span><i class="hold"></i></button>',
 			'  </div>',
 			'  <span class="vr"></span>',
-			'  <div class="grp"><button class="row-btn" data-act="help" data-tip="Ajuda e documentação">' + ic('help') + '<span class="lbl">Ajuda</span></button><span class="ver">' + VERSION + '</span></div>',
+			'  <div class="grp acc-grp"><span class="grp-title">{{set.accent}}</span><div class="acc-chips">' +
+				'<button class="acc-chip acc-auto" data-accent="auto" data-tip="{{set.accent.auto}}"><i></i></button>' +
+				ACCENTS.map(function (h) { return '<button class="acc-chip" data-accent="' + h + '" style="--c:' + h + '"></button>'; }).join('') + '</div></div>',
+			'  <span class="vr"></span>',
+			'  <div class="grp"><span class="grp-title">{{set.lang}}</span><div class="seg lang-seg" data-tip="{{set.lang}}"><span class="seg-pill"></span>' +
+				I18N.langs().map(function (l) { return '<button data-lang="' + l + '" aria-label="' + esc(I18N.name(l)) + '">' + l.toUpperCase() + '</button>'; }).join('') + '</div></div>',
+			// atalhos, ajuda e versão: no fim (à direita na faixa, embaixo na coluna)
+			'  <span class="vr vr-end"></span>',
+			'  <div class="grp grp-end"><button class="row-btn" data-act="keys" data-tip="{{set.keys}}" data-kbd="?">' + ic('keyboard') + '<span class="lbl">{{set.keys}}</span></button><button class="row-btn" data-act="help" data-tip="{{set.help.tip}}">' + ic('help') + '<span class="lbl">{{set.help}}</span></button><span class="ver">' + VERSION + '</span></div>',
 			'</div>',
 			'<div class="sheet library" hidden>',
 			'  <div class="lib-list" role="list"></div>',
 			'  <button class="lib-folder" data-act="folder">' + ic('folder') + '<span class="lib-path"></span></button>',
 			'</div>',
-			'<div class="sheet extract" hidden tabindex="-1" role="dialog" aria-label="Extrair cores">',
+			'<div class="sheet extract" hidden tabindex="-1" role="dialog" aria-label="{{ex.title}}">',
 			'  <div class="ed-flood"></div>',
 			'  <div class="ex-img"><div class="ex-stage"><img alt=""><div class="ex-marks"></div><span class="ex-loupe"><i></i></span></div><span class="ex-wait"><span class="ex-wait-txt"></span></span></div>',
 			'  <div class="ex-side">',
 			'    <div class="ex-head">' + ic('image') + '<span class="ex-label"></span></div>',
 			'    <div class="ex-chips"></div>',
 			'    <div class="ex-ctrl">',
-			'      <div class="ex-count"><button class="ex-step" data-d="-1" data-tip="Menos cores">' + ic('minus') + '</button><span class="ex-n">6</span><button class="ex-step" data-d="1" data-tip="Mais cores">' + ic('plus') + '</button></div>',
-			'      <button class="ed-btn cancel" data-tip="Cancelar" data-kbd="Esc">' + ic('x') + '</button>',
-			'      <button class="ed-btn ok" data-tip="Adicionar à paleta" data-kbd="Enter">' + ic('check') + '</button>',
+			'      <div class="ex-count"><button class="ex-step" data-d="-1" data-tip="{{ex.less}}">' + ic('minus') + '</button><span class="ex-n">6</span><button class="ex-step" data-d="1" data-tip="{{ex.more}}">' + ic('plus') + '</button></div>',
+			'      <button class="ed-btn cancel" data-tip="{{btn.cancel}}" data-kbd="Esc">' + ic('x') + '</button>',
+			'      <button class="ed-btn ok" data-tip="{{ex.ok}}" data-kbd="Enter">' + ic('check') + '</button>',
 			'    </div>',
 			'  </div>',
 			'</div>',
-			'<div class="sheet editor" hidden tabindex="-1" role="dialog" aria-label="Editor de cor">',
+			'<div class="sheet editor" hidden tabindex="-1" role="dialog" aria-label="{{ed.title}}">',
 			'  <div class="ed-flood"></div>',
-			'  <div class="ed-prev"><button class="ed-old" data-tip="Voltar à cor original">' + ic('undo') + '</button>',
-			'    <div class="ed-new"><input class="ed-name" id="pal-ed-name" placeholder="nome da cor" maxlength="40" spellcheck="false" autocomplete="off"><button class="ed-auto" type="button" data-tip="Nome automático">' + ic('sparkle') + '</button></div></div>',
-			'  <div class="ed-sv" tabindex="0" aria-label="Saturação e brilho"><span class="knob"></span></div>',
-			'  <div class="ed-hue" tabindex="0" aria-label="Matiz"><span class="knob"></span></div>',
+			'  <div class="ed-prev"><button class="ed-old" data-tip="{{ed.old}}">' + ic('undo') + '</button>',
+			'    <div class="ed-new"><input class="ed-name" id="pal-ed-name" placeholder="{{ed.name}}" maxlength="40" spellcheck="false" autocomplete="off"><button class="ed-auto" type="button" data-tip="{{ed.auto}}">' + ic('sparkle') + '</button></div></div>',
+			'  <div class="ed-sv" tabindex="0" aria-label="{{ed.sv}}"><span class="knob"></span></div>',
+			'  <div class="ed-hue" tabindex="0" aria-label="{{ed.hue}}"><span class="knob"></span></div>',
 			'  <div class="ed-ctrl">',
-			'    <div class="ed-field"><button class="ed-fmt" type="button" data-tip="Alternar HEX · RGB · HSB">HEX</button><input class="ed-val" id="pal-ed-val" spellcheck="false" autocomplete="off" aria-label="Valor da cor"></div>',
+			'    <div class="ed-field"><button class="ed-fmt" type="button" data-tip="{{ed.fmt}}">HEX</button><input class="ed-val" id="pal-ed-val" spellcheck="false" autocomplete="off" aria-label="{{ed.value}}"></div>',
 			'    <div class="ed-actions">',
-			'      <button class="ed-btn del" data-tip="Excluir cor">' + ic('trash') + '</button>',
-			'      <button class="ed-btn cancel" data-tip="Cancelar" data-kbd="Esc">' + ic('x') + '</button>',
-			'      <button class="ed-btn ok" data-tip="Aplicar" data-kbd="Enter">' + ic('check') + '</button>',
+			'      <button class="ed-btn mode" data-tip="{{ed.harmony}}">' + ic('wheel') + '</button>',
+			'      <button class="ed-btn del" data-tip="{{ed.delete}}">' + ic('trash') + '</button>',
+			'      <button class="ed-btn cancel" data-tip="{{btn.cancel}}" data-kbd="Esc">' + ic('x') + '</button>',
+			'      <button class="ed-btn ok" data-tip="{{ed.apply}}" data-kbd="Enter">' + ic('check') + '</button>',
 			'    </div>',
 			'  </div>',
 			'</div>',
-			'<div class="toast" role="status"><span class="chip"></span><span class="toast-ic"></span><span class="toast-msg"></span><button type="button">desfazer</button></div>',
+			'<div class="sheet harmony" hidden tabindex="-1" role="dialog" aria-label="{{ed.harmony}}">',
+			'  <div class="ed-flood"></div>',
+			'  <div class="hm-map" tabindex="0" aria-label="{{hm.map}}"><div class="hm-disk"></div><svg class="hm-geo" aria-hidden="true"></svg></div>',
+			'  <div class="hm-bri" tabindex="0" aria-label="{{hm.bri}}"><span class="knob"></span></div>',
+			'  <div class="hm-gen" role="list" aria-label="{{hm.gen}}"></div>',
+			'  <div class="hm-ctrl">',
+			'    <div class="hm-rules"></div>',
+			'    <div class="hm-opts">',
+			'      <div class="hm-open" data-tip="{{hm.open}}">' + ic('fan') + '<div class="hm-range" tabindex="0" aria-label="{{hm.open}}"><i></i><span class="knob"></span></div></div>',
+			'      <div class="hm-steps" role="group" aria-label="{{hm.steps}}"></div>',
+			'    </div>',
+			'    <div class="ed-actions">',
+			'      <button class="ed-btn save" data-tip="{{hm.save}}">' + ic('bookmark') + '</button>',
+			'      <button class="ed-btn mode" data-tip="{{hm.single}}">' + ic('drop') + '</button>',
+			'      <button class="ed-btn cancel" data-tip="{{btn.cancel}}" data-kbd="Esc">' + ic('x') + '</button>',
+			'      <button class="ed-btn ok" data-tip="{{hm.add}}">' + ic('check') + '<span class="hm-n"></span></button>',
+			'    </div>',
+			'  </div>',
+			'</div>',
+			'<div class="sheet keys" hidden tabindex="-1" role="dialog" aria-label="{{set.keys}}"><div class="k-body"></div><button class="tool k-x" aria-label="{{k.close}}">' + ic('x') + '</button></div>',
+			'<div class="toast" role="status"><span class="chip"></span><span class="toast-ic"></span><span class="toast-msg"></span><button type="button">{{toast.undo}}</button></div>',
 			'<div class="tip"></div>'
-		].join('\n');
+		].join('\n').replace(/\{\{([\w.]+)\}\}/g, function (m, k) { return esc(T(k)); });
 
 		function q(s) { return el.querySelector(s); }
 		var strip = q('.strip');
@@ -161,9 +212,44 @@
 		var library = q('.library');
 		var exSheet = q('.extract');
 		var ed = q('.editor');
+		var keysSheet = q('.keys');
 		var toastEl = q('.toast');
 		var tipEl = q('.tip');
+		setAccent(null, true); // destaque fixo já na abertura
 		var nodes = {}; // id → elemento
+
+		// ------------------------------------------------------------------ apertar e arrastar no CEP
+		// No CEP do After Effects chegam mousedown, mouseup e click, mas nem sempre pointerdown e
+		// pointerup (o registro de eventos mostrou isso). Todo "apertar e arrastar" passa por estes
+		// dois auxiliares, que escutam os dois tipos de evento sem disparar duas vezes.
+		var lastPointerDown = 0;
+		function onPress(target, fn) {
+			target.addEventListener('pointerdown', function (e) { lastPointerDown = Date.now(); fn(e); });
+			target.addEventListener('mousedown', function (e) { if (Date.now() - lastPointerDown < 700) return; fn(e); });
+		}
+		// acompanha o movimento e a soltura na janela inteira (com ou sem captura do ponteiro)
+		function follow(onMove, onUp, onCancel) {
+			var done = false;
+			function mv(e) { if (!done) onMove(e); }
+			function stop() {
+				if (done) return false;
+				done = true;
+				root.removeEventListener('pointermove', mv, true);
+				root.removeEventListener('mousemove', mv, true);
+				root.removeEventListener('pointerup', up, true);
+				root.removeEventListener('mouseup', up, true);
+				root.removeEventListener('pointercancel', cancel, true);
+				return true;
+			}
+			function up(e) { if (stop() && onUp) onUp(e); }
+			function cancel(e) { if (stop()) (onCancel || onUp || function () {})(e); }
+			root.addEventListener('pointermove', mv, true);
+			root.addEventListener('mousemove', mv, true);
+			root.addEventListener('pointerup', up, true);
+			root.addEventListener('mouseup', up, true);
+			root.addEventListener('pointercancel', cancel, true);
+			return { stop: stop };
+		}
 
 		// ------------------------------------------------------------------ layout responsivo
 		function measure() {
@@ -172,11 +258,14 @@
 			el.dataset.orient = orient;
 			el.dataset.thin = h < 70 ? '1' : '0';
 			el.dataset.narrow = w < 160 ? '1' : '0';
+			el.dataset.slim = w < 240 ? '1' : '0';
 			el.dataset.short = h < 110 ? '1' : '0';
 			el.dataset.shape = (h < 220 && w > h) ? 'wide' : 'tall';
 			roomy();
 			if (!settings.hidden) placePill(false);
 			if (!exSheet.hidden) fitStage();
+			if (H) { layoutHarmony(); updateHarmony(); }
+			if (!library.hidden) libFade();
 		}
 
 		function roomy() {
@@ -199,9 +288,9 @@
 			n.dataset.id = sw.id;
 			n.tabIndex = 0;
 			n.setAttribute('role', 'listitem');
-			n.innerHTML = '<button class="sw-edit" tabindex="-1" aria-label="Editar cor">' + ic('pencil') + '</button>' +
-				'<span class="sw-glyph">' + ic('bucket', 'g-fill') + ic('copy', 'g-copy') + ic('x', 'g-del') + ic('check', 'g-ok') + '</span>' +
-				'<span class="sw-meta"><span class="sw-name"></span><span class="sw-val"></span></span><i class="sw-dot"></i>';
+			n.innerHTML = '<button class="sw-edit" tabindex="-1" aria-label="' + esc(T('sw.edit')) + '">' + ic('pencil') + '</button>' +
+				'<span class="sw-glyph">' + ic('bucket', 'g-fill') + ic('ring', 'g-stroke') + ic('copy', 'g-copy') + ic('x', 'g-del') + ic('check', 'g-ok') + '</span>' +
+				'<span class="sw-meta"><span class="sw-line"><span class="sw-name"></span><span class="sw-val"></span></span></span><i class="sw-dot"></i>';
 			return n;
 		}
 
@@ -325,25 +414,35 @@
 		var saveTimer;
 		function save() {
 			clearTimeout(saveTimer);
+			var key = S.key, list = plain(S.swatches), preset = S.preset;
 			saveTimer = setTimeout(function () {
-				Host.savePalette(plain(S.swatches), S.preset)
-					.catch(function () { toast('Não foi possível salvar no projeto', { icon: 'alert' }); });
+				// se o After trocou de projeto nesse meio-tempo, essa paleta não é dele
+				Host.projectKey().then(function (k) {
+					if (key !== null && k !== key) return;
+					return Host.savePalette(list, preset);
+				}).catch(function () { toast(T('err.save'), { icon: 'alert' }); });
 			}, 200);
 		}
 
 		function plain(list) { return list.map(function (s) { return { color: s.color, label: s.label, auto: !!s.auto }; }); }
 		function snapshot() { return S.swatches.map(function (s) { return { id: s.id, color: s.color, label: s.label, auto: s.auto }; }); }
 		function pushUndo(entry) {
+			// outra ação entrou no histórico: o desfazer do aviso na tela já não é dela
+			if (toastEl.classList.contains('on')) toastEl.querySelector('button').hidden = true;
 			S.undo.push(entry || { palette: snapshot(), preset: S.preset });
 			if (S.undo.length > 40) S.undo.shift();
 		}
 		function undo() {
 			var prev = S.undo.pop();
-			if (!prev) return toast('Nada para desfazer');
+			if (!prev) return toast(T('undo.none'));
 			if (prev.restorePreset) {
-				return Host.savePreset(prev.restorePreset).then(function () {
+				return Host.savePreset(prev.restorePreset).then(function (r) {
+					if (!r || !r.ok) throw new Error('restore');
 					loadPresets(prev.restorePreset.id);
-					toast('Preset restaurado', { icon: 'undo' });
+					toast(T('undo.preset'), { icon: 'undo' });
+				}).catch(function () {
+					S.undo.push(prev); // não restaurou: o passo continua no histórico
+					toast(T('lib.readonly'), { icon: 'alert' });
 				});
 			}
 			S.swatches = prev.palette;
@@ -351,7 +450,7 @@
 			render({ slow: true });
 			save();
 			if (!library.hidden) renderLibrary();
-			toast('Desfeito', { icon: 'undo' });
+			toast(T('undo.done'), { icon: 'undo' });
 		}
 
 		function toSwatches(list) {
@@ -398,21 +497,26 @@
 				// as dicas das amostras somem depois que você já viu algumas vezes
 				if (learned >= 6 && !mods.alt && !mods.ctrl) return '';
 				return [
-					kbd('clique', 'aplicar', !mods.alt && !mods.ctrl),
-					kbd('botão dir.', 'editar'),
-					kbd(KEY.ctrl, 'copiar', mods.ctrl),
-					kbd(KEY.alt, 'excluir', mods.alt)
+					kbd(T('kbd.click'), T('tip.apply'), !mods.alt && !mods.ctrl && !mods.shift),
+					kbd(KEY.shift, T('tip.stroke'), mods.shift && !mods.alt && !mods.ctrl),
+					kbd(T('kbd.right'), T('tip.edit')),
+					kbd(KEY.ctrl, T('tip.copy'), mods.ctrl),
+					kbd(KEY.alt, T('tip.delete'), mods.alt)
 				].join('');
 			}
 			var act = t.dataset.act;
-			if (act === 'add' && t.classList.contains('tool')) return '<b>Nova cor</b>';
+			if (act === 'add' && t.classList.contains('tool')) return '<b>' + esc(hPrefs.on ? T('tip.newHarmony') : T('tool.add')) + '</b>';
+			if (t === hmOk && H) {
+				var n = harmonyColors().length;
+				return '<b>' + esc(Tn('colors', n)) + '</b>' + kbd('Enter', T('tip.add'), !mods.shift) + kbd(KEY.shift, T('tip.replacePalette'), mods.shift);
+			}
 			if (act === 'capture' && t.classList.contains('tool')) return captureTip();
-			if (act === 'menu') return el.classList.contains('menu-open') ? '<b>Fechar ajustes</b>' : '<b>Ajustes</b>';
-			if (act === 'library') return el.classList.contains('lib-open') ? '<b>Fechar presets</b>' : '<b>Presets</b>';
-			if (act === 'folder') return '<b>' + esc(S.folder) + '</b>' + kbd('clique', 'trocar pasta') + kbd(KEY.alt, 'abrir');
+			if (act === 'menu') return '<b>' + esc(el.classList.contains('menu-open') ? T('tip.closeSettings') : T('settings')) + '</b>';
+			if (act === 'library') return '<b>' + esc(el.classList.contains('lib-open') ? T('tip.closePresets') : T('presets')) + '</b>';
+			if (act === 'folder') return '<b>' + esc(S.folder) + '</b>' + kbd(T('kbd.click'), T('tip.changeFolder')) + kbd(KEY.alt, T('tip.open'));
 			if (t.dataset.pid) {
 				var pr = presetById(t.dataset.pid);
-				return '<b>' + esc(pr ? pr.name : '') + '</b>' + kbd('clique', 'substituir', !mods.shift) + kbd(KEY.shift, 'adicionar', mods.shift);
+				return '<b>' + esc(pr ? pr.name : '') + '</b>' + kbd(T('kbd.click'), T('tip.replace'), !mods.shift) + kbd(KEY.shift, T('tip.add'), mods.shift);
 			}
 			if (t.dataset.tip) {
 				// em layouts largos os rótulos estão escondidos: a dica assume o papel
@@ -424,9 +528,16 @@
 		}
 
 		function showTip(t) {
+			// enquanto o alvo (ou algo em volta) ainda está animando, a posição medida é a do meio da
+			// animação e a dica pode acabar em cima dele: espera assentar
+			if (moving(t)) { tipTimer = setTimeout(function () { if (tipTarget === t) showTip(t); }, 120); return; }
 			var html = tipHtml(t);
 			if (!html) return hideTip();
 			if (t.classList.contains('sw') && learned < 6) store('pal.tips', String(++learned));
+			// mede num canto livre: perto da borda (onde a dica anterior estava) ela ficaria espremida,
+			// com mais linhas, e a posição calculada não valeria para o tamanho de verdade
+			tipEl.style.left = '0px';
+			tipEl.style.top = '0px';
 			tipEl.innerHTML = html;
 			var pr = rect(el), tr = rect(t), w = tipEl.offsetWidth, h = tipEl.offsetHeight;
 			var x = tr.left - pr.left + tr.width / 2 - w / 2;
@@ -439,23 +550,39 @@
 				if (x + w > pr.width - 4) x = tr.left - pr.left - w - 6;
 			}
 			x = Math.max(4, Math.min(pr.width - w - 4, x));
+			// a dica nunca cobre o que está sob o mouse: sem lugar livre, não aparece
+			var tl = tr.left - pr.left, tt = tr.top - pr.top;
+			function covers() { return x < tl + tr.width && x + w > tl && y < tt + tr.height && y + h > tt; }
+			if (covers()) return hideTip();
 			tipEl.style.transform = '';
 			tipEl.style.left = x + 'px';
 			tipEl.style.top = y + 'px';
+			w = tipEl.offsetWidth; h = tipEl.offsetHeight; // confere com o tamanho final
+			if (covers()) return hideTip();
 			tipEl.classList.add('on');
 		}
 		function hideTip() { clearTimeout(tipTimer); tipEl.classList.remove('on'); }
+		function moving(t) {
+			if (!el.getAnimations) return false;
+			return el.getAnimations({ subtree: true }).some(function (a) {
+				var n = a.effect && a.effect.target;
+				if (a.playState !== 'running' || !n || n === tipEl || !n.contains || !n.contains(t)) return false;
+				var end = a.effect.getComputedTiming ? a.effect.getComputedTiming().endTime : 0;
+				return end !== Infinity; // animações em laço (carregando…) não seguram a dica
+			});
+		}
 
 		el.addEventListener('pointerover', function (e) {
 			var t = e.target.closest('.sw, .tool, [data-tip], [data-pid], [data-act="folder"]');
 			if (t === tipTarget) return;
 			hideTip();
 			tipTarget = t;
-			if (!t || el.classList.contains('dragging')) return;
+			if (!t || el.classList.contains('dragging') || libList.classList.contains('sorting')) return;
 			tipTimer = setTimeout(function () { showTip(t); }, t.classList.contains('sw') ? 700 : 320);
 		});
 		el.addEventListener('pointerleave', function () { tipTarget = null; hideTip(); setMods({}); });
 		el.addEventListener('pointerdown', hideTip);
+		el.addEventListener('mousedown', hideTip);
 
 		// ------------------------------------------------------------------ teclas modificadoras (a UI reage em tempo real)
 		function setMods(e) {
@@ -489,21 +616,35 @@
 			setTimeout(function () { n.classList.remove(cls); }, ms || 900);
 		}
 
-		function setAccent(hex) {
-			el.style.setProperty('--accent', hex);
-			el.style.setProperty('--accent-ink', C.ink(hex));
+		var lastApplied = '#FFC44E';
+		// no modo automático o destaque acompanha a última cor aplicada; com uma cor fixa, fica nela
+		function setAccent(hex, force) {
+			if (hex && !force) lastApplied = hex;
+			var c = S.prefs.accent !== 'auto' ? S.prefs.accent : (lastApplied || '#FFC44E');
+			el.style.setProperty('--accent', c);
+			el.style.setProperty('--accent-ink', C.ink(c));
+			var dot = q('.acc-auto i');
+			if (dot) dot.style.background = lastApplied || '#FFC44E';
+		}
+		function chooseAccent(v) {
+			S.prefs.accent = v;
+			store('pal.accent', v);
+			Host.savePrefs({ accent: v }).catch(function () {});
+			setAccent(null, true);
+			syncSettings();
 		}
 
 		var REASONS = {
-			nocomp: 'Abra uma composição primeiro',
-			nosel: 'Selecione um layer ou uma propriedade de cor',
-			error: 'O After Effects recusou a cor'
+			nocomp: T('reason.nocomp'),
+			nosel: T('reason.nosel'),
+			nostroke: T('reason.nostroke'),
+			error: T('reason.error')
 		};
 
-		function applySwatch(sw, e) {
+		function applySwatch(sw, e, opts) {
 			var n = nodes[sw.id];
 			ripple(n, e && e.clientX, e && e.clientY);
-			Host.apply(sw.color).then(function (r) {
+			Host.apply(sw.color, opts).then(function (r) {
 				if (r && r.ok) {
 					var prev = S.last && nodes[S.last];
 					if (prev) prev.classList.remove('last');
@@ -522,11 +663,12 @@
 		}
 
 		function removeSwatch(sw) {
+			if (!sw || !find(sw.id)) return;
 			pushUndo();
 			S.swatches = S.swatches.filter(function (s) { return s !== sw; });
 			render();
 			save();
-			toast((sw.label || sw.color) + ' removida', { color: sw.color, undo: true });
+			toast(T('toast.removed', { name: sw.label || sw.color }), { color: sw.color, undo: true });
 		}
 
 		function copyText(text) {
@@ -551,26 +693,68 @@
 				var v = C.format(sw.color, S.prefs.format);
 				copyText(v);
 				flash(nodes[sw.id], 'ok', 700);
-				return toast(v + ' copiado', { color: sw.color, icon: 'copy' });
+				return toast(T('toast.copied', { value: v }), { color: sw.color, icon: 'copy' });
 			}
-			applySwatch(sw, e);
+			applySwatch(sw, e, e.shiftKey ? { stroke: true } : null);
 		}
 
 		// arrastar para reordenar (pointer capture fica na faixa, que nunca se move)
 		var D = null;
-		strip.addEventListener('pointerdown', function (e) {
-			var n = e.target.closest('.sw');
-			if (!n || n.classList.contains('leaving') || e.button !== 0 || macRightClick(e) || e.target.closest('.sw-edit')) return;
-			D = { n: n, x: e.clientX, y: e.clientY, started: false, before: snapshot() };
-			strip.setPointerCapture(e.pointerId);
+		// destaque da amostra sob o mouse, decidido pela POSIÇÃO do mouse (não pelo elemento sob ele):
+		// - ignora os cantos arredondados e o vão entre amostras (o destaque fica "preso");
+		// - histerese: para trocar, o mouse precisa entrar HOT_IN px na outra amostra, então tremores
+		//   perto da fronteira não trocam nada (era o que fazia a faixa inteira sambar);
+		// - espera curta ao trocar, para uma passada rápida não sacudir tudo.
+		var hot = null, hotTimer = null, hotNext = null, HOT_IN = 6;
+		function setHot(n) {
+			hotNext = null;
+			if (hot === n) return;
+			if (hot) hot.classList.remove('hot');
+			hot = n;
+			if (n) n.classList.add('hot');
+		}
+		function pickHot(e) {
+			if (el.classList.contains('dragging') || D) return;
+			var o = el.dataset.orient, x = e.clientX, y = e.clientY, cand = null, r = null;
+			var list = liveNodes();
+			for (var i = 0; i < list.length; i++) {
+				var b = rect(list[i]);
+				var inX = x >= b.left - 2 && x <= b.right + 2, inY = y >= b.top - 2 && y <= b.bottom + 2;
+				if ((o === 'row' && inX) || (o === 'col' && inY) || (o === 'grid' && inX && inY)) { cand = list[i]; r = b; break; }
+			}
+			if (!cand) return; // no vão: mantém o destaque atual
+			if (cand === hot) { clearTimeout(hotTimer); hotNext = null; return; }
+			if (!hot || !hot.isConnected) { clearTimeout(hotTimer); return setHot(cand); }
+			var depth = o === 'row' ? Math.min(x - r.left, r.right - x) : o === 'col' ? Math.min(y - r.top, r.bottom - y) : HOT_IN;
+			if (depth < Math.min(HOT_IN, (o === 'col' ? r.height : r.width) / 4)) return;
+			if (cand === hotNext) return; // já agendado
+			clearTimeout(hotTimer);
+			hotNext = cand;
+			hotTimer = setTimeout(function () { setHot(cand); }, 45);
+		}
+		strip.addEventListener('pointermove', pickHot);
+		strip.addEventListener('pointerover', pickHot);
+		strip.addEventListener('pointerleave', function () {
+			clearTimeout(hotTimer);
+			hotNext = null;
+			hotTimer = setTimeout(function () { setHot(null); }, 60);
 		});
 
-		strip.addEventListener('pointermove', function (e) {
+		onPress(strip, function (e) {
+			var n = e.target.closest('.sw');
+			if (D || !n || n.classList.contains('leaving') || e.button !== 0 || macRightClick(e) || e.target.closest('.sw-edit')) return;
+			D = { n: n, x: e.clientX, y: e.clientY, started: false, before: snapshot() };
+			try { if (e.pointerId !== undefined) strip.setPointerCapture(e.pointerId); } catch (err) {}
+			follow(stripMove, function (ev) { endPress(ev, false); }, function (ev) { endPress(ev, true); });
+		});
+
+		function stripMove(e) {
 			if (!D) return;
 			if (!D.started) {
 				if (Math.abs(e.clientX - D.x) + Math.abs(e.clientY - D.y) < 6 || e.altKey) return;
 				D.started = true;
 				el.classList.add('dragging');
+				setHot(null);
 				D.n.classList.add('drag');
 				hideTip();
 				var r0 = rect(D.n);
@@ -578,7 +762,7 @@
 				D.gy = Math.max(0, Math.min(r0.height, D.y - r0.top));
 			}
 			dragMove(e);
-		});
+		}
 
 		function dragMove(e) {
 			var n = D.n, o = el.dataset.orient;
@@ -626,6 +810,7 @@
 			d.n.animate([{ transform: from }, { transform: 'none' }], { duration: 320, easing: SPRING });
 			d.n.classList.remove('drag');
 			el.classList.remove('dragging');
+			setHot(d.n);
 			var order = liveNodes().map(function (x) { return x.dataset.id; });
 			var changed = order.join() !== d.before.map(function (s) { return s.id; }).join();
 			if (changed) {
@@ -634,8 +819,6 @@
 				save();
 			}
 		}
-		strip.addEventListener('pointerup', function (e) { endPress(e, false); });
-		strip.addEventListener('pointercancel', function (e) { endPress(e, true); });
 
 		strip.addEventListener('contextmenu', function (e) {
 			var n = e.target.closest('.sw');
@@ -651,8 +834,9 @@
 		});
 		strip.addEventListener('keydown', function (e) {
 			var n = e.target.closest('.sw');
-			if (!n) return;
+			if (!n || n.classList.contains('leaving')) return;
 			var sw = find(n.dataset.id);
+			if (!sw) return;
 			if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); clickSwatch(sw, e); }
 			else if (e.key === 'F2' || e.key === 'e') { e.preventDefault(); openEditor(sw, n); }
 			else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); removeSwatch(sw); }
@@ -677,18 +861,18 @@
 		capTool.addEventListener('pointerenter', inspect);
 
 		function captureTip() {
-			var shift = kbd(KEY.shift, 'projeto inteiro');
-			if (mods.shift) return '<b>Capturar do projeto inteiro</b>';
+			var shift = kbd(KEY.shift, T('cap.wholeProject'));
+			if (mods.shift) return '<b>' + esc(T('cap.project')) + '</b>';
 			var m = INSPECT ? INSPECT.mode : '';
 			if (m === 'image') {
 				return INSPECT.source === 'comp' ?
-					'<b>Extrair cores do frame</b><span>nada selecionado: usa a comp</span>' + shift :
-					'<b>Extrair cores da imagem</b><span>' + esc(INSPECT.label || '') + '</span>' + shift;
+					'<b>' + esc(T('cap.frame')) + '</b><span>' + esc(T('cap.frameNote')) + '</span>' + shift :
+					'<b>' + esc(T('cap.image')) + '</b><span>' + esc(INSPECT.label || '') + '</span>' + shift;
 			}
-			if (m === 'props') return '<b>Capturar as propriedades selecionadas</b>' + shift;
-			if (m === 'layers') return '<b>Capturar as cores dos layers</b>' + shift;
-			if (m === 'none') return '<b>Abra uma composição</b>' + shift;
-			return '<b>Capturar cores</b>' + shift;
+			if (m === 'props') return '<b>' + esc(T('cap.props')) + '</b>' + shift;
+			if (m === 'layers') return '<b>' + esc(T('cap.layers')) + '</b>' + shift;
+			if (m === 'none') return '<b>' + esc(T('cap.nocomp')) + '</b>' + shift;
+			return '<b>' + esc(T('tool.capture')) + '</b>' + shift;
 		}
 
 		function capture(btn, e) {
@@ -710,36 +894,40 @@
 				var fresh = ((r && r.colors) || []).filter(function (c) { c = C.normHex(c); if (!c || have[c]) return false; have[c] = true; return true; });
 				if (!fresh.length) {
 					flash(tool, 'nope', 420);
-					return toast(r && r.ok ? 'Nenhuma cor nova encontrada' : 'Selecione layers ou propriedades com cor', { icon: 'pipette' });
+					return toast(r && r.ok ? T('cap.noneNew') : T('cap.nosel'), { icon: 'pipette' });
 				}
 				pushUndo();
 				fresh.forEach(function (c) { S.swatches.push({ id: newId(), color: C.normHex(c), label: '', auto: true }); });
 				render({ from: rect(btn) });
 				save();
-				toast('+' + fresh.length + (fresh.length > 1 ? ' cores' : ' cor') + (scope === 'project' ? ' do projeto' : ''), { color: C.normHex(fresh[0]), undo: true });
-			}).catch(function () { busy(tool, false); toast('Falha ao capturar cores', { icon: 'alert' }); });
+				toast('+' + Tn('colors', fresh.length) + (scope === 'project' ? ' ' + T('cap.fromProject') : ''), { color: C.normHex(fresh[0]), undo: true });
+			}).catch(function () { busy(tool, false); toast(T('cap.fail'), { icon: 'alert' }); });
 		}
 
 		function sortPalette() {
 			var sorted = C.sortSwatches(S.swatches.slice());
-			if (sorted.every(function (s, i) { return s === S.swatches[i]; })) return toast('A paleta já está em ordem', { icon: 'sort' });
+			if (sorted.every(function (s, i) { return s === S.swatches[i]; })) return toast(T('sort.already'), { icon: 'sort' });
 			pushUndo();
 			S.swatches = sorted;
 			render({ slow: true });
 			save();
-			toast('Ordenada por matiz', { icon: 'sort', undo: true });
+			toast(T('sort.done'), { icon: 'sort', undo: true });
 		}
 
 		el.addEventListener('click', function (e) {
 			var b = e.target.closest('[data-act]');
 			if (!b || !el.contains(b)) return;
 			var act = b.dataset.act;
-			if (act === 'add') openEditor(null, b);
+			if (act === 'add') { if (hPrefs.on) openHarmony(suggestColor(), b); else openEditor(null, b); }
 			else if (act === 'capture') capture(b, e);
 			else if (act === 'sort') { closeSettings(); sortPalette(); }
 			else if (act === 'menu') toggleSide('settings');
 			else if (act === 'library') toggleSide('library');
 			else if (act === 'save-preset') savePreset();
+			else if (act === 'harmony') openHarmony(suggestColor(), b);
+			else if (act === 'import') { closeSettings(); importColors(); }
+			else if (act === 'export') { closeSettings(); exportAse(); }
+			else if (act === 'keys') openKeys();
 			else if (act === 'folder') chooseFolder(e);
 			else if (act === 'toggle-info') setPref('info', !S.prefs.info);
 			else if (act === 'toggle-names') setPref('names', !S.prefs.names);
@@ -747,8 +935,8 @@
 		});
 
 		// ------------------------------------------------------------------ ajustes
-		function isSheetOpen() { return !settings.hidden || !library.hidden || !ed.hidden || !exSheet.hidden; }
-		function anyFull() { return !ed.hidden || !exSheet.hidden; }
+		function isSheetOpen() { return !settings.hidden || !library.hidden || !ed.hidden || !exSheet.hidden || !hm.hidden || !keysSheet.hidden; }
+		function anyFull() { return !ed.hidden || !exSheet.hidden || !hm.hidden || !keysSheet.hidden; }
 
 		// ajustes e presets ocupam a faixa; as docas continuam visíveis e o ícone vira ×
 		var SIDES = { settings: [settings, 'menu-open'], library: [library, 'lib-open'] };
@@ -782,25 +970,49 @@
 			Array.prototype.forEach.call(settings.querySelectorAll('[data-fmt]'), function (b) {
 				b.setAttribute('aria-pressed', b.dataset.fmt === S.prefs.format);
 			});
+			Array.prototype.forEach.call(settings.querySelectorAll('[data-accent]'), function (b) {
+				b.setAttribute('aria-pressed', b.dataset.accent === S.prefs.accent);
+				if (b.dataset.accent !== 'auto') b.dataset.tip = N.nearest(b.dataset.accent);
+			});
+			Array.prototype.forEach.call(settings.querySelectorAll('[data-lang]'), function (b) {
+				b.setAttribute('aria-pressed', b.dataset.lang === I18N.lang());
+			});
 			el.classList.toggle('show-info', S.prefs.info);
 			el.classList.toggle('show-names', S.prefs.names);
 		}
 
-		function placePill(animate) {
-			var b = settings.querySelector('[data-fmt="' + S.prefs.format + '"]');
-			var pill = settings.querySelector('.seg-pill');
-			if (!b) return;
-			if (!animate) pill.style.transition = 'none';
-			pill.style.width = b.offsetWidth + 'px';
-			pill.style.transform = 'translateX(' + b.offsetLeft + 'px)';
-			if (!animate) { void pill.offsetWidth; pill.style.transition = ''; }
+		// pílula dos seletores (formato e idioma) embaixo do botão escolhido
+		function placePill(animate, langCode) {
+			[settings.querySelector('[data-fmt="' + S.prefs.format + '"]'), settings.querySelector('[data-lang="' + (langCode || I18N.lang()) + '"]')].forEach(function (b) {
+				if (!b) return;
+				var pill = b.parentNode.querySelector('.seg-pill');
+				if (!animate) pill.style.transition = 'none';
+				pill.style.width = b.offsetWidth + 'px';
+				pill.style.transform = 'translateX(' + b.offsetLeft + 'px)';
+				if (!animate) { void pill.offsetWidth; pill.style.transition = ''; }
+			});
 		}
 
 		settings.addEventListener('click', function (e) {
+			var a = e.target.closest('[data-accent]');
+			if (a) {
+				if (a.dataset.accent !== S.prefs.accent) chooseAccent(a.dataset.accent);
+				a.animate([{ transform: 'scale(.7)' }, { transform: 'none' }], { duration: 380, easing: SPRING });
+				return;
+			}
 			var b = e.target.closest('[data-fmt]');
-			if (!b) return;
-			setPref('format', b.dataset.fmt);
-			placePill(true);
+			if (b) {
+				setPref('format', b.dataset.fmt);
+				placePill(true);
+				return;
+			}
+			// idioma: grava e recarrega o painel (a paleta fica no projeto, nada se perde)
+			var l = e.target.closest('[data-lang]');
+			if (!l || l.dataset.lang === I18N.lang()) return;
+			placePill(true, l.dataset.lang);
+			Host.savePrefs({ lang: l.dataset.lang }).then(function () {
+				setTimeout(function () { root.location.reload(); }, 220);
+			}, function () {});
 		});
 
 		function setPref(k, v) {
@@ -819,8 +1031,9 @@
 		(function () {
 			var btn = q('[data-act="clear"]'), t;
 			function cancel() { clearTimeout(t); btn.classList.remove('holding'); }
-			btn.addEventListener('pointerdown', function (e) {
+			onPress(btn, function (e) {
 				if (e.button !== 0) return;
+				follow(function () {}, cancel);
 				btn.classList.add('holding');
 				t = setTimeout(function () {
 					cancel();
@@ -830,11 +1043,11 @@
 					S.swatches = [];
 					render();
 					save();
-					toast('Paleta limpa', { icon: 'trash', undo: true });
+					toast(T('clear.done'), { icon: 'trash', undo: true });
 				}, 900);
 			});
-			btn.addEventListener('pointerup', cancel);
 			btn.addEventListener('pointerleave', cancel);
+			btn.addEventListener('mouseleave', cancel);
 		})();
 
 		// ------------------------------------------------------------------ presets
@@ -860,7 +1073,7 @@
 
 		function loadPresets(focusId, rename) {
 			return Host.listPresets().then(function (r) { gotPresets(r, focusId, rename); })
-				.catch(function () { toast('Não foi possível ler a pasta de presets', { icon: 'alert' }); });
+				.catch(function () { toast(T('lib.readFail'), { icon: 'alert' }); });
 		}
 		function gotPresets(r, focusId, rename) {
 			{
@@ -872,30 +1085,39 @@
 		}
 
 		function renderLibrary(focusId, rename) {
-			var html = '<div class="pcard is-project" role="listitem" data-tip="Paleta deste projeto · salva no .aep">' + bars(S.swatches) +
-				'<span class="pc-name">' + ic('file') + '<span>' + esc(S.project || 'projeto') + '</span></span></div>' +
-				'<button class="pcard add" data-act="save-preset" data-tip="Salvar a paleta do projeto como preset">' + ic('plus') + '<span class="pc-name">Salvar preset</span></button>';
+			// o cartão do projeto faz o papel do antigo "salvar preset": no hover mostra o que o clique faz.
+			// sem preset de origem, ou mudada desde ele, a paleta "não está salva": um fio a separa dos presets
+			var st = projectState(), src = st.p ? esc(st.p.name) : '';
+			var over = st.k === 'saved' ? '<span class="pc-save is-saved"><span class="pc-sv">' + ic('check') + '<b>' + T('lib.savedIn', { name: src }) + '</b></span></span>'
+				: st.k === 'empty' ? ''
+				: '<span class="pc-save"><span class="pc-sv pc-sv-a">' + ic('bookmark') + '<b>' + esc(T('lib.savePreset')) + '</b></span>' +
+					(st.k === 'changed' ? '<span class="pc-sv pc-sv-b">' + ic('reset') + '<b>' + T('lib.update', { name: src }) + '</b></span><small><kbd>' + KEY.shift + '</kbd> ' + T('lib.shiftUpdates', { name: src }) + '</small>' : '') + '</span>';
+			var html = '<div class="pcard is-project st-' + st.k + '" role="listitem" tabindex="0" aria-label="' + esc(T('lib.project')) + '">' + bars(S.swatches) +
+				'<span class="pc-name">' + ic('file') + '<span>' + esc(S.project || T('project.untitled')) + '</span></span>' + over + '</div>' +
+				(st.k === 'new' || st.k === 'changed' ? '<span class="lib-sep" aria-hidden="true"></span>' : '');
 			if (S.offline) {
 				// volume de rede desmontado / unidade desconectada: explica e oferece saída
 				html += '<div class="pcard offline" role="listitem">' +
 					'<span class="off-ic">' + ic('unplug') + '</span>' +
-					'<span class="off-txt"><b>' + esc(S.offline.volume || 'pasta') + '</b> não está acessível</span>' +
+					'<span class="off-txt">' + T('lib.offline', { name: '<b>' + esc(S.offline.volume || T('lib.theFolder')) + '</b>' }) + '</span>' +
 					'<span class="off-acts">' +
-					(S.offline.canMount ? '<button class="off-btn" data-off="mount">Montar</button>' : '') +
-					'<button class="off-btn" data-off="retry" data-tip="Tentar de novo">' + ic('reset') + '</button>' +
-					'<button class="off-btn" data-off="local" data-tip="Usar a pasta local">' + ic('folder') + '</button>' +
+					(S.offline.canMount ? '<button class="off-btn" data-off="mount">' + esc(T('lib.mount')) + '</button>' : '') +
+					'<button class="off-btn" data-off="retry" data-tip="' + esc(T('lib.retry')) + '">' + ic('reset') + '</button>' +
+					'<button class="off-btn" data-off="local" data-tip="' + esc(T('lib.local')) + '">' + ic('folder') + '</button>' +
 					'</span></div>';
 			}
 			S.presets.forEach(function (p, i) {
-				var cls = 'pcard' + (p.id === S.prefs.defaultPreset ? ' is-default' : '') + (p.name === S.preset ? ' is-origin' : '');
+				var cls = 'pcard' + (p.id === S.prefs.defaultPreset ? ' is-default' : '') + (p.name === S.preset ? ' is-origin' + (st.k === 'changed' ? ' drift' : '') : '');
 				html += '<div class="' + cls + '" role="listitem" tabindex="0" data-pid="' + esc(p.id) + '" style="--i:' + i + '">' + bars(p.swatches) +
-					'<span class="pc-name">' + esc(p.name) + '</span>' +
-					'<span class="pc-acts"><button class="pc-btn pc-ren" data-tip="Renomear">' + ic('pencil') + '</button>' +
-					'<button class="pc-btn pc-star" data-tip="Padrão para projetos sem paleta">' + ic('star') + '</button>' +
-					'<button class="pc-btn pc-del" data-tip="Excluir preset">' + ic('trash') + '</button></span></div>';
+					'<span class="pc-row"><span class="pc-name">' + esc(p.name) + '</span>' +
+					'<button type="button" class="pc-grip" aria-label="' + esc(T('lib.grip')) + '">' + GRIP + '</button></span>' +
+					'<span class="pc-acts"><button class="pc-btn pc-ren" aria-label="' + esc(T('lib.rename')) + '">' + ic('pencil') + '</button>' +
+					'<button class="pc-btn pc-star" aria-label="' + esc(T('lib.default')) + '">' + ic('star') + '</button>' +
+					'<button class="pc-btn pc-del" aria-label="' + esc(T('lib.delete')) + '">' + ic('trash') + '</button></span></div>';
 			});
 			libList.innerHTML = html;
 			q('.lib-path').textContent = shortPath(S.folder);
+			libFade();
 			if (focusId) {
 				var c = cardOf(focusId);
 				if (!c) return;
@@ -907,6 +1129,11 @@
 
 		function applyPreset(p, merge, card) {
 			var from = rect(card.querySelector('.pc-bars'));
+			if (merge) {
+				var have0 = {};
+				S.swatches.forEach(function (s) { have0[s.color] = true; });
+				if (toSwatches(p.swatches).every(function (s) { return have0[s.color]; })) return toast(T('hm.already'), { icon: 'library' });
+			}
 			pushUndo();
 			var added = 0;
 			if (merge) {
@@ -920,19 +1147,42 @@
 			closeSettings();
 			render({ from: from });
 			save();
-			toast(merge ? '+' + added + (added === 1 ? ' cor de ' : ' cores de ') + p.name : p.name + ' aplicado ao projeto', { color: (p.swatches[0] || {}).color, undo: true });
+			toast(merge ? Tn('added.from', added, { name: p.name }) : T('lib.applied', { name: p.name }), { color: (p.swatches[0] || {}).color, undo: true });
 		}
 
 		function savePreset() {
-			if (!S.swatches.length) return toast('A paleta do projeto está vazia', { icon: 'alert' });
-			if (S.offline) return toast((S.offline.volume || 'A pasta') + ' não está acessível', { icon: 'unplug' });
-			var name = N.unique(S.project && S.project !== 'sem título' ? S.project : 'minha paleta', S.presets.map(function (p) { return p.name; }));
+			if (!S.swatches.length) return toast(T('lib.empty'), { icon: 'alert' });
+			if (S.offline) return toast(T('lib.offline', { name: S.offline.volume || T('lib.theFolder') }), { icon: 'unplug' });
+			var name = N.unique(S.project || T('lib.myPalette'), S.presets.map(function (p) { return p.name; }));
 			Host.savePreset({ name: name, swatches: plain(S.swatches) }).then(function (r) {
-				if (!r || !r.ok) return toast(r && r.reason === 'offline' ? 'A pasta de presets não está acessível' : 'A pasta de presets não aceita gravação', { icon: 'alert' });
+				if (!r || !r.ok) return toast(r && r.reason === 'offline' ? T('lib.folderOffline') : T('lib.readonly'), { icon: 'alert' });
 				S.preset = name;
 				save();
 				loadPresets(r.id, true);
-			});
+			}).catch(function () { toast(T('lib.readonly'), { icon: 'alert' }); });
+		}
+
+		// a paleta do projeto está salva? saved: igual ao preset de origem · changed: mudou desde ele ·
+		// new: não veio de preset nenhum · empty: nada para salvar
+		function projectState() {
+			if (!S.swatches.length) return { k: 'empty' };
+			var src = null;
+			S.presets.forEach(function (p) { if (!src && p.name === S.preset) src = p; });
+			if (!src) return { k: 'new' };
+			var key = function (list) { return (list || []).map(function (s) { return C.normHex(s.color); }).join(); };
+			return { k: key(S.swatches) === key(src.swatches) ? 'saved' : 'changed', p: src };
+		}
+
+		// Shift + clique no cartão do projeto: grava a paleta por cima do preset de origem (com desfazer)
+		function updatePreset(p) {
+			if (S.offline) return toast(T('lib.offline', { name: S.offline.volume || T('lib.theFolder') }), { icon: 'unplug' });
+			var old = { id: p.id, name: p.name, swatches: p.swatches };
+			Host.savePreset({ id: p.id, name: p.name, swatches: plain(S.swatches) }).then(function (r) {
+				if (!r || !r.ok) return toast(T('lib.readonly'), { icon: 'alert' });
+				pushUndo({ restorePreset: old });
+				loadPresets(p.id);
+				toast(T('lib.updated', { name: p.name }), { icon: 'bookmark', undo: true });
+			}).catch(function () { toast(T('lib.readonly'), { icon: 'alert' }); });
 		}
 
 		// renomear no próprio cartão
@@ -954,8 +1204,18 @@
 				var v = input.value.trim();
 				if (ok && v && v !== p.name) {
 					if (S.preset === p.name) { S.preset = v; save(); }
+					var old = p.name, oldPreset = S.preset;
 					p.name = v;
-					Host.savePreset({ id: p.id, name: v, swatches: p.swatches });
+					Host.savePreset({ id: p.id, name: v, swatches: p.swatches }).then(function (r) {
+						if (r && r.ok) return;
+						throw new Error('rename');
+					}).catch(function () {
+						// não gravou: volta o nome, para a tela não mentir sobre o arquivo
+						p.name = old;
+						if (S.preset !== oldPreset) { S.preset = oldPreset; save(); }
+						nameEl.textContent = old;
+						toast(T('lib.readonly'), { icon: 'alert' });
+					});
 				}
 				nameEl.textContent = p.name;
 				input.replaceWith(nameEl);
@@ -977,12 +1237,12 @@
 			});
 			card.querySelector('.pc-star').animate([{ transform: 'scale(.4) rotate(-72deg)' }, { transform: 'none' }], { duration: 480, easing: SPRING });
 			Host.savePrefs({ defaultPreset: S.prefs.defaultPreset }).catch(function () {});
-			toast(on ? p.name + ' é o padrão para projetos sem paleta' : 'Sem preset padrão', { icon: 'star' });
+			toast(on ? T('lib.isDefault', { name: p.name }) : T('lib.noDefault'), { icon: 'star' });
 		}
 
 		function deletePreset(p, card) {
 			Host.deletePreset(p.id).then(function (r) {
-				if (!r || !r.ok) return toast('Não foi possível excluir o preset', { icon: 'alert' });
+				if (!r || !r.ok) return toast(T('lib.deleteFail'), { icon: 'alert' });
 				pushUndo({ restorePreset: { id: p.id, name: p.name, swatches: p.swatches } });
 				S.presets = S.presets.filter(function (x) { return x !== p; });
 				if (S.prefs.defaultPreset === p.id) { S.prefs.defaultPreset = ''; Host.savePrefs({ defaultPreset: '' }); }
@@ -992,26 +1252,236 @@
 					[{ opacity: 1, height: r0.height + 'px' }, { opacity: 0, height: '0px', marginTop: '-6px', transform: 'scale(.9)' }] :
 					[{ opacity: 1, width: r0.width + 'px' }, { opacity: 0, width: '0px', marginLeft: '-6px', transform: 'scale(.9)' }],
 					{ duration: 300, easing: EASE }).onfinish = function () { card.remove(); };
-				toast(p.name + ' excluído', { icon: 'trash', undo: true });
-			});
+				toast(T('lib.deleted', { name: p.name }), { icon: 'trash', undo: true });
+			}).catch(function () { toast(T('lib.deleteFail'), { icon: 'alert' }); });
 		}
 
 		function chooseFolder(e) {
-			if (e.altKey) return Host.revealPresetFolder().then(function (r) { if (!r || !r.ok) toast('A pasta não está acessível', { icon: 'unplug' }); });
+			if (e.altKey) return Host.revealPresetFolder().then(function (r) { if (!r || !r.ok) toast(T('lib.notAccessible'), { icon: 'unplug' }); });
 			Host.choosePresetFolder().then(function (r) {
 				if (!r || !r.ok) return;
 				S.folder = r.folder;
 				q('.lib-path').textContent = shortPath(S.folder);
 				return Host.listPresets().then(function (l) {
 					gotPresets(l);
-					if (S.offline) toast((S.offline.volume || 'A pasta') + ' não está acessível', { icon: 'unplug' });
-					else toast('Presets de ' + shortPath(S.folder), { icon: 'folder' });
+					if (S.offline) toast(T('lib.offline', { name: S.offline.volume || T('lib.theFolder') }), { icon: 'unplug' });
+					else toast(T('lib.from', { path: shortPath(S.folder) }), { icon: 'folder' });
 				});
-			});
+			}).catch(function () { toast(T('lib.notAccessible'), { icon: 'alert' }); });
 		}
 
+		// gradiente nas bordas da lista: os cartões se esvaem onde a lista é cortada
+		function libFade() {
+			var row = el.dataset.orient === 'row';
+			var pos = row ? libList.scrollLeft : libList.scrollTop;
+			var max = row ? libList.scrollWidth - libList.clientWidth : libList.scrollHeight - libList.clientHeight;
+			libList.classList.toggle('fade-start', pos > 2);
+			libList.classList.toggle('fade-end', pos < max - 2);
+		}
+		libList.addEventListener('scroll', libFade);
+
+		// arrastar presets pela alça (área vazia à direita do nome) para reordenar.
+		// Mesmo padrão do sortable.js do O PADEIRO, que funciona no CEP do After Effects:
+		// captura no próprio puxador (um <button>), nada muda no DOM durante o arrasto (só transforms
+		// calculados das posições iniciais) e a lista é reordenada uma vez, ao soltar.
+		function presetCards() { return Array.prototype.slice.call(libList.querySelectorAll('.pcard[data-pid]')); }
+
+		function movePreset(from, to) {
+			var all = presetCards();
+			if (from === to || !all[from] || !all[to]) return;
+			var card = all[from];
+			card.style.animation = 'none'; // reinserir no DOM reiniciaria a animação de entrada
+			libList.insertBefore(card, to > from ? all[to].nextSibling : all[to]);
+			var ids = presetCards().map(function (c) { return c.dataset.pid; });
+			S.presets = ids.map(presetById);
+			Host.savePresetOrder(ids).catch(function () { toast(T('lib.orderFail'), { icon: 'alert' }); });
+			return card;
+		}
+
+		// Dois jeitos de mover um preset pelo puxador:
+		//  · arrastar (botão pressionado) — precisa do painel já em foco no CEP;
+		//  · clicar para pegar, mover o mouse (só hover) e clicar para soltar — funciona mesmo quando
+		//    o primeiro clique só ativa a janela do painel, que é o que o After Effects faz. Esc cancela.
+		var suppressClick = false;
+		root.addEventListener('click', function (e) {
+			if (!suppressClick) return;
+			suppressClick = false;
+			e.preventDefault();
+			e.stopPropagation();
+		}, true);
+
+		onPress(libList, function (e) {
+			var grip = e.target.closest('.pc-grip');
+			if (!grip || e.button !== 0) return;
+			var all = presetCards();
+			var card = grip.closest('.pcard');
+			var from = all.indexOf(card);
+			if (from < 0 || all.length < 2) return;
+			e.preventDefault();
+			dbg('alça: ' + e.type + ' (' + (card.querySelector('.pc-name') || {}).textContent + ')');
+
+			var row = el.dataset.orient === 'row';
+			var start = row ? e.clientX : e.clientY;
+			var scroll0 = row ? libList.scrollLeft : libList.scrollTop;
+			var boxes = all.map(rect);
+			var step = row ? boxes[1].left - boxes[0].left : boxes[1].top - boxes[0].top;
+			var to = from, started = false, carrying = false, finished = false, last = e, raf = 0;
+
+			try { if (e.pointerId !== undefined) grip.setPointerCapture(e.pointerId); } catch (err) {}
+
+			function scrolled() { return (row ? libList.scrollLeft : libList.scrollTop) - scroll0; }
+
+			function begin() {
+				dbg(carrying ? 'pegou (clique)' : 'arrastando');
+				started = true;
+				hideTip();
+				card.classList.add('drag');
+				libList.classList.add('sorting');
+			}
+
+			function update() {
+				var d = (row ? last.clientX : last.clientY) - start + scrolled();
+				if (!started) {
+					if (Math.abs(d) < 4) return;
+					begin();
+				}
+				var b0 = boxes[from];
+				var center = (row ? b0.left + b0.width / 2 : b0.top + b0.height / 2) + d;
+				to = from;
+				for (var i = 0; i < boxes.length; i++) {
+					var mid = row ? boxes[i].left + boxes[i].width / 2 : boxes[i].top + boxes[i].height / 2;
+					if (i < from && center < mid) { to = i; break; }
+					if (i > from && center > mid) to = i;
+				}
+				card.style.transform = row ? 'translateX(' + d + 'px)' : 'translateY(' + d + 'px)';
+				all.forEach(function (c, i) {
+					if (c === card) return;
+					var shift = 0;
+					if (from < to && i > from && i <= to) shift = -step;
+					if (from > to && i < from && i >= to) shift = step;
+					c.style.transform = shift ? (row ? 'translateX(' : 'translateY(') + shift + 'px)' : '';
+				});
+			}
+
+			// rola sozinho perto das bordas da lista
+			function autoscroll() {
+				raf = 0;
+				if (!started) return;
+				var lr = rect(libList), edge = 28, v = 0;
+				var p = row ? last.clientX : last.clientY, lo = row ? lr.left : lr.top, hi = row ? lr.right : lr.bottom;
+				if (p < lo + edge && p > lo - 40) v = -Math.ceil((lo + edge - p) / 4);
+				else if (p > hi - edge && p < hi + 40) v = Math.ceil((p - hi + edge) / 4);
+				if (!v) return;
+				if (row) libList.scrollLeft += v; else libList.scrollTop += v;
+				update();
+				raf = requestAnimationFrame(autoscroll);
+			}
+
+			function move(ev) {
+				last = ev;
+				update();
+				if (!raf) raf = requestAnimationFrame(autoscroll);
+			}
+
+			function finish(cancel) {
+				if (finished) return;
+				finished = true;
+				dbg((cancel ? 'cancelou' : 'soltou') + ' · de ' + from + ' para ' + to);
+				root.removeEventListener('pointermove', move, true);
+				root.removeEventListener('mousemove', move, true);
+				root.removeEventListener('pointerup', up, true);
+				root.removeEventListener('mouseup', up, true);
+				root.removeEventListener('pointercancel', cancelDrag, true);
+				root.removeEventListener('pointerdown', drop, true);
+				root.removeEventListener('mousedown', drop, true);
+				root.removeEventListener('keydown', key, true);
+				if (raf) cancelAnimationFrame(raf);
+				// FLIP ao soltar: guarda onde cada cartão está na tela, reorganiza tudo de uma vez SEM
+				// transição (zerar o deslocamento dos vizinhos com transição os fazia voltar ao lugar
+				// antigo, atravessando o cartão solto) e só anima quem ficou fora do lugar
+				var seen = all.map(rect);
+				// transição desligada no próprio estilo de cada cartão (uma classe não basta: o navegador
+				// compara com o quadro anterior e criaria a transição mesmo assim); volta dois quadros depois
+				all.forEach(function (c) { c.style.transition = 'none'; });
+				libList.classList.remove('sorting', 'carry');
+				card.classList.remove('drag');
+				all.forEach(function (c) { c.style.transform = ''; });
+				if (!cancel && started && to !== from) movePreset(from, to);
+				void libList.offsetHeight;
+				all.forEach(function (c, i) {
+					c.getAnimations().forEach(function (a) { if (a.transitionProperty === 'transform') a.cancel(); });
+					var now = rect(c), dx = seen[i].left - now.left, dy = seen[i].top - now.top;
+					if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+					c.animate([{ transform: 'translate(' + dx + 'px,' + dy + 'px)' }, { transform: 'none' }], { duration: 260, easing: SPRING });
+				});
+				requestAnimationFrame(function () { requestAnimationFrame(function () { all.forEach(function (c) { c.style.transition = ''; }); }); });
+			}
+
+			function up(ev) {
+				if (carrying || finished) return; // pointerup e mouseup do mesmo clique
+				dbg('alça: ' + (ev && ev.type));
+				if (started) return finish(false);
+				// clique sem arrastar: pega o preset; ele segue o mouse até o próximo clique
+				carrying = true;
+				begin();
+				libList.classList.add('carry');
+				root.removeEventListener('pointerup', up, true);
+				root.removeEventListener('mouseup', up, true);
+				root.removeEventListener('pointercancel', cancelDrag, true);
+				root.addEventListener('pointerdown', drop, true);
+				root.addEventListener('mousedown', drop, true);
+				root.addEventListener('keydown', key, true);
+				toast(T('lib.carry'), { icon: 'library' });
+			}
+
+			function drop(ev) {
+				ev.preventDefault();
+				ev.stopPropagation();
+				suppressClick = true;
+				last = ev;
+				update();
+				finish(false);
+				hideToast();
+			}
+
+			function key(ev) {
+				if (ev.key !== 'Escape') return;
+				ev.preventDefault();
+				ev.stopPropagation();
+				finish(true);
+				hideToast();
+			}
+
+			function cancelDrag() { dbg('alça: pointercancel'); if (!carrying) finish(true); }
+
+			// escuta na janela (e não só no puxador): funciona com ou sem a captura do ponteiro,
+			// que o CEP pode soltar quando o painel não está em foco
+			root.addEventListener('pointermove', move, true);
+			root.addEventListener('mousemove', move, true);
+			root.addEventListener('pointerup', up, true);
+			root.addEventListener('mouseup', up, true);
+			root.addEventListener('pointercancel', cancelDrag, true);
+		});
+
+		// teclado: com o puxador em foco, ↑ ↓ (← → na faixa) mudam a ordem
+		libList.addEventListener('keydown', function (e) {
+			var grip = e.target.closest && e.target.closest('.pc-grip');
+			if (!grip) return;
+			var back = e.key === 'ArrowUp' || e.key === 'ArrowLeft', fwd = e.key === 'ArrowDown' || e.key === 'ArrowRight';
+			if (!back && !fwd) return;
+			e.preventDefault();
+			e.stopPropagation();
+			var all = presetCards(), from = all.indexOf(grip.closest('.pcard')), to = from + (back ? -1 : 1);
+			if (from < 0 || to < 0 || to >= all.length) return;
+			var moved = movePreset(from, to);
+			if (!moved) return;
+			moved.animate([{ transform: 'scale(.96)' }, { transform: 'none' }], { duration: 260, easing: SPRING });
+			moved.querySelector('.pc-grip').focus({ preventScroll: true });
+			moved.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+		});
+
 		libList.addEventListener('click', function (e) {
-			if (e.target.closest('.pc-input')) return;
+			if (e.target.closest('.pc-input') || e.target.closest('.pc-grip')) return;
 			var off = e.target.closest('[data-off]');
 			if (off) {
 				var card0 = off.closest('.pcard');
@@ -1022,14 +1492,22 @@
 					if (S.offline) {
 						card0 = libList.querySelector('.offline');
 						if (card0) card0.animate([{ transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' }, { transform: 'none' }], { duration: 300 });
-						toast((S.offline.volume || 'A pasta') + ' continua inacessível', { icon: 'unplug' });
+						toast(T('lib.stillOffline', { name: S.offline.volume || T('lib.theFolder') }), { icon: 'unplug' });
 					} else {
-						toast('Presets de ' + shortPath(S.folder), { icon: 'folder' });
+						toast(T('lib.from', { path: shortPath(S.folder) }), { icon: 'folder' });
 					}
-				});
+				}).catch(function () { off.classList.remove('busy'); toast(T('lib.notAccessible'), { icon: 'alert' }); });
 			}
 			var card = e.target.closest('[data-pid]');
-			if (!card) { if (e.target.closest('.is-project')) closeSettings(); return; }
+			if (!card) {
+				var proj = e.target.closest('.is-project');
+				if (!proj) return;
+				var ps = projectState();
+				if (ps.k === 'changed' && e.shiftKey) updatePreset(ps.p);
+				else if (ps.k === 'new' || ps.k === 'changed') savePreset();
+				else closeSettings();
+				return;
+			}
 			var p = presetById(card.dataset.pid);
 			if (!p) return;
 			if (e.target.closest('.pc-ren')) startRename(card);
@@ -1038,6 +1516,10 @@
 			else applyPreset(p, e.shiftKey, card);
 		});
 		libList.addEventListener('keydown', function (e) {
+			if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('is-project')) {
+				e.target.dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey: e.shiftKey }));
+				return;
+			}
 			var card = e.target.closest('[data-pid]');
 			if (!card || e.target !== card) return;
 			var p = presetById(card.dataset.pid);
@@ -1065,13 +1547,14 @@
 			var tool = capTool;
 			busy(tool, true);
 			Host.grabFrame().then(function (r) {
+				if (r && r.ok && (!ed.hidden || !hm.hidden || !keysSheet.hidden)) { busy(tool, false); Host.releaseFrame(r); return; }
 				if (!r || !r.ok) {
 					busy(tool, false);
 					flash(tool, 'nope', 420);
-					return toast(REASONS[r && r.reason] || 'Não foi possível ler o frame', { icon: 'alert' });
+					return toast(REASONS[r && r.reason] || T('ex.readFail'), { icon: 'alert' });
 				}
 				var job = XS = { grab: r, chips: [], data: null };
-				q('.ex-label').textContent = r.label || 'frame';
+				q('.ex-label').textContent = r.label || T('ex.frame');
 				exSheet.classList.add('loading');
 				exSheet.classList.remove('slow');
 				exImg.removeAttribute('src');
@@ -1091,7 +1574,7 @@
 					var sec = (Date.now() - t0) / 1000;
 					if (sec < 0.7) return;
 					exSheet.classList.add('slow');
-					waitTxt.textContent = (r.kind === 'image' && !r.temp ? 'lendo imagem' : 'renderizando frame') + (sec >= 2 ? ' · ' + Math.floor(sec) + 's' : '…');
+					waitTxt.textContent = (r.kind === 'image' && !r.temp ? T('ex.reading') : T('ex.rendering')) + (sec >= 2 ? ' · ' + Math.floor(sec) + 's' : '…');
 				}, 250);
 
 				function done() {
@@ -1114,11 +1597,11 @@
 					done();
 					if (XS !== job) return; // cancelado com Esc/×: sem aviso
 					closeExtract();
-					toast(/tempo/.test(err && err.message) ? 'O frame demorou demais para renderizar' : 'Não foi possível ler o frame', { icon: 'alert' });
+					toast(/tempo/.test(err && err.message) ? T('ex.timeout') : T('ex.readFail'), { icon: 'alert' });
 				});
 			}).catch(function () {
 				busy(tool, false);
-				toast('Não foi possível ler o frame', { icon: 'alert' });
+				toast(T('ex.readFail'), { icon: 'alert' });
 			});
 		}
 
@@ -1160,7 +1643,7 @@
 			exMarks.children[i].classList.toggle('on', c.on);
 		}
 
-		function hot(i, on) {
+		function exHot(i, on) {
 			if (exChips.children[i]) exChips.children[i].classList.toggle('hot', on);
 			if (exMarks.children[i]) exMarks.children[i].classList.toggle('hot', on);
 		}
@@ -1170,8 +1653,8 @@
 			if (b) toggleChip(+b.dataset.i);
 		});
 		[exChips, exMarks].forEach(function (box) {
-			box.addEventListener('pointerover', function (e) { var t = e.target.closest('[data-i]'); if (t) hot(+t.dataset.i, true); });
-			box.addEventListener('pointerout', function (e) { var t = e.target.closest('[data-i]'); if (t) hot(+t.dataset.i, false); });
+			box.addEventListener('pointerover', function (e) { var t = e.target.closest('[data-i]'); if (t) exHot(+t.dataset.i, true); });
+			box.addEventListener('pointerout', function (e) { var t = e.target.closest('[data-i]'); if (t) exHot(+t.dataset.i, false); });
 		});
 
 		// lupa: mostra a cor sob o cursor; clique adiciona
@@ -1180,6 +1663,7 @@
 			if (e.target.closest('.ex-mark')) { exLoupe.classList.remove('on'); return; }
 			var r = rect(exStage), fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
 			var hex = X.pixel(XS.data, fx, fy);
+			if (!hex) { exLoupe.classList.remove('on'); return; }
 			exLoupe.style.left = (fx * 100) + '%';
 			exLoupe.style.top = (fy * 100) + '%';
 			exLoupe.style.setProperty('--c', hex);
@@ -1192,6 +1676,7 @@
 			if (m) return toggleChip(+m.dataset.i);
 			var r = rect(exStage), fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
 			var hex = X.pixel(XS.data, fx, fy);
+			if (!hex) return;
 			for (var i = 0; i < XS.chips.length; i++) {
 				if (XS.chips[i].color === hex) { XS.chips[i].on = true; renderChips(false, i); return; }
 			}
@@ -1215,7 +1700,7 @@
 			var have = {}, fresh = [];
 			S.swatches.forEach(function (s) { have[s.color] = true; });
 			XS.chips.forEach(function (c) { if (c.on && !have[c.color]) { have[c.color] = true; fresh.push(c.color); } });
-			if (!fresh.length) return toast('Nenhuma cor nova selecionada', { icon: 'image' });
+			if (!fresh.length) return toast(T('ex.noneSelected'), { icon: 'image' });
 			var from = rect(exStage), label = XS.grab.label;
 			closeExtract();
 			pushUndo();
@@ -1224,7 +1709,7 @@
 				render({ from: from });
 				save();
 			}, 120);
-			toast('+' + fresh.length + (fresh.length > 1 ? ' cores de ' : ' cor de ') + label, { color: fresh[0], undo: true });
+			toast(Tn('added.from', fresh.length, { name: label }), { color: fresh[0], undo: true });
 		}
 
 		function closeExtract() {
@@ -1232,6 +1717,7 @@
 			XS = null;
 			exLoupe.classList.remove('on');
 			exSheet.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.97)' }], { duration: 220, easing: EASE }).onfinish = function () {
+				if (XS) return; // reabriu durante a animação
 				exSheet.hidden = true;
 				exSheet.getAnimations().forEach(function (a) { a.cancel(); });
 				exFlood.getAnimations().forEach(function (a) { a.cancel(); });
@@ -1245,6 +1731,50 @@
 		exSheet.addEventListener('keydown', function (e) {
 			if (e.key === 'Enter') { e.preventDefault(); confirmExtract(); }
 			else if (e.key === 'Escape') { e.preventDefault(); closeExtract(); }
+		});
+
+		// ------------------------------------------------------------------ registro de eventos (diagnóstico)
+		// 3 cliques no número da versão (nos ajustes) liga/desliga. Mostra os eventos de mouse que chegam
+		// ao painel e o que o arrasto dos presets fez — para descobrir o que o CEP entrega de verdade.
+		var dbgBox = null, dbgLines = [], dbgMoveAt = 0, verClicks = 0, verTimer = null;
+		function dbg(msg) {
+			if (!dbgBox) return;
+			var t = new Date(), ms = ('00' + t.getMilliseconds()).slice(-3);
+			dbgLines.push(t.getSeconds() + '.' + ms + '  ' + msg);
+			if (dbgLines.length > 14) dbgLines.shift();
+			dbgBox.textContent = dbgLines.join('\n');
+		}
+		function dbgTarget(e) {
+			var t = e.target;
+			if (!t || !t.closest) return String(t && t.nodeName || '?');
+			var c = t.closest('.pc-grip, .pcard, .sw, .tool, .lib-list, .strip, .sheet');
+			return c ? (c.className.baseVal !== undefined ? 'svg' : c.className.split(' ').slice(0, 2).join('.')) : t.nodeName.toLowerCase();
+		}
+		['pointerdown', 'pointerup', 'pointercancel', 'mousedown', 'mouseup', 'click', 'gotpointercapture', 'lostpointercapture'].forEach(function (type) {
+			root.addEventListener(type, function (e) {
+				if (!dbgBox) return;
+				dbg(type + ' → ' + dbgTarget(e) + (e.buttons !== undefined ? ' b' + e.buttons : '') + (e.pointerType ? ' ' + e.pointerType : ''));
+			}, true);
+		});
+		root.addEventListener('pointermove', function (e) {
+			if (!dbgBox || Date.now() - dbgMoveAt < 400) return;
+			dbgMoveAt = Date.now();
+			dbg('pointermove → ' + dbgTarget(e) + ' b' + e.buttons);
+		}, true);
+		root.addEventListener('focus', function () { dbg('janela: focus'); });
+		root.addEventListener('blur', function () { dbg('janela: blur'); });
+		settings.querySelector('.ver').addEventListener('click', function () {
+			clearTimeout(verTimer);
+			verTimer = setTimeout(function () { verClicks = 0; }, 600);
+			if (++verClicks < 3) return;
+			verClicks = 0;
+			if (dbgBox) { dbgBox.remove(); dbgBox = null; return toast('Registro de eventos desligado'); }
+			dbgBox = document.createElement('pre');
+			dbgBox.className = 'dbg';
+			el.appendChild(dbgBox);
+			dbgLines = [];
+			dbg('registro ligado · ' + VERSION + ' · ' + (Host.isCEP ? 'CEP' : 'navegador') + ' · ' + (root.navigator.userAgent.match(/Chrome\/[\d.]+/) || ['?'])[0]);
+			toast('Registro de eventos ligado', { icon: 'help' });
 		});
 
 		// ------------------------------------------------------------------ editor de cor
@@ -1268,12 +1798,14 @@
 			return C.rgbToHex(C.hsbToRgb([h[0] + 137.5, C.clamp(h[1], 45, 80), C.clamp(h[2], 80, 96)]));
 		}
 
-		function openEditor(sw, fromEl) {
-			if (!sw && !fromEl) return;
+		// opt.swap: vem do modo harmonia (troca de folha sem a animação de abrir) · opt.hex: cor inicial
+		function openEditor(sw, fromEl, opt) {
+			opt = opt || {};
+			if (!sw && !fromEl && !opt.swap) return;
 			closeSettings();
 			hideTip();
-			var hex = sw ? sw.color : suggestColor();
-			E = { id: sw ? sw.id : null, old: hex, fmt: S.prefs.format, hsb: C.rgbToHsb(C.hexToRgb(hex)), auto: sw ? !!sw.auto : true };
+			var hex = sw ? sw.color : (opt.hex || suggestColor());
+			E = { id: sw ? sw.id : null, old: hex, fmt: S.prefs.format, hsb: C.rgbToHsb(C.hexToRgb(opt.hex || hex)), auto: sw ? !!sw.auto : true };
 			edName.value = sw ? sw.label : '';
 			ed.querySelector('.ed-btn.del').hidden = !sw;
 			q('.ed-prev').classList.toggle('is-new', !sw);
@@ -1284,6 +1816,7 @@
 			el.classList.add('sheet-open', 'editing');
 			el.classList.remove('alt', 'ctrl');
 			updateEditor();
+			if (opt.swap) return swapIn(ed);
 
 			var r = relRect(rect(fromEl));
 			ed.animate([{ clipPath: clip(r, 7) }, { clipPath: 'inset(0px 0px 0px 0px round 0px)' }], { duration: 420, easing: EASE });
@@ -1306,8 +1839,9 @@
 			if (commit) {
 				var label = edName.value.trim();
 				var auto = E.auto || !label;
-				pushUndo();
-				if (E.id) {
+				var same = E.id && find(E.id) && find(E.id).color === hex && find(E.id).auto === auto && (auto || find(E.id).label === label);
+				if (!same) pushUndo();
+				if (same) { /* nada mudou */ } else if (E.id) {
 					var sw = find(E.id);
 					if (sw) { sw.color = hex; sw.label = auto ? '' : label; sw.auto = auto; }
 					render({ noEnter: E.id });
@@ -1316,9 +1850,9 @@
 					S.swatches.push(nsw);
 					render({ noEnter: nsw.id });
 					E.id = nsw.id;
-					toast('Cor adicionada', { color: hex, undo: true });
+					toast(T('ed.added'), { color: hex, undo: true });
 				}
-				save();
+				if (!same) save();
 				target = nodes[E.id];
 			} else {
 				target = E.id ? nodes[E.id] : q('.tool[data-act="add"]');
@@ -1337,6 +1871,7 @@
 		}
 
 		function finish() {
+			if (E) return; // o editor reabriu durante a animação de fechar
 			ed.hidden = true;
 			ed.getAnimations().forEach(function (a) { a.cancel(); });
 			flood.getAnimations().forEach(function (a) { a.cancel(); });
@@ -1373,21 +1908,12 @@
 		}
 
 		function drag(area, onMove) {
-			area.addEventListener('pointerdown', function (e) {
+			onPress(area, function (e) {
 				if (e.button !== 0) return;
-				area.setPointerCapture(e.pointerId);
+				try { if (e.pointerId !== undefined) area.setPointerCapture(e.pointerId); } catch (err) {}
 				area.classList.add('grab');
 				onMove(e);
-				function mv(ev) { onMove(ev); }
-				function up() {
-					area.classList.remove('grab');
-					area.removeEventListener('pointermove', mv);
-					area.removeEventListener('pointerup', up);
-					area.removeEventListener('pointercancel', up);
-				}
-				area.addEventListener('pointermove', mv);
-				area.addEventListener('pointerup', up);
-				area.addEventListener('pointercancel', up);
+				follow(onMove, function () { area.classList.remove('grab'); });
 			});
 		}
 
@@ -1456,6 +1982,15 @@
 		ed.querySelector('.ed-btn.ok').addEventListener('click', function () { closeEditor(true); });
 		ed.querySelector('.ed-btn.cancel').addEventListener('click', function () { closeEditor(false); });
 		ed.querySelector('.ed-btn.del').addEventListener('click', function () { closeEditor('delete'); });
+		ed.querySelector('.ed-btn.mode').addEventListener('click', function () {
+			if (!E) return;
+			var back = { id: E.id }, hex = currentHex();
+			E = null;
+			hPrefs.on = true;
+			saveHPrefs();
+			swapOut(ed);
+			openHarmony(hex, null, back);
+		});
 
 		// nome automático: acompanha a cor até você digitar um nome seu
 		edName.addEventListener('input', function () {
@@ -1488,10 +2023,583 @@
 			updateEditor();
 		});
 
+		// ------------------------------------------------------------------ harmonias
+		// Segundo modo do editor: uma cor base + uma regra geram as cores irmãs.
+		// Com espaço, uma roda (ângulo = matiz, distância do centro = saturação); apertado, a mesma
+		// roda aberta num quadrado (matiz na horizontal, saturação na vertical). Arrastar qualquer
+		// ponto gira o conjunto inteiro e a regra continua valendo.
+		var HM = root.PalHarmony;
+		function ruleName(id) { return T('rule.' + id); }
+		var H = null;
+		var hm = q('.harmony'), hmMap = q('.hm-map'), hmDisk = q('.hm-disk'), hmGeo = q('.hm-geo'), hmBri = q('.hm-bri');
+		var hmGen = q('.hm-gen'), hmRules = q('.hm-rules'), hmOpen = q('.hm-open'), hmRange = q('.hm-range'), hmSteps = q('.hm-steps');
+		var hmOk = hm.querySelector('.ed-btn.ok'), hmN = q('.hm-n'), hmFlood = hm.querySelector('.ed-flood');
+		var hPrefs = (function () { try { return JSON.parse(store('pal.harm') || '{}') || {}; } catch (e) { return {}; } })();
+		function saveHPrefs() { store('pal.harm', JSON.stringify(hPrefs)); }
+		var REDUCED = !!(root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+		hmRules.innerHTML = HM.RULES.map(function (r) {
+			return '<button class="hm-rule" data-rule="' + r.id + '" data-tip="' + esc(ruleName(r.id)) + '" aria-label="' + esc(ruleName(r.id)) + '">' + HM.icon(r) + '</button>';
+		}).join('');
+		hmSteps.innerHTML = [1, 2, 3].map(function (n) {
+			return '<button data-steps="' + n + '" data-tip="' + esc(Tn('hm.steps', n)) + '">' + HM.stepsIcon(n) + '</button>';
+		}).join('');
+
+		// troca de folha (editor ⇄ harmonia) sem a animação de abrir
+		function swapIn(sheet) {
+			sheet.querySelector('.ed-flood').style.opacity = '0';
+			sheet.hidden = false;
+			sheet.animate([{ opacity: 0, transform: 'scale(.98)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: EASE });
+			setTimeout(function () { sheet.focus({ preventScroll: true }); }, 30);
+		}
+		function swapOut(sheet) {
+			sheet.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, easing: EASE }).onfinish = function () {
+				if (sheet === ed ? E : H) return; // voltou a abrir no meio
+				sheet.hidden = true;
+				sheet.getAnimations().forEach(function (a) { a.cancel(); });
+			};
+		}
+
+		function openHarmony(hex, fromEl, back) {
+			closeSettings();
+			hideTip();
+			var hsb = C.rgbToHsb(C.hexToRgb(hex));
+			H = {
+				h: hsb[0], s: hsb[1] / 100, b: Math.max(0.04, hsb[2] / 100),
+				rule: HM.rule(hPrefs.rule) ? hPrefs.rule : 'tri',
+				open: C.clamp(+hPrefs.open || 30, HM.OPEN_MIN, HM.OPEN_MAX),
+				steps: C.clamp(+hPrefs.steps || 1, 1, 3),
+				off: {}, back: back || null, disp: [], mk: [], sig: '', geo: null
+			};
+			hmGen.innerHTML = '';
+			Array.prototype.forEach.call(hmMap.querySelectorAll('.hm-mk'), function (m) { m.remove(); });
+			hm.hidden = false;
+			el.classList.add('sheet-open', 'editing');
+			el.classList.remove('alt', 'ctrl');
+			hm.style.setProperty('--from', hex);
+			layoutHarmony();
+			updateHarmony();
+			if (!fromEl) return swapIn(hm);
+			var r = relRect(rect(fromEl));
+			hm.animate([{ clipPath: clip(r, 7) }, { clipPath: 'inset(0px 0px 0px 0px round 0px)' }], { duration: 420, easing: EASE });
+			hmFlood.style.opacity = '1';
+			hmFlood.animate([{ opacity: 1 }, { opacity: 1, offset: 0.4 }, { opacity: 0 }], { duration: 560, easing: 'ease-out', fill: 'forwards' });
+			setTimeout(function () { hm.focus({ preventScroll: true }); }, 60);
+		}
+
+		function closeHarmony() {
+			if (!H) return;
+			H = null;
+			hm.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.97)' }], { duration: 220, easing: EASE }).onfinish = function () {
+				if (H) return;
+				hm.hidden = true;
+				hm.getAnimations().forEach(function (a) { a.cancel(); });
+				hmFlood.getAnimations().forEach(function (a) { a.cancel(); });
+				if (ed.hidden) el.classList.remove('editing');
+				if (!isSheetOpen()) el.classList.remove('sheet-open');
+				el.focus({ preventScroll: true });
+			};
+		}
+
+		function toEditor() {
+			if (!H) return;
+			var hex = baseHex(), back = H.back, sw = back && back.id ? find(back.id) : null;
+			H = null;
+			hPrefs.on = false;
+			saveHPrefs();
+			swapOut(hm);
+			openEditor(sw, null, { swap: true, hex: hex });
+		}
+
+		function baseHex() { return C.rgbToHex(C.hsbToRgb([H.h, H.s * 100, H.b * 100])); }
+		function baseIndex(pts) { for (var i = 0; i < pts.length; i++) if (pts[i].base) return i; return 0; }
+
+		// cores ligadas, na ordem das colunas, sem repetir
+		function harmonyColors() {
+			if (!H) return [];
+			var seen = {}, out = [];
+			HM.grid(H).forEach(function (col) {
+				col.forEach(function (c) { if (!H.off[c.key] && !seen[c.hex]) { seen[c.hex] = true; out.push(c.hex); } });
+			});
+			return out;
+		}
+
+		// roda quando cabe um círculo de bom tamanho; senão, o quadrado
+		function layoutHarmony() {
+			if (!H) return;
+			var w = hmMap.clientWidth, h = hmMap.clientHeight, d = Math.min(w, h), wheel = d >= 116;
+			var g = wheel ? { x: (w - d) / 2, y: (h - d) / 2, w: d, h: d } : { x: 0, y: 0, w: w, h: h };
+			g.wheel = wheel;
+			hmMap.dataset.geo = wheel ? 'wheel' : 'rect';
+			hmDisk.style.left = g.x + 'px';
+			hmDisk.style.top = g.y + 'px';
+			hmDisk.style.width = g.w + 'px';
+			hmDisk.style.height = g.h + 'px';
+			H.geo = g;
+			paintDisk(g);
+		}
+		// desenha a roda (ou o quadrado) pixel a pixel, com brilho máximo: o escurecimento é a camada de cima.
+		// Só refaz quando o tamanho ou a forma mudam.
+		var hmCanvas = document.createElement('canvas');
+		hmDisk.insertBefore(hmCanvas, hmDisk.firstChild);
+		function paintDisk(g) {
+			var dpr = root.devicePixelRatio || 1, W = Math.max(1, Math.round(g.w * dpr)), Hh = Math.max(1, Math.round(g.h * dpr));
+			var sig = (g.wheel ? 'w' : 'r') + W + 'x' + Hh;
+			if (hmCanvas._sig === sig) return;
+			hmCanvas._sig = sig;
+			hmCanvas.width = W;
+			hmCanvas.height = Hh;
+			var cx = hmCanvas.getContext('2d'), img = cx.createImageData(W, Hh), d = img.data, R = W / 2, i = 0, x, y;
+			for (y = 0; y < Hh; y++) {
+				for (x = 0; x < W; x++, i += 4) {
+					var hue, sat, a = 255;
+					if (g.wheel) {
+						var dx = x + 0.5 - R, dy = y + 0.5 - R, dist = Math.sqrt(dx * dx + dy * dy);
+						if (dist > R + 0.5) { d[i + 3] = 0; continue; }
+						a = Math.round(C.clamp(R + 0.5 - dist, 0, 1) * 255); // borda suave de 1 px
+						hue = Math.atan2(dx, -dy) * 180 / Math.PI;
+						sat = Math.min(1, dist / R);
+					} else {
+						hue = (x + 0.5) / W * 360;
+						sat = 1 - (y + 0.5) / Hh;
+					}
+					var rgb = C.hsbToRgb([hue, sat * 100, 100]);
+					d[i] = rgb[0]; d[i + 1] = rgb[1]; d[i + 2] = rgb[2]; d[i + 3] = a;
+				}
+			}
+			cx.putImageData(img, 0, 0);
+		}
+		function hPlace(hue, r) {
+			var g = H.geo;
+			if (g.wheel) {
+				var R = g.w / 2, a = hue * Math.PI / 180;
+				return [g.x + R + Math.sin(a) * r * R, g.y + R - Math.cos(a) * r * R];
+			}
+			return [g.x + HM.norm(hue) / 360 * g.w, g.y + (1 - r) * g.h];
+		}
+		function hPick(x, y) {
+			var g = H.geo;
+			if (g.wheel) {
+				var R = g.w / 2, dx = x - g.x - R, dy = y - g.y - R;
+				return [HM.norm(Math.atan2(dx, -dy) * 180 / Math.PI), C.clamp(Math.sqrt(dx * dx + dy * dy) / R, 0, 1)];
+			}
+			return [C.clamp((x - g.x) / g.w, 0, 0.9999) * 360, 1 - C.clamp((y - g.y) / g.h, 0, 1)];
+		}
+
+		function updateHarmony() {
+			if (!H) return;
+			var r = HM.rule(H.rule), cols = HM.grid(H), pts = HM.points(H), base = baseHex();
+			hm.style.setProperty('--new', base);
+			hm.style.setProperty('--new-ink', C.ink(base));
+			hmMap.style.setProperty('--dim', (1 - H.b).toFixed(3));
+
+			var tall = el.dataset.shape === 'tall', full = C.rgbToHex(C.hsbToRgb([H.h, H.s * 100, 100]));
+			hmBri.style.background = 'linear-gradient(to ' + (tall ? 'right' : 'top') + ', #000, ' + full + ')';
+			var k = hmBri.querySelector('.knob');
+			if (tall) { k.style.left = (H.b * 100) + '%'; k.style.top = '50%'; }
+			else { k.style.top = ((1 - H.b) * 100) + '%'; k.style.left = '50%'; }
+
+			// a regra escolhida pinta os pontos do ícone com as cores de verdade
+			Array.prototype.forEach.call(hmRules.children, function (b) {
+				var on = b.dataset.rule === H.rule;
+				b.setAttribute('aria-pressed', on ? 'true' : 'false');
+				Array.prototype.forEach.call(b.querySelectorAll('.hr-dot'), function (d) {
+					var col = cols[+d.dataset.i];
+					d.style.fill = on && col ? col[col.length === 3 ? 1 : 0].hex : '';
+				});
+			});
+
+			// abertura e degraus só aparecem quando a regra usa
+			hmOpen.classList.toggle('gone', !r.open);
+			hmSteps.classList.toggle('gone', !!r.mono);
+			var t = (H.open - HM.OPEN_MIN) / (HM.OPEN_MAX - HM.OPEN_MIN);
+			hmRange.querySelector('.knob').style.left = (t * 100) + '%';
+			hmRange.querySelector('i').style.width = (t * 100) + '%';
+			hmOpen.dataset.tip = T('hm.openTip', { deg: H.open });
+			Array.prototype.forEach.call(hmSteps.children, function (b) {
+				b.setAttribute('aria-pressed', +b.dataset.steps === H.steps ? 'true' : 'false');
+			});
+
+			renderGen(cols);
+			syncMarkers(pts, cols);
+
+			var n = harmonyColors().length;
+			if (hmN.textContent !== String(n)) {
+				hmN.textContent = n;
+				hmN.animate([{ transform: 'scale(1.6)' }, { transform: 'none' }], { duration: 320, easing: SPRING });
+			}
+			hmOk.classList.toggle('empty', !n);
+		}
+
+		function renderGen(cols) {
+			var sig = H.rule + '|' + H.steps + '|' + cols.length;
+			if (H.sig !== sig) {
+				H.sig = sig;
+				hmGen.innerHTML = cols.map(function (col, i) {
+					return '<div class="hm-col" role="listitem" style="--i:' + i + '">' + col.map(function (c) {
+						return '<button class="hm-sw" data-k="' + c.key + '">' + ic('x') + '</button>';
+					}).join('') + '</div>';
+				}).join('');
+			}
+			cols.forEach(function (col, i) {
+				var box = hmGen.children[i];
+				col.forEach(function (c, j) {
+					var b = box.children[j], off = !!H.off[c.key];
+					b.style.setProperty('--c', c.hex);
+					b.style.setProperty('--ink', C.ink(c.hex));
+					b.classList.toggle('off', off);
+					b.classList.toggle('base', c.base);
+					b.dataset.tip = N.nearest(c.hex) + ' · ' + c.hex + (off ? ' · ' + T('hm.out') : '');
+				});
+			});
+		}
+
+		// pontos: a posição exibida persegue a certa pelo caminho curto do matiz (giram em arco)
+		var hmRaf = 0;
+		function syncMarkers(pts, cols) {
+			while (H.mk.length < pts.length) {
+				var m = document.createElement('span'), src = H.disp[0] || { h: H.h, r: H.s };
+				m.className = 'hm-mk';
+				H.disp.push({ h: src.h, r: src.r }); // nasce de dentro da base
+				hmMap.appendChild(m);
+				H.mk.push(m);
+			}
+			while (H.mk.length > pts.length) {
+				var gone = H.mk.pop();
+				H.disp.pop();
+				gone.classList.add('leaving');
+				setTimeout(function (g) { return function () { g.remove(); }; }(gone), 260);
+			}
+			H.mk.forEach(function (m, i) {
+				var col = cols[i];
+				m.dataset.i = i;
+				m.style.setProperty('--c', col[col.length === 3 ? 1 : 0].hex);
+				m.classList.toggle('base', pts[i].base);
+				m.classList.toggle('off', col.every(function (c) { return H.off[c.key]; }));
+			});
+			if (!hmRaf) hmRaf = requestAnimationFrame(stepMarkers);
+		}
+		function stepMarkers() {
+			hmRaf = 0;
+			if (!H) return;
+			var pts = HM.points(H), moving = false, k = REDUCED ? 1 : hmMap.classList.contains('grab') ? 0.55 : 0.22;
+			H.disp.forEach(function (d, i) {
+				var th = H.h + pts[i].off, tr = C.clamp(H.s * pts[i].sk, 0, 1);
+				var dh = ((th - d.h) % 360 + 540) % 360 - 180, dr = tr - d.r;
+				if (Math.abs(dh) > 0.05 || Math.abs(dr) > 0.001) { d.h += dh * k; d.r += dr * k; moving = true; }
+				else { d.h = th; d.r = tr; }
+				var p = hPlace(d.h, d.r);
+				H.mk[i].style.transform = 'translate(' + p[0].toFixed(1) + 'px,' + p[1].toFixed(1) + 'px)';
+			});
+			drawGeo();
+			if (moving) hmRaf = requestAnimationFrame(stepMarkers);
+		}
+		// raios do centro até cada ponto + o polígono da regra (só na roda)
+		function drawGeo() {
+			var r = HM.rule(H.rule), g = H.geo, out = '';
+			if (g.wheel) {
+				var cx = (g.x + g.w / 2).toFixed(1), cy = (g.y + g.h / 2).toFixed(1);
+				var pts = H.disp.map(function (d) { return hPlace(d.h, d.r); });
+				var line = function (p) { return '<line x1="' + cx + '" y1="' + cy + '" x2="' + p[0].toFixed(1) + '" y2="' + p[1].toFixed(1) + '"/>'; };
+				if (r.mono) out = line(hPlace(H.h, 1));
+				else {
+					if (pts.length > 2 && r.id !== 'ana') out += '<polygon points="' + pts.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' ') + '"/>';
+					out += pts.map(line).join('');
+				}
+			}
+			hmGeo.innerHTML = out;
+		}
+
+		// arrastar: pegar um ponto gira o conjunto por ele; clicar no vazio leva a base até lá
+		onPress(hmMap, function (e) {
+			if (!H || e.button !== 0) return;
+			var mk = e.target.closest ? e.target.closest('.hm-mk') : null;
+			var pts = HM.points(H), idx = mk ? +mk.dataset.i : baseIndex(pts);
+			if (!pts[idx]) idx = baseIndex(pts);
+			e.preventDefault();
+			hmMap.focus({ preventScroll: true });
+			var r = rect(hmMap);
+			hmMap.classList.add('grab');
+			function mv(ev) {
+				if (!H) return;
+				var p = hPick(ev.clientX - r.left, ev.clientY - r.top), pt = HM.points(H)[idx];
+				H.h = HM.norm(p[0] - pt.off);
+				H.s = C.clamp(p[1] / pt.sk, 0, 1);
+				updateHarmony();
+			}
+			if (!mk) mv(e);
+			follow(mv, function () { hmMap.classList.remove('grab'); });
+		});
+		onPress(hmBri, function (e) {
+			if (!H || e.button !== 0) return;
+			e.preventDefault();
+			var r = rect(hmBri), tall = el.dataset.shape === 'tall';
+			hmBri.classList.add('grab');
+			function mv(ev) {
+				if (!H) return;
+				H.b = C.clamp(tall ? (ev.clientX - r.left) / r.width : 1 - (ev.clientY - r.top) / r.height, 0.04, 1);
+				updateHarmony();
+			}
+			mv(e);
+			follow(mv, function () { hmBri.classList.remove('grab'); });
+		});
+		onPress(hmRange, function (e) {
+			if (!H || e.button !== 0) return;
+			e.preventDefault();
+			var r = rect(hmRange);
+			hmRange.classList.add('grab');
+			function mv(ev) {
+				if (!H) return;
+				var t = C.clamp((ev.clientX - r.left) / r.width, 0, 1);
+				var a = Math.round(HM.OPEN_MIN + t * (HM.OPEN_MAX - HM.OPEN_MIN));
+				if (a !== H.open) { H.open = a; updateHarmony(); }
+			}
+			mv(e);
+			follow(mv, function () { hmRange.classList.remove('grab'); hPrefs.open = H ? H.open : hPrefs.open; saveHPrefs(); });
+		});
+
+		function arrow(e) { return /Right|Up/.test(e.key) ? 1 : /Left|Down/.test(e.key) ? -1 : 0; }
+		hmMap.addEventListener('keydown', function (e) {
+			if (!H) return;
+			var d = e.shiftKey ? 15 : 5;
+			if (e.key === 'ArrowRight') H.h = HM.norm(H.h + d);
+			else if (e.key === 'ArrowLeft') H.h = HM.norm(H.h - d);
+			else if (e.key === 'ArrowUp') H.s = C.clamp(H.s + d / 250, 0, 1);
+			else if (e.key === 'ArrowDown') H.s = C.clamp(H.s - d / 250, 0, 1);
+			else return;
+			e.preventDefault();
+			updateHarmony();
+		});
+		hmBri.addEventListener('keydown', function (e) {
+			var s = arrow(e);
+			if (!H || !s) return;
+			e.preventDefault();
+			H.b = C.clamp(H.b + s * (e.shiftKey ? 0.1 : 0.02), 0.04, 1);
+			updateHarmony();
+		});
+		hmRange.addEventListener('keydown', function (e) {
+			var s = arrow(e);
+			if (!H || !s) return;
+			e.preventDefault();
+			H.open = hPrefs.open = C.clamp(H.open + s * (e.shiftKey ? 10 : 2), HM.OPEN_MIN, HM.OPEN_MAX);
+			saveHPrefs();
+			updateHarmony();
+		});
+
+		hm.addEventListener('click', function (e) {
+			if (!H) return;
+			var b = e.target.closest('button');
+			if (!b || !hm.contains(b)) return;
+			if (b.dataset.rule) {
+				if (H.rule === b.dataset.rule) return;
+				H.rule = hPrefs.rule = b.dataset.rule;
+				H.off = {};
+				saveHPrefs();
+				updateHarmony();
+			} else if (b.dataset.steps) {
+				if (H.steps === +b.dataset.steps) return;
+				H.steps = hPrefs.steps = +b.dataset.steps;
+				H.off = {};
+				saveHPrefs();
+				updateHarmony();
+			} else if (b.dataset.k) {
+				if (H.off[b.dataset.k]) delete H.off[b.dataset.k]; else H.off[b.dataset.k] = true;
+				updateHarmony();
+				if (tipTarget === b) showTip(b);
+			} else if (b === hmOk) commitHarmony(e.shiftKey);
+			else if (b.classList.contains('cancel')) closeHarmony();
+			else if (b.classList.contains('mode')) toEditor();
+			else if (b.classList.contains('save')) saveHarmonyPreset(b);
+		});
+
+		// ✓ adiciona as cores ligadas que ainda não estão na paleta · Shift + ✓ substitui a paleta
+		function commitHarmony(replace) {
+			if (!H) return;
+			var list = harmonyColors();
+			if (!list.length) return flash(hmOk, 'nope', 420);
+			var have = {}, fresh = [];
+			if (!replace) S.swatches.forEach(function (s) { have[s.color] = true; });
+			list.forEach(function (c) { if (!have[c]) { have[c] = true; fresh.push(c); } });
+			if (!fresh.length) { flash(hmOk, 'nope', 420); return toast(T('hm.already'), { icon: 'alert' }); }
+			var from = rect(hmGen), name = ruleName(H.rule);
+			closeHarmony();
+			pushUndo();
+			if (replace) { S.swatches = []; S.preset = ''; }
+			fresh.forEach(function (c) { S.swatches.push({ id: newId(), color: c, label: '', auto: true }); });
+			setTimeout(function () {
+				render({ from: from });
+				save();
+			}, 120);
+			toast(replace ? T('hm.replaced', { colors: Tn('colors', fresh.length), rule: name }) : '+' + Tn('colors', fresh.length) + ' · ' + name, { color: fresh[0], undo: true });
+		}
+
+		// salvar as cores ligadas como um preset novo, com o nome da regra e da cor base
+		function saveHarmonyPreset(btn) {
+			var list = harmonyColors();
+			if (!list.length) return flash(btn, 'nope', 420);
+			if (S.offline) return toast(T('lib.offline', { name: S.offline.volume || T('lib.theFolder') }), { icon: 'unplug' });
+			var name = N.unique(T('hm.presetName', { rule: ruleName(H.rule), color: N.nearest(baseHex()) }), S.presets.map(function (p) { return p.name; }));
+			var taken = [];
+			var sws = list.map(function (c) { var l = N.pick(c, taken); taken.push(l); return { color: c, label: l, auto: true }; });
+			Host.savePreset({ name: name, swatches: sws }).then(function (r) {
+				if (!r || !r.ok) return toast(r && r.reason === 'offline' ? T('lib.folderOffline') : T('lib.readonly'), { icon: 'alert' });
+				S.presets.push({ id: r.id, name: name, swatches: sws });
+				flash(btn, 'saved', 900);
+				toast(T('hm.saved', { name: name }), { icon: 'bookmark' });
+			}, function () { toast(T('hm.saveFail'), { icon: 'alert' }); });
+		}
+
+		hm.addEventListener('keydown', function (e) {
+			if (!H) return;
+			if (e.key === 'Enter') {
+				var b = e.target.closest && e.target.closest('button');
+				if (b && b !== hmOk) return; // Enter num botão é clique nele
+				e.preventDefault();
+				commitHarmony(e.shiftKey);
+			} else if (e.key === 'Escape') { e.preventDefault(); closeHarmony(); }
+		});
+
+		// ------------------------------------------------------------------ colar, importar e exportar cores
+		// adiciona cores novas (as que já existem ficam de fora), com desfazer
+		function addColors(list, from) {
+			if (!list || !list.length) return toast(from ? T('io.noneIn', { from: from }) : T('io.none'), { icon: 'alert' });
+			var have = {}, fresh = [];
+			S.swatches.forEach(function (s) { have[s.color] = true; });
+			list.forEach(function (c) {
+				var h = C.normHex(c.color);
+				if (!h || have[h]) return;
+				have[h] = true;
+				var lbl = String(c.label || '').trim().slice(0, 40), auto = N.isGeneric(lbl, h);
+				fresh.push({ id: newId(), color: h, label: auto ? '' : lbl, auto: auto });
+			});
+			if (!fresh.length) return toast(T('hm.already'), { icon: 'alert' });
+			closeSettings();
+			pushUndo();
+			S.swatches = S.swatches.concat(fresh);
+			render();
+			save();
+			var last = nodes[fresh[fresh.length - 1].id];
+			if (last && last.scrollIntoView) last.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+			toast('+' + Tn('colors', fresh.length) + (from ? ' · ' + from : ''), { color: fresh[0].color, undo: true });
+		}
+
+		// colar: o evento de colar traz o texto; no CEP ele nem sempre chega, então o Ctrl/⌘+V também
+		// agenda uma leitura da área de transferência pelo sistema, cancelada se o evento vier
+		var pasteAt = 0;
+		function pasteText(t) { addColors(IO.parseText(t), T('io.pasted')); }
+		el.addEventListener('paste', function (e) {
+			if (anyFull() || (e.target.closest && e.target.closest('input, textarea'))) return;
+			pasteAt = 0;
+			e.preventDefault();
+			pasteText((e.clipboardData || root.clipboardData).getData('text'));
+		});
+		function waitPaste() {
+			var at = pasteAt = Date.now();
+			setTimeout(function () {
+				if (pasteAt !== at) return;
+				pasteAt = 0;
+				Host.readClipboard().then(pasteText, function () { toast(T('io.clipFail'), { icon: 'alert' }); });
+			}, 200);
+		}
+
+		// importar: .ase (Illustrator, Photoshop…) ou qualquer texto com cores (.css, .txt, .json…)
+		function importColors() {
+			Host.importColors().then(function (r) {
+				if (!r || !r.ok) { if (r && r.reason !== 'cancel') toast(T('io.readFail'), { icon: 'alert' }); return; }
+				var list;
+				try { list = r.kind === 'ase' ? IO.parseAse(IO.hexToBytes(r.hex)).colors : IO.parseText(r.text); }
+				catch (err) { return toast(T('io.aseFail'), { icon: 'alert' }); }
+				addColors(list, r.name);
+			}, function () { toast(T('io.readFail'), { icon: 'alert' }); });
+		}
+
+		// exportar a paleta do projeto como .ase, com os nomes das cores
+		function exportAse() {
+			if (!S.swatches.length) return toast(T('lib.empty'), { icon: 'alert' });
+			var title = S.project || 'El PALLETERO';
+			var bytes = IO.buildAse(S.swatches.map(function (s) { return { color: s.color, label: s.label }; }), title);
+			Host.exportAse(IO.bytesToHex(bytes), title).then(function (r) {
+				if (!r || !r.ok) { if (r && r.reason !== 'cancel') toast(T('io.writeFail'), { icon: 'alert' }); return; }
+				toast(T('io.exported', { name: r.name }), { icon: 'export' });
+			}, function () { toast(T('io.writeFail'), { icon: 'alert' }); });
+		}
+
+		// ------------------------------------------------------------------ folha de atalhos
+		function keysHtml() {
+			function k(x) { return '<kbd>' + x + '</kbd>'; }
+			function combo(mod, x) { return k(mod) + '<i>+</i>' + k(x); }
+			var click = T('kbd.click'), cmdKey = IS_MAC ? '⌘' : 'Ctrl', or = '<i>' + T('k.or') + '</i>', onProj = '<i>' + T('k.onProject') + '</i>';
+			var groups = [
+				[T('k.swatches'), [
+					[k(click), T('k.applyLayer')],
+					[combo(KEY.shift, click), T('k.applyStroke')],
+					[combo(KEY.ctrl, click), T('k.copy')],
+					[combo(KEY.alt, click), T('tip.delete')],
+					[k(T('k.right')) + (IS_MAC ? or + combo('Ctrl', click) : ''), T('tip.edit')],
+					[k(T('k.drag')), T('k.reorder')],
+					[k('Enter') + k('F2') + k('Delete'), T('k.focus')]
+				]],
+				[T('k.panel'), [
+					[k('+'), T('k.add')],
+					[k(T('k.pipette')), T('k.capture')],
+					[combo(KEY.shift, T('k.pipette')), T('k.captureAll')],
+					[IS_MAC ? k('⌘V') : combo(cmdKey, 'V'), T('k.paste')],
+					[IS_MAC ? k('⌘Z') : combo(cmdKey, 'Z'), T('toast.undo')],
+					[k('?'), T('k.these')]
+				]],
+				[T('presets'), [
+					[k(click), T('tip.replacePalette')],
+					[combo(KEY.shift, click), T('k.addMissing')],
+					[k(click) + onProj, T('k.saveAs')],
+					[combo(KEY.shift, click) + onProj, T('k.updateOrigin')],
+					[k('F2') + k('Delete'), T('k.renameDelete')],
+					[k('⠿') + or + k('↑↓'), T('k.reorder')]
+				]],
+				[T('k.editor'), [
+					[k('Enter') + k('Esc'), T('k.confirmCancel')],
+					[combo(KEY.shift, 'Enter'), T('k.hmReplace')],
+					[k('←→↑↓'), T('k.adjust', { shift: KEY.shift })],
+					[k(T('k.dragPoint')), T('k.rotate')]
+				]]
+			];
+			return groups.map(function (g) {
+				return '<section class="k-grp"><h4>' + g[0] + '</h4>' + g[1].map(function (r) {
+					return '<div class="k-row"><span class="k-keys">' + r[0] + '</span><span class="k-what">' + r[1] + '</span></div>';
+				}).join('') + '</section>';
+			}).join('');
+		}
+		function openKeys() {
+			if (anyFull()) return;
+			closeSettings();
+			hideTip();
+			keysSheet.querySelector('.k-body').innerHTML = '<div class="k-cols">' + keysHtml() + '</div>';
+			keysSheet.hidden = false;
+			el.classList.add('sheet-open');
+			keysSheet.animate([{ opacity: 0, transform: 'scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: EASE });
+			keysSheet.focus({ preventScroll: true });
+		}
+		function closeKeys() {
+			if (keysSheet.hidden || keysSheet.dataset.closing) return;
+			keysSheet.dataset.closing = '1';
+			keysSheet.animate([{ opacity: 1 }, { opacity: 0, transform: 'scale(.97)' }], { duration: 180, easing: EASE }).onfinish = function () {
+				delete keysSheet.dataset.closing;
+				keysSheet.hidden = true;
+				if (!isSheetOpen()) el.classList.remove('sheet-open');
+				el.focus({ preventScroll: true });
+			};
+		}
+		keysSheet.querySelector('.k-x').addEventListener('click', closeKeys);
+		keysSheet.addEventListener('keydown', function (e) {
+			if (e.key === 'Escape' || e.key === '?' || e.key === 'Enter') { e.preventDefault(); closeKeys(); }
+		});
+
 		// ------------------------------------------------------------------ teclado global
 		root.addEventListener('keydown', function (e) {
-			if (!ed.hidden || !exSheet.hidden) return;
+			if (anyFull()) return;
+			var typing = e.target && e.target.closest && e.target.closest('input, textarea');
 			if (cmd(e) && !e.shiftKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
+			else if (cmd(e) && e.key.toLowerCase() === 'v' && !typing) waitPaste();
+			else if (e.key === '?' && !typing) { e.preventDefault(); openKeys(); }
 			else if (e.key === 'Escape') closeSettings();
 		});
 
@@ -1511,8 +2619,10 @@
 			Host.projectKey().then(function (k) {
 				if (S.key !== null && k !== S.key) {
 					S.key = k;
+					clearTimeout(saveTimer);
 					closeSettings();
 					if (E) closeEditor(false);
+					if (H) closeHarmony();
 					if (XS) closeExtract();
 					loadProject(true);
 				}
@@ -1527,6 +2637,8 @@
 			S.prefs.names = p.showColorLabels !== false;
 			S.prefs.defaultPreset = p.defaultPreset || '';
 			S.folder = p.presetFolder || '';
+			if (p.accent && p.accent !== S.prefs.accent) { S.prefs.accent = p.accent; store('pal.accent', p.accent); }
+			setAccent(null, true);
 			syncSettings();
 		}).catch(function () {}).then(function () {
 			measure();

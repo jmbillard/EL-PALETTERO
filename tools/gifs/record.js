@@ -87,7 +87,7 @@ S.imagem = () => scene('imagem', { clip: WS, layout: 'grid', dsf: 2, width: 900 
 // 6. presets
 S.presets = () => scene('presets', { clip: DOCK, layout: 'grid', dsf: 2, width: 440, dither: 'bayer' }, async (p, H) => {
   await H.click('.tool[data-act="library"]'); await H.wait(800);
-  await H.to('.pcard[data-pid="neutros"]', .5, .4, 700); await H.wait(600);
+  await H.to('.pcard[data-pid="exemplo-por-do-sol"]', .5, .4, 700); await H.wait(600);
   await H.click(null); await H.wait(1300);
   await H.click('.tool[data-act="library"]'); await H.wait(700);
   await H.to('.pcard[data-pid="verao"]', .5, .4, 700);

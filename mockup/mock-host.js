@@ -35,8 +35,20 @@
 		'/Users/voce/Library/Application Support/El PALLETERO/presets': [
 			{ id: 'el-palletero', name: 'El PALLETERO', swatches: BUILTIN },
 			{ id: 'abertura', name: 'Abertura', swatches: sw(['#FF4D4D', '#FFC44E', '#5DE6A2', '#80C0FE', '#B5ADFF', '#FF8CCD', '#1E2A44', '#F2F2F2']) },
-			{ id: 'neutros', name: 'Neutros', swatches: sw(['#111111', '#2B2B2B', '#4A4A4A', '#8D8D8D', '#C0C0C0', '#E3DAC9', '#F5F3EE']) },
-			{ id: 'verao', name: 'Verão', swatches: sw(['#FF7518', '#FFC72C', '#40E0D0', '#00B2A9', '#FA8072', '#FFF1A8']) }
+			{ id: 'exemplo-monocromatico', name: 'Monocromático', swatches: sw(['#111111', '#333333', '#555555', '#888888', '#BBBBBB', '#EEEEEE']) },
+			{ id: 'verao', name: 'Verão', swatches: sw(['#FF7518', '#FFC72C', '#40E0D0', '#00B2A9', '#FA8072', '#FFF1A8']) },
+			// as mesmas paletas de exemplo que o host.jsx cria na pasta padrão
+			{ id: 'exemplo-por-do-sol', name: 'Pôr do sol', swatches: sw(['#2B1B4A', '#6A2C70', '#C2456B', '#F08A4B', '#FFD27A', '#FFF1C9']) },
+			{ id: 'exemplo-sorveteria', name: 'Sorveteria', swatches: sw(['#F7C6D9', '#FDE2B8', '#F6EAC2', '#B8E0D2', '#A7C7E7', '#D9C2F0']) },
+			{ id: 'exemplo-neon', name: 'Neon', swatches: sw(['#0D0221', '#FF2A6D', '#F706CF', '#05D9E8', '#01FFC3', '#FFF338']) },
+			{ id: 'exemplo-oceano', name: 'Oceano', swatches: sw(['#03045E', '#0077B6', '#00B4D8', '#48CAE4', '#90E0EF', '#CAF0F8']) },
+			{ id: 'exemplo-floresta', name: 'Floresta', swatches: sw(['#0B2B1C', '#1F4D2B', '#3A7D44', '#7FB069', '#C9D99E', '#F2E8CF']) },
+			{ id: 'exemplo-terroso', name: 'Terroso', swatches: sw(['#3D2B1F', '#7A4E2D', '#B5703F', '#D9A273', '#E8D2B0', '#6B7F4F']) },
+			{ id: 'exemplo-tropical', name: 'Tropical', swatches: sw(['#FF5E5B', '#FFAA4C', '#FFED66', '#00CECB', '#0B7A75', '#2E294E']) },
+			{ id: 'exemplo-retro-70', name: 'Retrô 70', swatches: sw(['#8C3B19', '#D9622B', '#F2A541', '#F2D16B', '#6B8F71', '#2E4A3F']) },
+			{ id: 'exemplo-noite-urbana', name: 'Noite urbana', swatches: sw(['#0F1020', '#2A2D5E', '#4F5BD5', '#E03E7E', '#FFB86B', '#F7F7FF']) },
+			{ id: 'exemplo-brasil', name: 'Brasil', swatches: sw(['#009C3B', '#FFDF00', '#002776', '#FFFFFF']) },
+			{ id: 'exemplo-pastel', name: 'Pastel', swatches: sw(['#FFD6E0', '#FFEFCF', '#D4F4DD', '#CDE7FF', '#E5D9FF', '#FCE1F5']) }
 		],
 		'/Volumes/equipe/design/paletas': [
 			{ id: 'jornal', name: 'Jornal da noite', swatches: sw(['#0B1F4B', '#1560BD', '#80C0FE', '#E53935', '#FFFFFF']) },
@@ -53,6 +65,7 @@
 
 	var prefs = { showColorLabels: true, showColorInfo: true, labelType: '#HEX', defaultPreset: 'el-palletero', presetFolder: folderNames[0] };
 	var current = 'abertura_v3.aep';
+	var orders = {}; // ordem dos presets por pasta
 	var listeners = [];
 
 	function proj() { return projects[current]; }
@@ -141,15 +154,32 @@
 			if (preset !== undefined) p.preset = preset;
 			return { ok: true };
 		},
-		loadPrefs: function () { return prefs; },
+		// idioma: guardado no navegador (o mockup recarrega ao trocar); ?lang=en na URL simula o After em inglês
+		loadPrefs: function () {
+			var out = {}, k;
+			for (k in prefs) out[k] = prefs[k];
+			try { out.lang = localStorage.getItem('mock.lang') || ''; } catch (e) {}
+			var m = /[?&]lang=([\w-]+)/.exec(root.location.search);
+			out.aeLang = m ? m[1] : root.navigator.language;
+			return out;
+		},
 		savePrefs: function (json) {
 			var n = JSON.parse(json);
 			for (var k in n) prefs[k] = n[k];
+			if (n.lang) { try { localStorage.setItem('mock.lang', n.lang); } catch (e) {} }
 			return { ok: true };
 		},
+		setStrings: function () { return { ok: true }; },
+		savePresetOrder: function (json) { orders[prefs.presetFolder] = JSON.parse(json); return { ok: true }; },
 		listPresets: function () {
 			if (prefs.presetFolder === OFFLINE && !mounted) return { folder: OFFLINE, offline: true, volume: 'PROMO', canMount: true, presets: [] };
-			return { folder: prefs.presetFolder, presets: presets().slice().sort(function (a, b) { return a.name.localeCompare(b.name); }) };
+			var list = presets().slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+			var order = orders[prefs.presetFolder];
+			if (order) {
+				var known = list.filter(function (p) { return order.indexOf(p.id) >= 0; }).sort(function (a, b) { return order.indexOf(a.id) - order.indexOf(b.id); });
+				list = known.concat(list.filter(function (p) { return order.indexOf(p.id) < 0; }));
+			}
+			return { folder: prefs.presetFolder, presets: list };
 		},
 		savePreset: function (json) {
 			var p = JSON.parse(json), list = presets();
@@ -184,12 +214,33 @@
 			return { ok: true, url: scene('comp', 640, 360), label: 'MAIN_COMP', kind: 'comp', temp: true, readyAt: Date.now() + 400 };
 		},
 		releaseFrame: function () { return { ok: true }; },
-		apply: function (hex) {
+		apply: function (hex, optsJson) {
 			var sel = selLayers().filter(function (l) { return !l.scene; });
 			if (!sel.length) return { ok: false, reason: 'nosel' };
+			var opts = optsJson ? JSON.parse(optsJson) : {};
+			if (opts.stroke) {
+				// contorno: só shapes com traço e textos
+				var st = sel.filter(function (l) { return l.stroke || l.kind === 'text'; });
+				if (!st.length) return { ok: false, reason: 'nostroke' };
+				st.forEach(function (l) { l.stroke = hex; l.flash = Date.now(); });
+				emit();
+				return { ok: true, mode: 'stroke', count: st.length };
+			}
 			sel.forEach(function (l) { l.color = hex; l.flash = Date.now(); });
 			emit();
 			return { ok: true, mode: 'fill', count: sel.length };
+		},
+		// importar: no mockup, um .ase de exemplo (como se viesse do Illustrator)
+		importColors: function () {
+			var bytes = window.PalIO.buildAse([
+				{ color: '#0B132B', label: 'Azul noite' }, { color: '#1C2541', label: 'Marinho' }, { color: '#3A506B', label: 'Aço' },
+				{ color: '#5BC0BE', label: 'Turquesa' }, { color: '#F2E9E4', label: 'Areia' }
+			], 'Cliente');
+			return { ok: true, kind: 'ase', name: 'Cliente', hex: window.PalIO.bytesToHex(bytes) };
+		},
+		exportAse: function (hex, name) {
+			window.PalMockHost.lastAse = hex;
+			return { ok: true, path: '~/Desktop/' + name + '.ase', name: name + '.ase' };
 		},
 		capture: function (scope) {
 			var src = scope === 'project' ? proj().layers : selLayers();

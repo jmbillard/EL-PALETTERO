@@ -25,14 +25,20 @@ o painel sempre mostra a paleta do projeto. os presets são uma biblioteca para 
 >
 > <img src="gifs/presets.gif" alt="biblioteca de presets" width="420">
 
-- **primeiro cartão** (borda colorida) → a paleta deste projeto, com o nome do `.aep`.
-- **salvar preset** → salva a paleta do projeto como um preset novo e já abre o nome para edição. `Enter` confirma, `Esc` mantém o nome sugerido.
+- **primeiro cartão** (borda colorida) → a paleta deste projeto, com o nome do `.aep`. passe o mouse para ver o que o clique faz:
+  - **não salva** (não veio de um preset, ou mudou desde que veio) → um fio separa o cartão dos presets. `◖ clique` salva como um preset novo e já abre o nome para edição (`Enter` confirma, `Esc` mantém o nome sugerido).
+  - **mudou desde o preset de origem** → `Shift` + `◖ clique` **atualiza** aquele preset com a paleta do projeto (tem desfazer). o pontinho do preset de origem fica vazado.
+  - **salva** (igual ao preset de origem) → o hover só confirma onde ela está.
 - **cartão de preset**:
   - `◖ clique esquerdo` → **substitui** a paleta do projeto pelo preset.
   - `Shift` + `◖ clique esquerdo` → **adiciona** ao projeto só as cores do preset que ainda não estão lá.
   - ✏️ → renomear (ou `F2`).
   - ★ → preset **padrão**: é o que aparece em projetos que ainda não têm paleta.
   - 🗑️ → excluir (ou `Delete`).
+  - **reordenar** pela área vazia à direita do nome (a alça ⠿ aparece no hover):
+    - `◖ clique` na alça → pega o preset; ele segue o mouse; `◖ clique` de novo → solta. `Esc` cancela. funciona mesmo quando o primeiro clique só ativa o painel.
+    - ou arraste com o botão pressionado (com o painel já em foco).
+    - com a alça em foco, ↑ ↓ (← → na faixa) também mudam a ordem. a ordem fica nas suas preferências, por pasta: numa pasta de equipe cada pessoa tem a sua ordem e os arquivos não mudam.
 - o pontinho colorido no canto do cartão marca o preset de onde a paleta do projeto veio.
 
 > 🚩 *obs:*\
