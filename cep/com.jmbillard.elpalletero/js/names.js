@@ -40,7 +40,7 @@
 	function pick(hex, taken) {
 		var r = ranked(hex), best = r.list[0];
 		if (taken.indexOf(best.name) < 0) return best.name;
-		for (var i = 1; i < 4; i++) {
+		for (var i = 1; i < Math.min(4, r.list.length); i++) {
 			var alt = r.list[i];
 			if (alt.d <= Math.max(best.d * 2.5, 220) && taken.indexOf(alt.name) < 0) return alt.name;
 		}

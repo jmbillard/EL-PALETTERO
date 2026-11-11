@@ -1093,6 +1093,11 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 		text = String(text || '').replace(/^﻿/, '');
 		for (i = 0; i < text.length; i++) {
 			c = text.charAt(i);
+			// linha de comentário (# no começo, fora de aspas): pula inteira, sem ler aspas dela
+			if (!q && cell === '' && !row.length && c === '#' && !/^#[0-9a-f]{6}\b/i.test(text.substr(i, 8))) {
+				while (i < text.length && text.charAt(i) !== '\n') i++;
+				continue;
+			}
 			if (q) {
 				if (c === '"') { if (text.charAt(i + 1) === '"') { cell += '"'; i++; } else q = false; }
 				else cell += c;
@@ -1289,7 +1294,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 	function format(hex, fmt) {
 		var rgb = hexToRgb(hex);
 		if (fmt === 'RGB') return rgb.join(' ');
-		if (fmt === 'HSB') return rgbToHsb(rgb).map(Math.round).join(' ');
+		if (fmt === 'HSB') { var h = rgbToHsb(rgb).map(Math.round); h[0] %= 360; return h.join(' '); } // 359,6° arredonda para 0, não 360
 		return normHex(hex);
 	}
 
@@ -1306,7 +1311,8 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 			}
 			return rgbToHex(n);
 		}
-		return hex;
+		// só números no modo RGB/HSB ("255", "100"): ainda não é uma cor, não um hex de 3 dígitos
+		return hex && (fmt === 'HEX' || /^#|[a-f]/i.test(s)) ? hex : null;
 	}
 
 
@@ -1343,12 +1349,12 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 	// Ordenar por matiz:
 	// - neutros (croma CIELAB baixo: brancos, cinzas, pretos, inclusive os levemente tingidos) vão
 	//   para o fim, do escuro ao claro;
-	// - as cores seguem o círculo de matiz começando nos vermelhos (o círculo é girado 30°, então
+	// - as cores seguem o círculo de matiz começando nos vermelhos (o círculo é girado 15°, então
 	//   um vermelho de 350° fica junto do de 5°, e os rosas/magentas fecham a fila);
 	// - matizes vizinhos (até 18° do primeiro do grupo) formam um grupo, ordenado do escuro ao claro
 	//   (L* CIELAB) e, empatando, do mais saturado ao menos. Assim uma diferença de 1° no matiz não
 	//   passa na frente da luminosidade, e não há fronteira fixa separando cores quase iguais.
-	var HUE_START = 30, HUE_GROUP = 18, NEUTRAL_C = 9;
+	var HUE_START = 15, HUE_GROUP = 18, NEUTRAL_C = 9;
 	function sortSwatches(list) {
 		var colors = [], neutrals = [];
 		list.forEach(function (sw, i) {
@@ -1415,7 +1421,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 	function pick(hex, taken) {
 		var r = ranked(hex), best = r.list[0];
 		if (taken.indexOf(best.name) < 0) return best.name;
-		for (var i = 1; i < 4; i++) {
+		for (var i = 1; i < Math.min(4, r.list.length); i++) {
 			var alt = r.list[i];
 			if (alt.d <= Math.max(best.d * 2.5, 220) && taken.indexOf(alt.name) < 0) return alt.name;
 		}
@@ -1518,6 +1524,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 		var x = Math.min(data.w - 1, Math.max(0, Math.floor(fx * data.w)));
 		var y = Math.min(data.h - 1, Math.max(0, Math.floor(fy * data.h)));
 		var d = data.ctx.getImageData(x, y, 1, 1).data;
+		if (d[3] < 128) return null; // transparente: não é uma cor da imagem
 		return C.rgbToHex([d[0], d[1], d[2]]);
 	}
 
@@ -2008,7 +2015,8 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 	var cep = root.__adobe_cep__;
 
 	function evalScript(fn, args) {
-		var script = fn + '(' + (args || []).map(function (a) { return a === undefined ? 'undefined' : JSON.stringify(a); }).join(',') + ')';
+		// U+2028/2029 são quebras de linha para o ExtendScript (ES3): dentro de uma string, quebram o script
+		var script = fn + '(' + (args || []).map(function (a) { return a === undefined ? 'undefined' : JSON.stringify(a).replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029'); }).join(',') + ')';
 		return new Promise(function (resolve, reject) {
 			cep.evalScript(script, function (res) {
 				if (res === 'EvalScript error.') return reject(new Error(fn + ' falhou'));
@@ -2054,8 +2062,13 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 			var req = root.cep_node ? root.cep_node.require : root.require;
 			if (cep && req) {
 				var cp = req('child_process');
-				var cmd = IS_MAC ? 'pbpaste' : 'powershell -NoProfile -NonInteractive -Command Get-Clipboard -Raw';
-				return Promise.resolve(String(cp.execSync(cmd, { encoding: 'utf8', timeout: 4000, windowsHide: true })));
+				// saída em UTF-8: o PowerShell usa a página de código do console (acentos viravam �), e o
+				// pbpaste aberto pelo After pode vir sem LANG
+				var cmd = IS_MAC ? 'pbpaste' : 'powershell -NoProfile -NonInteractive -Command "[Console]::OutputEncoding=[Text.Encoding]::UTF8; Get-Clipboard -Raw"';
+				var env = {}, k, proc = req('process');
+				for (k in proc.env) env[k] = proc.env[k];
+				if (IS_MAC) env.LANG = env.LC_ALL = 'en_US.UTF-8';
+				return Promise.resolve(String(cp.execSync(cmd, { encoding: 'utf8', timeout: 4000, windowsHide: true, env: env })));
 			}
 		} catch (e) {}
 		if (root.navigator.clipboard && root.navigator.clipboard.readText) return root.navigator.clipboard.readText();
@@ -2184,7 +2197,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 	var I18N = root.PalI18n;
 	function T(k, v) { return I18N.t(k, v); }
 	function Tn(k, n, v) { return I18N.n(k, n, v); }
-	var VERSION = 'v1.5.3';
+	var VERSION = 'v1.5.4';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
@@ -2587,15 +2600,21 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 		var saveTimer;
 		function save() {
 			clearTimeout(saveTimer);
+			var key = S.key, list = plain(S.swatches), preset = S.preset;
 			saveTimer = setTimeout(function () {
-				Host.savePalette(plain(S.swatches), S.preset)
-					.catch(function () { toast(T('err.save'), { icon: 'alert' }); });
+				// se o After trocou de projeto nesse meio-tempo, essa paleta não é dele
+				Host.projectKey().then(function (k) {
+					if (key !== null && k !== key) return;
+					return Host.savePalette(list, preset);
+				}).catch(function () { toast(T('err.save'), { icon: 'alert' }); });
 			}, 200);
 		}
 
 		function plain(list) { return list.map(function (s) { return { color: s.color, label: s.label, auto: !!s.auto }; }); }
 		function snapshot() { return S.swatches.map(function (s) { return { id: s.id, color: s.color, label: s.label, auto: s.auto }; }); }
 		function pushUndo(entry) {
+			// outra ação entrou no histórico: o desfazer do aviso na tela já não é dela
+			if (toastEl.classList.contains('on')) toastEl.querySelector('button').hidden = true;
 			S.undo.push(entry || { palette: snapshot(), preset: S.preset });
 			if (S.undo.length > 40) S.undo.shift();
 		}
@@ -2603,9 +2622,13 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 			var prev = S.undo.pop();
 			if (!prev) return toast(T('undo.none'));
 			if (prev.restorePreset) {
-				return Host.savePreset(prev.restorePreset).then(function () {
+				return Host.savePreset(prev.restorePreset).then(function (r) {
+					if (!r || !r.ok) throw new Error('restore');
 					loadPresets(prev.restorePreset.id);
 					toast(T('undo.preset'), { icon: 'undo' });
+				}).catch(function () {
+					S.undo.push(prev); // não restaurou: o passo continua no histórico
+					toast(T('lib.readonly'), { icon: 'alert' });
 				});
 			}
 			S.swatches = prev.palette;
@@ -2826,6 +2849,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 		}
 
 		function removeSwatch(sw) {
+			if (!sw || !find(sw.id)) return;
 			pushUndo();
 			S.swatches = S.swatches.filter(function (s) { return s !== sw; });
 			render();
@@ -2996,8 +3020,9 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 		});
 		strip.addEventListener('keydown', function (e) {
 			var n = e.target.closest('.sw');
-			if (!n) return;
+			if (!n || n.classList.contains('leaving')) return;
 			var sw = find(n.dataset.id);
+			if (!sw) return;
 			if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); clickSwatch(sw, e); }
 			else if (e.key === 'F2' || e.key === 'e') { e.preventDefault(); openEditor(sw, n); }
 			else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); removeSwatch(sw); }
@@ -3290,6 +3315,11 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 
 		function applyPreset(p, merge, card) {
 			var from = rect(card.querySelector('.pc-bars'));
+			if (merge) {
+				var have0 = {};
+				S.swatches.forEach(function (s) { have0[s.color] = true; });
+				if (toSwatches(p.swatches).every(function (s) { return have0[s.color]; })) return toast(T('hm.already'), { icon: 'library' });
+			}
 			pushUndo();
 			var added = 0;
 			if (merge) {
@@ -3315,7 +3345,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 				S.preset = name;
 				save();
 				loadPresets(r.id, true);
-			});
+			}).catch(function () { toast(T('lib.readonly'), { icon: 'alert' }); });
 		}
 
 		// a paleta do projeto está salva? saved: igual ao preset de origem · changed: mudou desde ele ·
@@ -3338,7 +3368,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 				pushUndo({ restorePreset: old });
 				loadPresets(p.id);
 				toast(T('lib.updated', { name: p.name }), { icon: 'bookmark', undo: true });
-			});
+			}).catch(function () { toast(T('lib.readonly'), { icon: 'alert' }); });
 		}
 
 		// renomear no próprio cartão
@@ -3360,8 +3390,18 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 				var v = input.value.trim();
 				if (ok && v && v !== p.name) {
 					if (S.preset === p.name) { S.preset = v; save(); }
+					var old = p.name, oldPreset = S.preset;
 					p.name = v;
-					Host.savePreset({ id: p.id, name: v, swatches: p.swatches });
+					Host.savePreset({ id: p.id, name: v, swatches: p.swatches }).then(function (r) {
+						if (r && r.ok) return;
+						throw new Error('rename');
+					}).catch(function () {
+						// não gravou: volta o nome, para a tela não mentir sobre o arquivo
+						p.name = old;
+						if (S.preset !== oldPreset) { S.preset = oldPreset; save(); }
+						nameEl.textContent = old;
+						toast(T('lib.readonly'), { icon: 'alert' });
+					});
 				}
 				nameEl.textContent = p.name;
 				input.replaceWith(nameEl);
@@ -3399,7 +3439,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 					[{ opacity: 1, width: r0.width + 'px' }, { opacity: 0, width: '0px', marginLeft: '-6px', transform: 'scale(.9)' }],
 					{ duration: 300, easing: EASE }).onfinish = function () { card.remove(); };
 				toast(T('lib.deleted', { name: p.name }), { icon: 'trash', undo: true });
-			});
+			}).catch(function () { toast(T('lib.deleteFail'), { icon: 'alert' }); });
 		}
 
 		function chooseFolder(e) {
@@ -3413,7 +3453,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 					if (S.offline) toast(T('lib.offline', { name: S.offline.volume || T('lib.theFolder') }), { icon: 'unplug' });
 					else toast(T('lib.from', { path: shortPath(S.folder) }), { icon: 'folder' });
 				});
-			});
+			}).catch(function () { toast(T('lib.notAccessible'), { icon: 'alert' }); });
 		}
 
 		// gradiente nas bordas da lista: os cartões se esvaem onde a lista é cortada
@@ -3642,7 +3682,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 					} else {
 						toast(T('lib.from', { path: shortPath(S.folder) }), { icon: 'folder' });
 					}
-				});
+				}).catch(function () { off.classList.remove('busy'); toast(T('lib.notAccessible'), { icon: 'alert' }); });
 			}
 			var card = e.target.closest('[data-pid]');
 			if (!card) {
@@ -3693,6 +3733,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 			var tool = capTool;
 			busy(tool, true);
 			Host.grabFrame().then(function (r) {
+				if (r && r.ok && (!ed.hidden || !hm.hidden || !keysSheet.hidden)) { busy(tool, false); Host.releaseFrame(r); return; }
 				if (!r || !r.ok) {
 					busy(tool, false);
 					flash(tool, 'nope', 420);
@@ -3788,7 +3829,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 			exMarks.children[i].classList.toggle('on', c.on);
 		}
 
-		function hot(i, on) {
+		function exHot(i, on) {
 			if (exChips.children[i]) exChips.children[i].classList.toggle('hot', on);
 			if (exMarks.children[i]) exMarks.children[i].classList.toggle('hot', on);
 		}
@@ -3798,8 +3839,8 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 			if (b) toggleChip(+b.dataset.i);
 		});
 		[exChips, exMarks].forEach(function (box) {
-			box.addEventListener('pointerover', function (e) { var t = e.target.closest('[data-i]'); if (t) hot(+t.dataset.i, true); });
-			box.addEventListener('pointerout', function (e) { var t = e.target.closest('[data-i]'); if (t) hot(+t.dataset.i, false); });
+			box.addEventListener('pointerover', function (e) { var t = e.target.closest('[data-i]'); if (t) exHot(+t.dataset.i, true); });
+			box.addEventListener('pointerout', function (e) { var t = e.target.closest('[data-i]'); if (t) exHot(+t.dataset.i, false); });
 		});
 
 		// lupa: mostra a cor sob o cursor; clique adiciona
@@ -3808,6 +3849,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 			if (e.target.closest('.ex-mark')) { exLoupe.classList.remove('on'); return; }
 			var r = rect(exStage), fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
 			var hex = X.pixel(XS.data, fx, fy);
+			if (!hex) { exLoupe.classList.remove('on'); return; }
 			exLoupe.style.left = (fx * 100) + '%';
 			exLoupe.style.top = (fy * 100) + '%';
 			exLoupe.style.setProperty('--c', hex);
@@ -3820,6 +3862,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 			if (m) return toggleChip(+m.dataset.i);
 			var r = rect(exStage), fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
 			var hex = X.pixel(XS.data, fx, fy);
+			if (!hex) return;
 			for (var i = 0; i < XS.chips.length; i++) {
 				if (XS.chips[i].color === hex) { XS.chips[i].on = true; renderChips(false, i); return; }
 			}
@@ -3860,6 +3903,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 			XS = null;
 			exLoupe.classList.remove('on');
 			exSheet.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.97)' }], { duration: 220, easing: EASE }).onfinish = function () {
+				if (XS) return; // reabriu durante a animação
 				exSheet.hidden = true;
 				exSheet.getAnimations().forEach(function (a) { a.cancel(); });
 				exFlood.getAnimations().forEach(function (a) { a.cancel(); });
@@ -3981,8 +4025,9 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 			if (commit) {
 				var label = edName.value.trim();
 				var auto = E.auto || !label;
-				pushUndo();
-				if (E.id) {
+				var same = E.id && find(E.id) && find(E.id).color === hex && find(E.id).auto === auto && (auto || find(E.id).label === label);
+				if (!same) pushUndo();
+				if (same) { /* nada mudou */ } else if (E.id) {
 					var sw = find(E.id);
 					if (sw) { sw.color = hex; sw.label = auto ? '' : label; sw.auto = auto; }
 					render({ noEnter: E.id });
@@ -3993,7 +4038,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 					E.id = nsw.id;
 					toast(T('ed.added'), { color: hex, undo: true });
 				}
-				save();
+				if (!same) save();
 				target = nodes[E.id];
 			} else {
 				target = E.id ? nodes[E.id] : q('.tool[data-act="add"]');
@@ -4012,6 +4057,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 		}
 
 		function finish() {
+			if (E) return; // o editor reabriu durante a animação de fechar
 			ed.hidden = true;
 			ed.getAnimations().forEach(function (a) { a.cancel(); });
 			flood.getAnimations().forEach(function (a) { a.cancel(); });
@@ -4759,6 +4805,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 			Host.projectKey().then(function (k) {
 				if (S.key !== null && k !== S.key) {
 					S.key = k;
+					clearTimeout(saveTimer);
 					closeSettings();
 					if (E) closeEditor(false);
 					if (H) closeHarmony();

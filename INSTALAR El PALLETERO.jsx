@@ -52,6 +52,10 @@ Baseado no instalador do ABRIDOR.
 		var rows = [], row = [], cell = '', q = false, i, c;
 		for (i = 0; i < text.length; i++) {
 			c = text.charAt(i);
+			if (!q && cell === '' && !row.length && c == '#') { // comentário: pula a linha inteira
+				while (i < text.length && text.charAt(i) != '\n') i++;
+				continue;
+			}
 			if (q) {
 				if (c == '"') { if (text.charAt(i + 1) == '"') { cell += '"'; i++; } else q = false; }
 				else cell += c;
@@ -192,7 +196,10 @@ Baseado no instalador do ABRIDOR.
 			// 'rm' sem barra no fim apaga só o link, se a instalação de desenvolvimento for um link
 			system.callSystem('rm -rf ' + quote(folder.fsName));
 		} else if (folder.exists) {
-			removeFolder(folder);
+			// rmdir /s não entra em junctions: numa instalação de desenvolvimento ligada à pasta do
+			// código, apaga só o link. Arquivo por arquivo (removeFolder) só se o rmdir não der conta.
+			system.callSystem('cmd.exe /c rmdir /s /q ' + quote(folder.fsName));
+			if (folder.exists) removeFolder(folder);
 		}
 
 		return !folder.exists;

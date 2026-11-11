@@ -11,7 +11,7 @@
 	var I18N = root.PalI18n;
 	function T(k, v) { return I18N.t(k, v); }
 	function Tn(k, n, v) { return I18N.n(k, n, v); }
-	var VERSION = 'v1.5.3';
+	var VERSION = 'v1.5.4';
 	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
@@ -414,15 +414,21 @@
 		var saveTimer;
 		function save() {
 			clearTimeout(saveTimer);
+			var key = S.key, list = plain(S.swatches), preset = S.preset;
 			saveTimer = setTimeout(function () {
-				Host.savePalette(plain(S.swatches), S.preset)
-					.catch(function () { toast(T('err.save'), { icon: 'alert' }); });
+				// se o After trocou de projeto nesse meio-tempo, essa paleta não é dele
+				Host.projectKey().then(function (k) {
+					if (key !== null && k !== key) return;
+					return Host.savePalette(list, preset);
+				}).catch(function () { toast(T('err.save'), { icon: 'alert' }); });
 			}, 200);
 		}
 
 		function plain(list) { return list.map(function (s) { return { color: s.color, label: s.label, auto: !!s.auto }; }); }
 		function snapshot() { return S.swatches.map(function (s) { return { id: s.id, color: s.color, label: s.label, auto: s.auto }; }); }
 		function pushUndo(entry) {
+			// outra ação entrou no histórico: o desfazer do aviso na tela já não é dela
+			if (toastEl.classList.contains('on')) toastEl.querySelector('button').hidden = true;
 			S.undo.push(entry || { palette: snapshot(), preset: S.preset });
 			if (S.undo.length > 40) S.undo.shift();
 		}
@@ -430,9 +436,13 @@
 			var prev = S.undo.pop();
 			if (!prev) return toast(T('undo.none'));
 			if (prev.restorePreset) {
-				return Host.savePreset(prev.restorePreset).then(function () {
+				return Host.savePreset(prev.restorePreset).then(function (r) {
+					if (!r || !r.ok) throw new Error('restore');
 					loadPresets(prev.restorePreset.id);
 					toast(T('undo.preset'), { icon: 'undo' });
+				}).catch(function () {
+					S.undo.push(prev); // não restaurou: o passo continua no histórico
+					toast(T('lib.readonly'), { icon: 'alert' });
 				});
 			}
 			S.swatches = prev.palette;
@@ -653,6 +663,7 @@
 		}
 
 		function removeSwatch(sw) {
+			if (!sw || !find(sw.id)) return;
 			pushUndo();
 			S.swatches = S.swatches.filter(function (s) { return s !== sw; });
 			render();
@@ -823,8 +834,9 @@
 		});
 		strip.addEventListener('keydown', function (e) {
 			var n = e.target.closest('.sw');
-			if (!n) return;
+			if (!n || n.classList.contains('leaving')) return;
 			var sw = find(n.dataset.id);
+			if (!sw) return;
 			if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); clickSwatch(sw, e); }
 			else if (e.key === 'F2' || e.key === 'e') { e.preventDefault(); openEditor(sw, n); }
 			else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); removeSwatch(sw); }
@@ -1117,6 +1129,11 @@
 
 		function applyPreset(p, merge, card) {
 			var from = rect(card.querySelector('.pc-bars'));
+			if (merge) {
+				var have0 = {};
+				S.swatches.forEach(function (s) { have0[s.color] = true; });
+				if (toSwatches(p.swatches).every(function (s) { return have0[s.color]; })) return toast(T('hm.already'), { icon: 'library' });
+			}
 			pushUndo();
 			var added = 0;
 			if (merge) {
@@ -1142,7 +1159,7 @@
 				S.preset = name;
 				save();
 				loadPresets(r.id, true);
-			});
+			}).catch(function () { toast(T('lib.readonly'), { icon: 'alert' }); });
 		}
 
 		// a paleta do projeto está salva? saved: igual ao preset de origem · changed: mudou desde ele ·
@@ -1165,7 +1182,7 @@
 				pushUndo({ restorePreset: old });
 				loadPresets(p.id);
 				toast(T('lib.updated', { name: p.name }), { icon: 'bookmark', undo: true });
-			});
+			}).catch(function () { toast(T('lib.readonly'), { icon: 'alert' }); });
 		}
 
 		// renomear no próprio cartão
@@ -1187,8 +1204,18 @@
 				var v = input.value.trim();
 				if (ok && v && v !== p.name) {
 					if (S.preset === p.name) { S.preset = v; save(); }
+					var old = p.name, oldPreset = S.preset;
 					p.name = v;
-					Host.savePreset({ id: p.id, name: v, swatches: p.swatches });
+					Host.savePreset({ id: p.id, name: v, swatches: p.swatches }).then(function (r) {
+						if (r && r.ok) return;
+						throw new Error('rename');
+					}).catch(function () {
+						// não gravou: volta o nome, para a tela não mentir sobre o arquivo
+						p.name = old;
+						if (S.preset !== oldPreset) { S.preset = oldPreset; save(); }
+						nameEl.textContent = old;
+						toast(T('lib.readonly'), { icon: 'alert' });
+					});
 				}
 				nameEl.textContent = p.name;
 				input.replaceWith(nameEl);
@@ -1226,7 +1253,7 @@
 					[{ opacity: 1, width: r0.width + 'px' }, { opacity: 0, width: '0px', marginLeft: '-6px', transform: 'scale(.9)' }],
 					{ duration: 300, easing: EASE }).onfinish = function () { card.remove(); };
 				toast(T('lib.deleted', { name: p.name }), { icon: 'trash', undo: true });
-			});
+			}).catch(function () { toast(T('lib.deleteFail'), { icon: 'alert' }); });
 		}
 
 		function chooseFolder(e) {
@@ -1240,7 +1267,7 @@
 					if (S.offline) toast(T('lib.offline', { name: S.offline.volume || T('lib.theFolder') }), { icon: 'unplug' });
 					else toast(T('lib.from', { path: shortPath(S.folder) }), { icon: 'folder' });
 				});
-			});
+			}).catch(function () { toast(T('lib.notAccessible'), { icon: 'alert' }); });
 		}
 
 		// gradiente nas bordas da lista: os cartões se esvaem onde a lista é cortada
@@ -1469,7 +1496,7 @@
 					} else {
 						toast(T('lib.from', { path: shortPath(S.folder) }), { icon: 'folder' });
 					}
-				});
+				}).catch(function () { off.classList.remove('busy'); toast(T('lib.notAccessible'), { icon: 'alert' }); });
 			}
 			var card = e.target.closest('[data-pid]');
 			if (!card) {
@@ -1520,6 +1547,7 @@
 			var tool = capTool;
 			busy(tool, true);
 			Host.grabFrame().then(function (r) {
+				if (r && r.ok && (!ed.hidden || !hm.hidden || !keysSheet.hidden)) { busy(tool, false); Host.releaseFrame(r); return; }
 				if (!r || !r.ok) {
 					busy(tool, false);
 					flash(tool, 'nope', 420);
@@ -1615,7 +1643,7 @@
 			exMarks.children[i].classList.toggle('on', c.on);
 		}
 
-		function hot(i, on) {
+		function exHot(i, on) {
 			if (exChips.children[i]) exChips.children[i].classList.toggle('hot', on);
 			if (exMarks.children[i]) exMarks.children[i].classList.toggle('hot', on);
 		}
@@ -1625,8 +1653,8 @@
 			if (b) toggleChip(+b.dataset.i);
 		});
 		[exChips, exMarks].forEach(function (box) {
-			box.addEventListener('pointerover', function (e) { var t = e.target.closest('[data-i]'); if (t) hot(+t.dataset.i, true); });
-			box.addEventListener('pointerout', function (e) { var t = e.target.closest('[data-i]'); if (t) hot(+t.dataset.i, false); });
+			box.addEventListener('pointerover', function (e) { var t = e.target.closest('[data-i]'); if (t) exHot(+t.dataset.i, true); });
+			box.addEventListener('pointerout', function (e) { var t = e.target.closest('[data-i]'); if (t) exHot(+t.dataset.i, false); });
 		});
 
 		// lupa: mostra a cor sob o cursor; clique adiciona
@@ -1635,6 +1663,7 @@
 			if (e.target.closest('.ex-mark')) { exLoupe.classList.remove('on'); return; }
 			var r = rect(exStage), fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
 			var hex = X.pixel(XS.data, fx, fy);
+			if (!hex) { exLoupe.classList.remove('on'); return; }
 			exLoupe.style.left = (fx * 100) + '%';
 			exLoupe.style.top = (fy * 100) + '%';
 			exLoupe.style.setProperty('--c', hex);
@@ -1647,6 +1676,7 @@
 			if (m) return toggleChip(+m.dataset.i);
 			var r = rect(exStage), fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
 			var hex = X.pixel(XS.data, fx, fy);
+			if (!hex) return;
 			for (var i = 0; i < XS.chips.length; i++) {
 				if (XS.chips[i].color === hex) { XS.chips[i].on = true; renderChips(false, i); return; }
 			}
@@ -1687,6 +1717,7 @@
 			XS = null;
 			exLoupe.classList.remove('on');
 			exSheet.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.97)' }], { duration: 220, easing: EASE }).onfinish = function () {
+				if (XS) return; // reabriu durante a animação
 				exSheet.hidden = true;
 				exSheet.getAnimations().forEach(function (a) { a.cancel(); });
 				exFlood.getAnimations().forEach(function (a) { a.cancel(); });
@@ -1808,8 +1839,9 @@
 			if (commit) {
 				var label = edName.value.trim();
 				var auto = E.auto || !label;
-				pushUndo();
-				if (E.id) {
+				var same = E.id && find(E.id) && find(E.id).color === hex && find(E.id).auto === auto && (auto || find(E.id).label === label);
+				if (!same) pushUndo();
+				if (same) { /* nada mudou */ } else if (E.id) {
 					var sw = find(E.id);
 					if (sw) { sw.color = hex; sw.label = auto ? '' : label; sw.auto = auto; }
 					render({ noEnter: E.id });
@@ -1820,7 +1852,7 @@
 					E.id = nsw.id;
 					toast(T('ed.added'), { color: hex, undo: true });
 				}
-				save();
+				if (!same) save();
 				target = nodes[E.id];
 			} else {
 				target = E.id ? nodes[E.id] : q('.tool[data-act="add"]');
@@ -1839,6 +1871,7 @@
 		}
 
 		function finish() {
+			if (E) return; // o editor reabriu durante a animação de fechar
 			ed.hidden = true;
 			ed.getAnimations().forEach(function (a) { a.cancel(); });
 			flood.getAnimations().forEach(function (a) { a.cancel(); });
@@ -2586,6 +2619,7 @@
 			Host.projectKey().then(function (k) {
 				if (S.key !== null && k !== S.key) {
 					S.key = k;
+					clearTimeout(saveTimer);
 					closeSettings();
 					if (E) closeEditor(false);
 					if (H) closeHarmony();

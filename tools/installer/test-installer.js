@@ -43,7 +43,7 @@ function run(opts) {
 	const ctx = {
 		$: { os: opts.os || 'Windows', fileName: SCRIPT }, File, Folder, decodeURI, encodeURI,
 		app: { version: opts.ae || '25.1.0', isoLanguage: opts.lang || 'pt_BR', preferences: { getPrefAsLong: () => 1 }, executeCommand() { } },
-		system: { callSystem: c => { calls.push(c); const m = c.match(/^rm -rf "(.*)"$/); if (m) fs.rmSync(m[1], { recursive: true, force: true }); return ''; } },
+		system: { callSystem: c => { calls.push(c); const m = c.match(/^rm -rf "(.*)"$/) || c.match(/^cmd\.exe \/c rmdir \/s \/q "(.*)"$/); if (m) fs.rmSync(m[1], { recursive: true, force: true }); return ''; } },
 		Window: function (t, title) { win = ctrl('window', title); return win; }
 	};
 	vm.createContext(ctx);
@@ -87,7 +87,7 @@ fs.mkdirSync(path.join(ext(u, 'com.jmbillard.opalettero'), 'CSXS'), { recursive:
 fs.writeFileSync(path.join(ext(u, 'com.jmbillard.opalettero'), 'CSXS/manifest.xml'), '<x ExtensionBundleVersion="1.1.0">');
 r = run({ userData: u, clicks: ['atualizar'] });
 assert(r.texts.some(t => /nome antigo/.test(t))); ok('avisa da troca de nome');
-assert(!fs.existsSync(ext(u, 'com.jmbillard.opalettero'))); ok('pasta antiga removida');
+assert(!fs.existsSync(ext(u, 'com.jmbillard.opalettero'))); ok('pasta antiga removida'); assert(r.calls.some(c => /rmdir \/s \/q/.test(c))); ok('Windows remove com rmdir (não segue junctions)');
 assert(fs.existsSync(ext(u, 'com.jmbillard.elpalletero'))); ok('pasta nova instalada');
 assert(r.texts.some(t => /atualizado!/.test(t))); ok('conclusão: atualizado');
 

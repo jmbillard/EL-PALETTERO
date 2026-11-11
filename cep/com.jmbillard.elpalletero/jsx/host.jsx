@@ -38,9 +38,16 @@ function PAL_json(v) {
 	return '{' + out.join(',') + '}';
 }
 
+// JSON → objeto. Os dados vêm do painel, mas também do .aep aberto (XMP), de pastas de presets
+// de equipe e do preferences.json: só passa para o eval o que for JSON de verdade (checagem do json2.js),
+// senão um projeto recebido poderia rodar código.
 function PAL_parse(s) {
-	// entrada vem do próprio painel ou do preferences.json do usuário
-	return eval('(' + s + ')');
+	s = String(s);
+	var probe = s.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g, '@')
+		.replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']')
+		.replace(/(?:^|:|,)(?:\s*\[)+/g, '');
+	if (!/^[\],:{}\s]*$/.test(probe)) throw new Error('JSON inválido');
+	return eval('(' + s.replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029') + ')');
 }
 
 // ---------------------------------------------------------------- textos (vêm do painel, de i18n/strings.csv)
@@ -174,6 +181,8 @@ function PAL_savePalette(swatchesJson, preset) {
 
 // ---------------------------------------------------------------- preferências
 
+function PAL_count(o) { var n = 0; for (var k in o) if (o.hasOwnProperty(k)) n++; return n; }
+
 function PAL_readPrefs() {
 	var raw = PAL_readFile(PAL_PREFS_FOLDER + '/preferences.json');
 	if (!raw) return {};
@@ -197,6 +206,12 @@ function PAL_loadPrefs() {
 function PAL_savePrefs(json) {
 	var next = PAL_parse(json);
 	var cur = PAL_readPrefs();
+	// arquivo existe mas não abre (editado à mão, vírgula sobrando…): guarda uma cópia antes de regravar,
+	// para a pasta de presets, as ordens e o preset padrão não sumirem sem rastro
+	var raw = PAL_readFile(PAL_PREFS_FOLDER + '/preferences.json');
+	if (raw && !PAL_count(cur)) {
+		try { PAL_parse(raw); } catch (e) { new File(PAL_PREFS_FOLDER + '/preferences.json').copy(PAL_PREFS_FOLDER + '/preferences.ilegivel-' + new Date().getTime() + '.json'); }
+	}
 	for (var k in next) if (next.hasOwnProperty(k)) cur[k] = next[k];
 	PAL_writeFile(PAL_PREFS_FOLDER + '/preferences.json', PAL_json(cur));
 	return PAL_json({ ok: true });
@@ -228,7 +243,10 @@ function PAL_splitUNC(p) {
 // servidores iguais? compara o nome completo ou só o primeiro rótulo (vfx-ml-sp ≈ vfx-ml-sp.servicos.corp…)
 function PAL_sameServer(a, b) {
 	a = String(a).toLowerCase(); b = String(b).toLowerCase();
-	return a == b || a.split('.')[0] == b.split('.')[0];
+	if (a == b) return true;
+	var ip = /^\d+(\.\d+){3}$/;
+	if (ip.test(a) || ip.test(b)) return false; // 10.0.0.5 e 10.20.1.9 não são o mesmo servidor
+	return a.split('.')[0] == b.split('.')[0];
 }
 
 // Windows: unidades mapeadas → UNC, lendo "net use" (uma vez por sessão do AE)
@@ -438,30 +456,35 @@ function PAL_defaultPreset() {
 
 // paletas de exemplo: criadas uma vez na pasta padrão (pastas de equipe não são tocadas).
 // Subir PAL_EXAMPLES_VERSION traz exemplos novos sem recriar os que a pessoa apagou antes.
-var PAL_EXAMPLES_VERSION = 2;
+var PAL_EXAMPLES_VERSION = 2; // cada exemplo diz em que versão entrou (4º campo)
 var PAL_EXAMPLES = [
-	['exemplo-por-do-sol', 'Pôr do sol', ['#2B1B4A', '#6A2C70', '#C2456B', '#F08A4B', '#FFD27A', '#FFF1C9']],
-	['exemplo-sorveteria', 'Sorveteria', ['#F7C6D9', '#FDE2B8', '#F6EAC2', '#B8E0D2', '#A7C7E7', '#D9C2F0']],
-	['exemplo-neon', 'Neon', ['#0D0221', '#FF2A6D', '#F706CF', '#05D9E8', '#01FFC3', '#FFF338']],
-	['exemplo-oceano', 'Oceano', ['#03045E', '#0077B6', '#00B4D8', '#48CAE4', '#90E0EF', '#CAF0F8']],
-	['exemplo-floresta', 'Floresta', ['#0B2B1C', '#1F4D2B', '#3A7D44', '#7FB069', '#C9D99E', '#F2E8CF']],
-	['exemplo-terroso', 'Terroso', ['#3D2B1F', '#7A4E2D', '#B5703F', '#D9A273', '#E8D2B0', '#6B7F4F']],
-	['exemplo-tropical', 'Tropical', ['#FF5E5B', '#FFAA4C', '#FFED66', '#00CECB', '#0B7A75', '#2E294E']],
-	['exemplo-retro-70', 'Retrô 70', ['#8C3B19', '#D9622B', '#F2A541', '#F2D16B', '#6B8F71', '#2E4A3F']],
-	['exemplo-noite-urbana', 'Noite urbana', ['#0F1020', '#2A2D5E', '#4F5BD5', '#E03E7E', '#FFB86B', '#F7F7FF']],
-	['exemplo-brasil', 'Brasil', ['#009C3B', '#FFDF00', '#002776', '#FFFFFF']],
-	['exemplo-pastel', 'Pastel', ['#FFD6E0', '#FFEFCF', '#D4F4DD', '#CDE7FF', '#E5D9FF', '#FCE1F5']],
-	['exemplo-monocromatico', 'Monocromático', ['#111111', '#333333', '#555555', '#888888', '#BBBBBB', '#EEEEEE']]
+	['exemplo-por-do-sol', 'Pôr do sol', ['#2B1B4A', '#6A2C70', '#C2456B', '#F08A4B', '#FFD27A', '#FFF1C9'], 2],
+	['exemplo-sorveteria', 'Sorveteria', ['#F7C6D9', '#FDE2B8', '#F6EAC2', '#B8E0D2', '#A7C7E7', '#D9C2F0'], 2],
+	['exemplo-neon', 'Neon', ['#0D0221', '#FF2A6D', '#F706CF', '#05D9E8', '#01FFC3', '#FFF338'], 2],
+	['exemplo-oceano', 'Oceano', ['#03045E', '#0077B6', '#00B4D8', '#48CAE4', '#90E0EF', '#CAF0F8'], 2],
+	['exemplo-floresta', 'Floresta', ['#0B2B1C', '#1F4D2B', '#3A7D44', '#7FB069', '#C9D99E', '#F2E8CF'], 2],
+	['exemplo-terroso', 'Terroso', ['#3D2B1F', '#7A4E2D', '#B5703F', '#D9A273', '#E8D2B0', '#6B7F4F'], 2],
+	['exemplo-tropical', 'Tropical', ['#FF5E5B', '#FFAA4C', '#FFED66', '#00CECB', '#0B7A75', '#2E294E'], 2],
+	['exemplo-retro-70', 'Retrô 70', ['#8C3B19', '#D9622B', '#F2A541', '#F2D16B', '#6B8F71', '#2E4A3F'], 2],
+	['exemplo-noite-urbana', 'Noite urbana', ['#0F1020', '#2A2D5E', '#4F5BD5', '#E03E7E', '#FFB86B', '#F7F7FF'], 2],
+	['exemplo-brasil', 'Brasil', ['#009C3B', '#FFDF00', '#002776', '#FFFFFF'], 2],
+	['exemplo-pastel', 'Pastel', ['#FFD6E0', '#FFEFCF', '#D4F4DD', '#CDE7FF', '#E5D9FF', '#FCE1F5'], 2],
+	['exemplo-monocromatico', 'Monocromático', ['#111111', '#333333', '#555555', '#888888', '#BBBBBB', '#EEEEEE'], 2]
 ];
+
+function PAL_isDefaultFolder(loc) {
+	return PAL_slash(loc.folder.fsName).toLowerCase() == PAL_slash(new Folder(PAL_defaultPresetPath()).fsName).toLowerCase();
+}
 
 function PAL_seedExamples(loc) {
 	var prefs = PAL_readPrefs();
 	if ((Number(prefs.presetsSeeded) || (prefs.presetsSeeded === true ? 1 : 0)) >= PAL_EXAMPLES_VERSION) return;
-	var isDefault = PAL_slash(loc.folder.fsName).toLowerCase() == PAL_slash(new Folder(PAL_defaultPresetPath()).fsName).toLowerCase();
-	if (!isDefault) return; // pasta de equipe: não mexe, e tenta de novo quando voltar para a pasta padrão
+	if (!PAL_isDefaultFolder(loc)) return; // pasta de equipe: não mexe, e tenta de novo quando voltar para a pasta padrão
+	var seeded = Number(prefs.presetsSeeded) || (prefs.presetsSeeded === true ? 1 : 0);
 	{
 		for (var i = 0; i < PAL_EXAMPLES.length; i++) {
 			var e = PAL_EXAMPLES[i];
+			if (e[3] <= seeded) continue; // já oferecido antes: se não existe, a pessoa apagou
 			if (new File(loc.folder.fsName + '/' + e[0] + '.json').exists) continue;
 			var sw = [];
 			for (var c = 0; c < e[2].length; c++) sw.push({ color: e[2][c], label: '', auto: true });
@@ -476,9 +499,9 @@ function PAL_listPresets() {
 	if (!loc.folder) return PAL_json({ folder: loc.path, offline: true, volume: loc.volume, canMount: PAL_OS == 'Mac' && !!loc.net, presets: [] });
 	// cria um primeiro preset para a biblioteca nunca começar vazia (só na pasta padrão)
 	var list = PAL_readPresets();
-	if (!list.length && !PAL_readPrefs().presetsSeeded) {
-		PAL_savePreset(PAL_json({ id: 'el-palletero', name: 'El PALLETERO', swatches: PAL_builtinSwatches() }));
-		PAL_savePrefs(PAL_json({ presetsSeeded: 1 }));
+	if (!list.length && !PAL_readPrefs().presetsSeeded && PAL_isDefaultFolder(loc)) {
+		var first = PAL_parse(PAL_savePreset(PAL_json({ id: 'el-palletero', name: 'El PALLETERO', swatches: PAL_builtinSwatches() })));
+		if (first.ok) PAL_savePrefs(PAL_json({ presetsSeeded: 1 }));
 	}
 	PAL_seedExamples(loc);
 	list = PAL_orderPresets(PAL_readPresets(), loc);
@@ -581,7 +604,10 @@ function PAL_releaseFrame(tmpId, path) {
 	try {
 		if (tmpId) {
 			var item = app.project.itemByID(tmpId);
-			if (item) { app.beginUndoGroup(PAL_T('undo.frame', 'El PALLETERO · extrair frame')); item.remove(); app.endUndoGroup(); }
+			if (item) {
+				app.beginUndoGroup(PAL_T('undo.frame', 'El PALLETERO · extrair frame'));
+				try { item.remove(); } finally { app.endUndoGroup(); }
+			}
 		}
 		if (path) { var f = new File(path); if (f.exists) f.remove(); }
 	} catch (e) {}
@@ -598,6 +624,7 @@ function PAL_grabFrame() {
 	PAL_sweepTemp();
 	var out = new File(Folder.temp.fsName + '/elpalletero_' + new Date().getTime() + '.png');
 	var src = layer && layer.source ? layer.source : null;
+	var undo = false, tmp = null;
 
 	try {
 		if (src instanceof FootageItem && src.mainSource instanceof FileSource && src.mainSource.isStill && src.file && PAL_IMAGE_EXT.test(src.file.name)) {
@@ -611,13 +638,15 @@ function PAL_grabFrame() {
 		if (src instanceof FootageItem && !(src.mainSource instanceof SolidSource)) {
 			// vídeo, PSD, sequência…: renderiza o frame numa comp temporária
 			app.beginUndoGroup(PAL_T('undo.frame', 'El PALLETERO · extrair frame'));
+			undo = true;
 			var fps = src.frameRate || comp.frameRate;
 			var dur = Math.max(src.duration || 0, 1 / fps);
-			var tmp = app.project.items.addComp('El PALLETERO tmp', src.width, src.height, src.pixelAspect || 1, dur, fps);
+			tmp = app.project.items.addComp('El PALLETERO tmp', src.width, src.height, src.pixelAspect || 1, dur, fps);
 			tmp.layers.add(src);
 			var t = src.mainSource.isStill ? 0 : Math.max(0, Math.min(dur - 1 / fps, layer.sourceTime(comp.time)));
 			tmp.saveFrameToPng(t, out);
 			app.endUndoGroup();
+			undo = false;
 			// a comp temporária só sai depois que o painel ler o PNG (PAL_releaseFrame)
 			return PAL_json({ ok: true, path: out.fsName, temp: true, tmpId: tmp.id, label: src.name, kind: src.mainSource.isStill ? 'image' : 'video' });
 		}
@@ -625,6 +654,9 @@ function PAL_grabFrame() {
 		comp.saveFrameToPng(comp.time, out);
 		return PAL_json({ ok: true, path: out.fsName, temp: true, label: comp.name, kind: 'comp' });
 	} catch (e) {
+		// não deixa a comp temporária no projeto nem o desfazer aberto
+		try { if (tmp) tmp.remove(); } catch (e2) {}
+		if (undo) app.endUndoGroup();
 		return PAL_json({ ok: false, reason: 'error', message: e.message });
 	}
 }
@@ -665,6 +697,17 @@ function PAL_strokes(group, out) {
 	return out;
 }
 
+// cores dentro do que está selecionado: a propriedade em si ou, num grupo (Fill 1, Stroke 1, um efeito),
+// as de dentro. Em grupos de shape, o Shift escolhe entre traços e preenchimentos.
+function PAL_selColors(prop, props, texts, stroke, depth) {
+	if (prop.matchName == 'ADBE Text Document') { texts.push(prop); return; }
+	if (PAL_isColor(prop)) { props.push(prop); return; }
+	if (prop.propertyType == PropertyType.PROPERTY || depth > 6) return;
+	if (prop.matchName == 'ADBE Vector Graphic - Stroke' && !stroke) return;
+	if (prop.matchName == 'ADBE Vector Graphic - Fill' && stroke) return;
+	for (var i = 1; i <= prop.numProperties; i++) PAL_selColors(prop.property(i), props, texts, stroke, depth + 1);
+}
+
 function PAL_apply(hex, optsJson) {
 	var comp = app.project.activeItem;
 	if (!(comp instanceof CompItem)) return PAL_json({ ok: false, reason: 'nocomp' });
@@ -681,10 +724,7 @@ function PAL_apply(hex, optsJson) {
 	// 1) propriedades de cor selecionadas têm prioridade
 	for (i = 0; i < layers.length; i++) {
 		var sel = layers[i].selectedProperties;
-		for (p = 0; p < sel.length; p++) {
-			if (PAL_isColor(sel[p])) props.push(sel[p]);
-			else if (sel[p].matchName == 'ADBE Text Document') texts.push(sel[p]);
-		}
+		for (p = 0; p < sel.length; p++) PAL_selColors(sel[p], props, texts, stroke, 0);
 	}
 
 	app.beginUndoGroup(PAL_T('undo.apply', 'El PALLETERO · aplicar {hex}', { hex: hex }));
@@ -718,7 +758,7 @@ function PAL_apply(hex, optsJson) {
 			var fx = layers[i].property('ADBE Effect Parade');
 			if (!fx) continue;
 			var last = fx.numProperties ? fx.property(fx.numProperties) : null;
-			var fill = last && last.matchName == 'ADBE Fill' && /^#[0-9A-F]{6}$/.test(last.name) ? last : fx.addProperty('ADBE Fill');
+			var fill = last && last.matchName == 'ADBE Fill' && /^#[0-9A-F]{6}$/i.test(last.name) ? last : fx.addProperty('ADBE Fill');
 			fill.name = hex;
 			PAL_setProp(fill.property('ADBE Fill-0002'), color, comp.time);
 		}
@@ -845,7 +885,7 @@ function PAL_isRaster(layer) {
 	try {
 		var src = layer.source;
 		if (src instanceof CompItem) return true;
-		return src instanceof FootageItem && !(src.mainSource instanceof SolidSource);
+		return src instanceof FootageItem && !(src.mainSource instanceof SolidSource) && src.hasVideo; // áudio não tem imagem
 	} catch (e) { return false; }
 }
 

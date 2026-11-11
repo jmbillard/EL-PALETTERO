@@ -6,7 +6,8 @@
 	var cep = root.__adobe_cep__;
 
 	function evalScript(fn, args) {
-		var script = fn + '(' + (args || []).map(function (a) { return a === undefined ? 'undefined' : JSON.stringify(a); }).join(',') + ')';
+		// U+2028/2029 são quebras de linha para o ExtendScript (ES3): dentro de uma string, quebram o script
+		var script = fn + '(' + (args || []).map(function (a) { return a === undefined ? 'undefined' : JSON.stringify(a).replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029'); }).join(',') + ')';
 		return new Promise(function (resolve, reject) {
 			cep.evalScript(script, function (res) {
 				if (res === 'EvalScript error.') return reject(new Error(fn + ' falhou'));
@@ -52,8 +53,13 @@
 			var req = root.cep_node ? root.cep_node.require : root.require;
 			if (cep && req) {
 				var cp = req('child_process');
-				var cmd = IS_MAC ? 'pbpaste' : 'powershell -NoProfile -NonInteractive -Command Get-Clipboard -Raw';
-				return Promise.resolve(String(cp.execSync(cmd, { encoding: 'utf8', timeout: 4000, windowsHide: true })));
+				// saída em UTF-8: o PowerShell usa a página de código do console (acentos viravam �), e o
+				// pbpaste aberto pelo After pode vir sem LANG
+				var cmd = IS_MAC ? 'pbpaste' : 'powershell -NoProfile -NonInteractive -Command "[Console]::OutputEncoding=[Text.Encoding]::UTF8; Get-Clipboard -Raw"';
+				var env = {}, k, proc = req('process');
+				for (k in proc.env) env[k] = proc.env[k];
+				if (IS_MAC) env.LANG = env.LC_ALL = 'en_US.UTF-8';
+				return Promise.resolve(String(cp.execSync(cmd, { encoding: 'utf8', timeout: 4000, windowsHide: true, env: env })));
 			}
 		} catch (e) {}
 		if (root.navigator.clipboard && root.navigator.clipboard.readText) return root.navigator.clipboard.readText();

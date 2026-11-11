@@ -72,7 +72,7 @@
 	function format(hex, fmt) {
 		var rgb = hexToRgb(hex);
 		if (fmt === 'RGB') return rgb.join(' ');
-		if (fmt === 'HSB') return rgbToHsb(rgb).map(Math.round).join(' ');
+		if (fmt === 'HSB') { var h = rgbToHsb(rgb).map(Math.round); h[0] %= 360; return h.join(' '); } // 359,6° arredonda para 0, não 360
 		return normHex(hex);
 	}
 
@@ -89,7 +89,8 @@
 			}
 			return rgbToHex(n);
 		}
-		return hex;
+		// só números no modo RGB/HSB ("255", "100"): ainda não é uma cor, não um hex de 3 dígitos
+		return hex && (fmt === 'HEX' || /^#|[a-f]/i.test(s)) ? hex : null;
 	}
 
 
@@ -126,12 +127,12 @@
 	// Ordenar por matiz:
 	// - neutros (croma CIELAB baixo: brancos, cinzas, pretos, inclusive os levemente tingidos) vão
 	//   para o fim, do escuro ao claro;
-	// - as cores seguem o círculo de matiz começando nos vermelhos (o círculo é girado 30°, então
+	// - as cores seguem o círculo de matiz começando nos vermelhos (o círculo é girado 15°, então
 	//   um vermelho de 350° fica junto do de 5°, e os rosas/magentas fecham a fila);
 	// - matizes vizinhos (até 18° do primeiro do grupo) formam um grupo, ordenado do escuro ao claro
 	//   (L* CIELAB) e, empatando, do mais saturado ao menos. Assim uma diferença de 1° no matiz não
 	//   passa na frente da luminosidade, e não há fronteira fixa separando cores quase iguais.
-	var HUE_START = 30, HUE_GROUP = 18, NEUTRAL_C = 9;
+	var HUE_START = 15, HUE_GROUP = 18, NEUTRAL_C = 9;
 	function sortSwatches(list) {
 		var colors = [], neutrals = [];
 		list.forEach(function (sw, i) {

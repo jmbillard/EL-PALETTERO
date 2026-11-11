@@ -12,6 +12,11 @@
 		text = String(text || '').replace(/^﻿/, '');
 		for (i = 0; i < text.length; i++) {
 			c = text.charAt(i);
+			// linha de comentário (# no começo, fora de aspas): pula inteira, sem ler aspas dela
+			if (!q && cell === '' && !row.length && c === '#' && !/^#[0-9a-f]{6}\b/i.test(text.substr(i, 8))) {
+				while (i < text.length && text.charAt(i) !== '\n') i++;
+				continue;
+			}
 			if (q) {
 				if (c === '"') { if (text.charAt(i + 1) === '"') { cell += '"'; i++; } else q = false; }
 				else cell += c;
