@@ -171,7 +171,15 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 	var list = document.getElementById('layers');
 	var sel = document.getElementById('proj');
 	var ws = document.querySelector('.ws');
-	var hintTxt = 'Ctrl ou Shift para selecionar vários.';
+	// textos da área de trabalho no idioma do mockup (os GIFs em inglês/espanhol mostram esta parte)
+	var WS_TXT = {
+		pt: { proj: 'projeto', strip: 'Faixa', column: 'Coluna', grid: 'Grade', hint: ['Ctrl ou Shift para selecionar vários.', '⌘ ou ⇧ para selecionar vários.'] },
+		en: { proj: 'project', strip: 'Strip', column: 'Column', grid: 'Grid', hint: ['Ctrl or Shift to select several.', '⌘ or ⇧ to select several.'] },
+		es: { proj: 'proyecto', strip: 'Franja', column: 'Columna', grid: 'Cuadrícula', hint: ['Ctrl o Shift para seleccionar varios.', '⌘ o ⇧ para seleccionar varios.'] }
+	}[AE.lang] || null;
+	var hintTxt = WS_TXT.hint[0];
+	document.querySelector('label.proj').firstChild.textContent = WS_TXT.proj + ' ';
+	['strip', 'column', 'grid'].forEach(function (k) { var b = document.querySelector('.layouts button[data-layout="' + k + '"]'); b.lastChild.textContent = WS_TXT[k]; });
 	var KIND = { text: 'T', shape: '★', solid: '■', image: '▣', video: '▶' };
 	var thumbs = {};
 
@@ -187,7 +195,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		}).join('') + '<p class="hint">' + hintTxt + '</p>';
 
 		if (!comp.children.length) {
-			comp.innerHTML = '<div class="lyr l-bg" data-id="bg"></div><div class="lyr l-bar" data-id="bar"></div><div class="lyr l-circle" data-id="circle"></div><div class="lyr l-title" data-id="title">ABER<br>TURA</div>';
+			comp.innerHTML = '<div class="lyr l-bg" data-id="bg"></div><div class="lyr l-bar" data-id="bar"></div><div class="lyr l-circle" data-id="circle"></div><div class="lyr l-title" data-id="title">' + AE.title[0] + '<br>' + AE.title[1] + '</div>';
 		}
 		layers.forEach(function (l) {
 			var n = comp.querySelector('[data-id="' + l.id + '"]');
@@ -225,7 +233,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 		document.querySelectorAll('.tile kbd').forEach(function (k) { if (map[k.textContent]) k.textContent = map[k.textContent]; });
 		document.querySelectorAll('.tile p').forEach(function (p) { p.innerHTML = p.innerHTML.replace(/Ctrl\+Z/g, '⌘Z').replace(/\bShift\b/g, '⇧'); });
 	}
-	hintTxt = window.PalApp.isMac ? '⌘ ou ⇧ para selecionar vários.' : 'Ctrl ou Shift para selecionar vários.';
+	hintTxt = window.PalApp.isMac ? WS_TXT.hint[1] : WS_TXT.hint[0];
 
 	var pal = document.getElementById('pal');
 	draw();

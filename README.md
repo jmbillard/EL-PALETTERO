@@ -1,8 +1,10 @@
-# <img src="docs/img/logo.svg" alt="" height="44"> El PALLETERO · v1.2 beta
+# <img src="docs/img/logo.svg" alt="" height="44"> El PALLETERO · v1.5
 
-🗨️ **pt-BR** ⚡ a paleta de cores do projeto, como painel do After Effects ⚡
+🗨️ **português** · [English](README.en.md) · [español](README.es.md)
 
-o palletero guarda as cores do projeto num painel que você acopla em qualquer lugar da interface. um clique aplica a cor nos layers selecionados. as cores podem vir do seletor, dos layers, do projeto inteiro, de uma imagem ou de uma biblioteca de presets compartilhada pela equipe.
+⚡ a paleta de cores do projeto, como painel do After Effects ⚡
+
+o palletero guarda as cores do projeto num painel que você acopla em qualquer lugar da interface. um clique aplica a cor nos layers selecionados. as cores podem vir do seletor, de uma harmonia, dos layers, do projeto inteiro, de uma imagem, de um texto colado, de um `.ase` ou de uma biblioteca de presets compartilhada pela equipe.
 
 > <img src="docs/gifs/aplicar.gif" alt="aplicando cores da paleta nos layers" width="860">
 
@@ -56,6 +58,7 @@ requer After Effects **2022 (22.0)** ou mais novo, no Windows ou no macOS.
 > • se a versão com o nome antigo (**O PALETTERO**) estiver instalada, o instalador troca pela nova. paletas, presets e preferências são mantidos.\
 > • **remover** apaga só a extensão: as paletas salvas nos projetos e os presets continuam onde estão.\
 > • **sem o After Effects:** dê dois cliques em `instalar_windows.bat` (Windows) ou `instalar_mac.command` (macOS). fazem o mesmo: copiam a extensão, trocam a versão antiga e habilitam o `PlayerDebugMode`.\
+> • o instalador fala o idioma do After Effects (português, inglês ou espanhol; outros idiomas, inglês).\
 > • **macOS:** se o painel não aparecer depois de reiniciar o After Effects, reinicie o computador.\
 > • as preferências e os presets ficam em `%APPDATA%\El PALLETERO\` (Windows) ou `~/Library/Application Support/El PALLETERO/` (macOS).
 
@@ -94,10 +97,11 @@ o painel se chamava **O PALETTERO** até a v1.1. na primeira vez que o El PALLET
 2. `◖ clique esquerdo` na cor.
 
 - com **propriedades de cor selecionadas** (Fill, Stroke, Tint, a cor de um efeito, o Source Text…), só elas mudam.
+- com um **grupo selecionado** (o *Fill 1* ou o *Stroke 1* de um shape, um efeito inteiro), mudam as cores de dentro dele. num grupo de shape, o clique pinta os preenchimentos e `Shift` + clique, os traços.
 - sem propriedades selecionadas, cada layer ganha um efeito **Fill** com o nome da cor (`#FF4D4D`). aplicar outra cor **reaproveita** esse Fill em vez de empilhar outro.
 - `Shift` + `◖ clique` → **contorno**: pinta os traços (Stroke) dos shape layers e o contorno dos textos (o contorno do texto ganha 2 px se estava em zero). layers sem traço avisam em vez de ganhar um Fill. com o `Shift` seguro, o balde da amostra vira um anel.
 - com keyframes, a cor entra no tempo atual.
-- a última cor aplicada ganha um pontinho e passa a ser a cor de destaque do painel.
+- a última cor aplicada ganha um pontinho. com o destaque no modo automático, ela também vira a cor de destaque do painel (veja [ajustes](#-ajustes)).
 
 com a paleta vazia, o painel oferece os caminhos para começar: **capturar**, **nova cor**, **presets**, **harmonia**, ou colar cores.
 
@@ -144,9 +148,9 @@ o editor nasce da própria amostra e volta para ela quando você confirma.
 
 ### nomes automáticos
 
-cada cor ganha um nome em português, do mundo real: *menta*, *tijolo*, *céu*, *mostarda*, *berinjela*, *noite*…
+cada cor ganha um nome do mundo real, no idioma do painel: *menta*, *tijolo*, *céu*, *mostarda*, *berinjela*, *noite*…
 
-- o nome é o da cor de referência mais próxima (são cerca de 150, comparadas em CIELAB, que mede diferença de cor como o olho).
+- o nome é o da cor de referência mais próxima (são 133, comparadas em CIELAB, que mede diferença de cor como o olho).
 - se o nome já existe na paleta, entra um vizinho parecido (*vermelho* → *melancia*) ou *suave* / *forte*.
 - no editor, o nome automático (em itálico, com ✦ preenchido) **acompanha a cor** enquanto você mexe.
 - digitou um nome seu? ele fica fixo. o ✦ devolve o automático.
@@ -164,6 +168,8 @@ cada cor ganha um nome em português, do mundo real: *menta*, *tijolo*, *céu*, 
 ## 📍 criar harmonias
 
 o segundo modo do editor: você escolhe uma **cor base** e uma **regra**, e as cores irmãs aparecem juntas. entra pela roda no rodapé do editor; o 💧 volta para o editor de uma cor. o **+** abre no último modo usado.
+
+> <img src="docs/gifs/harmonia.gif" alt="criando uma harmonia" width="420">
 
 - **roda** → o ângulo é o matiz e a distância do centro é a saturação. com pouco espaço ela vira um **quadrado** (matiz na horizontal, saturação na vertical), com os mesmos gestos.
   - arraste **qualquer ponto**: o conjunto inteiro gira junto e a regra continua valendo.
@@ -236,7 +242,7 @@ o **conta-gotas**, com um layer de imagem selecionado (ou nada selecionado), lê
 - os marcadores na imagem mostram de onde veio cada cor. passe o mouse numa amostra para destacar o marcador.
 - `◖ clique` numa amostra → liga / desliga.
 - `−` / `+` → menos ou mais cores (de 2 a 12; o painel lembra a sua escolha).
-- `◖ clique` na imagem → adiciona a cor daquele ponto (a lupa mostra a cor antes do clique).
+- `◖ clique` na imagem → adiciona a cor daquele ponto (a lupa mostra a cor antes do clique). pontos transparentes são ignorados.
 - ✓ ou `Enter` → adiciona as cores ligadas à paleta.
 
 > 🚩 *obs:*\
@@ -314,7 +320,7 @@ o **⋯** (doca da direita) abre os ajustes no lugar das cores.
 - ⌨ **atalhos** → uma folha com todos os cliques e teclas (também com `?` no painel). `Esc` fecha.
 - 🎨 **destaque** → a cor de destaque da interface (botões ligados, contornos, foco). o primeiro, com o anel de cores, é o **automático**: o destaque acompanha a última cor aplicada (a bolinha do meio mostra qual). as outras deixam uma cor fixa.
 - **idioma** → `PT · EN · ES`. sem escolha, o painel segue o idioma do After Effects. veja [idiomas](#-idiomas).
-- **?** (o círculo) → esta documentação.
+- no fim (à direita na faixa, embaixo na vertical): ⌨ **atalhos**, **?** → esta documentação, no idioma do painel, e o número da versão.
 
 <br>
 
@@ -324,7 +330,7 @@ o **⋯** (doca da direita) abre os ajustes no lugar das cores.
 
 ## 📍 idiomas
 
-o painel, o After Effects (nomes do desfazer, janelas de abrir/salvar, presets de exemplo) e o instalador falam **português, inglês e espanhol**. os nomes automáticos das cores também: *menta* / *mint* / *menta*, *tijolo* / *brick* / *ladrillo*…
+o painel, o After Effects (nomes do desfazer, janelas de abrir/salvar, presets de exemplo), o instalador e esta documentação falam **português, inglês e espanhol**. os nomes automáticos das cores também: *menta* / *mint* / *menta*, *tijolo* / *brick* / *ladrillo*…
 
 - **qual idioma** → o escolhido nos [ajustes](#-ajustes); sem escolha, o do After Effects. idioma sem tradução usa inglês.
 - **trocar** → nos ajustes. o painel recarrega na hora (a paleta está no projeto, nada se perde). nomes automáticos das cores acompanham; nomes que você digitou ficam como estão.
@@ -385,24 +391,28 @@ cep/com.jmbillard.elpalletero/
 ├── js/color.js         → conversões de cor (HSB, CIELAB…)
 ├── js/names.js         → nomes automáticos
 ├── js/extract.js       → extração de cores (k-means em CIELAB)
+├── js/harmony.js       → regras de harmonia
+├── js/io.js            → cores em texto colado e arquivos .ase
+├── js/i18n.js          → idiomas (lê i18n/*.csv)
 ├── js/bridge.js        → ponte painel ↔ ExtendScript (ou o mock, no navegador)
 ├── js/panel.js         → estado, interações e animações
-└── jsx/host.jsx        → lado After Effects: metadados, presets, rede, aplicar, capturar, frames
+├── i18n/               → strings.csv e colors.csv: textos e nomes de cor por idioma
+└── jsx/host.jsx        → lado After Effects: metadados, presets, rede, aplicar, capturar, frames, .ase
 mockup/                 → página de demonstração com um "After Effects de mentira"
 tools/                  → scripts que geram o mockup, os GIFs, o banner e testam o instalador
 INSTALAR El PALLETERO.jsx, instalar_mac.command, instalar_windows.bat → instaladores
 ```
 
 - **depurar:** com o painel aberto, acesse `http://localhost:8099` no Chrome.
-- **mockup:** depois de mudar o painel, rode `node tools/build-mockup.js`.
-- **GIFs:** `node tools/gifs/record.js` grava todos de novo a partir do mockup (ou `node tools/gifs/record.js editor presets` para alguns). precisa do Playwright e do `ffmpeg`.
+- **mockup:** depois de mudar o painel, rode `node tools/build-mockup.js`. no navegador, `?lang=en` ou `?lang=es` no endereço abre o mockup nesse idioma.
+- **GIFs:** `node tools/gifs/record.js` grava todos de novo a partir do mockup (ou `node tools/gifs/record.js editor presets` para alguns). com `--lang=en` ou `--lang=es` grava em `docs/gifs/en/` ou `docs/gifs/es/`, com o painel e a cena de mentira nesse idioma. precisa do Playwright e do `ffmpeg`.
 - **registro de eventos:** nos ajustes (⋯), 3 cliques no número da versão mostram ao vivo os eventos de mouse que chegam ao painel. foi assim que descobrimos que o CEP do After Effects entrega `mousedown`/`mouseup`, mas nem sempre `pointerdown`/`pointerup`: por isso todo "apertar e arrastar" do painel escuta os dois (`onPress` e `follow` em `panel.js`).
 - **ExtendScript:** `node tools/check-es3.js` procura palavras reservadas do ES3 nos `.jsx` (o After Effects recusa `native`, `int`, `class`, `char`… como nomes de variável, mesmo que o Node aceite). rode antes de publicar uma mudança no `host.jsx` ou no instalador.
 - **idiomas:** `node tools/check-i18n.js` confere os `.csv` de tradução contra o código (chaves faltando ou sobrando, células vazias, `{variáveis}`). o mockup embute os `.csv`; no After Effects o painel lê do disco.
 - **logo:** `docs/img/logo.svg` é a fonte. depois de mudar o logo, rode `node tools/installer/make-banner.js` (banner do instalador) e `node tools/installer/make-icons.js` (ícones do painel); o mockup e o estado de paleta vazia usam o mesmo desenho.
-- **instalador:** `node tools/installer/test-installer.js` executa o `INSTALAR El PALLETERO.jsx` em Node, com File/Folder/ScriptUI simulados (instalação nova, troca do nome antigo, reinstalar, remover, macOS e AE antigo). `node tools/installer/make-banner.js` gera o banner e grava no instalador.
+- **instalador:** `node tools/installer/test-installer.js` executa o `INSTALAR El PALLETERO.jsx` em Node, com File/Folder/ScriptUI simulados (instalação nova, troca do nome antigo, reinstalar, remover, macOS, AE antigo e os idiomas). `node tools/installer/make-banner.js` gera o banner e grava no instalador.
 - os instaladores seguem o modelo do [ABRIDOR](https://github.com/jmbillard/ABRIDOR).
 
 > 🚩 *obs:*\
-> • o painel usa o Node.js do CEP (`--enable-nodejs`) só para ler o PNG do frame.\
+> • o painel usa o Node.js do CEP (`--enable-nodejs`) para ler o PNG do frame, os `.csv` de idioma e a área de transferência.\
 > • o frame é gerado com `saveFrameToPng`, um método que existe no After Effects mas não está na documentação oficial.

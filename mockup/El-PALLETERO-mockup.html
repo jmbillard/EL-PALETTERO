@@ -1814,6 +1814,34 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 	folders[OFFLINE] = [
 		{ id: 'promo', name: 'Promo 2026', swatches: sw(['#FF1493', '#7F00FF', '#00B7EB', '#FFE01B', '#111111']) }
 	];
+	// idioma do mockup (?lang=en na URL, a escolha nos ajustes ou o do navegador): nomes de layers e
+	// presets da cena de mentira acompanham, para os GIFs da documentação em inglês e espanhol
+	var LANG = (function () {
+		var m = /[?&]lang=([a-z]{2})/i.exec(root.location.search), l = '';
+		try { l = localStorage.getItem('mock.lang') || ''; } catch (e) {}
+		l = (l || (m && m[1]) || root.navigator.language || 'pt').slice(0, 2).toLowerCase();
+		return l === 'en' || l === 'es' ? l : 'pt';
+	})();
+	var NAMES = {
+		en: { 'TÍTULO': 'TITLE', 'círculo': 'circle', 'faixa': 'bar', 'praia_entardecer.jpg': 'beach_sunset.jpg', 'floresta_drone.mp4': 'forest_drone.mp4', 'fundo': 'background',
+			'Abertura': 'Opening', 'Verão': 'Summer', 'Jornal da noite': 'Evening news', 'Esporte': 'Sports', 'Monocromático': 'Monochrome', 'Pôr do sol': 'Sunset',
+			'Sorveteria': 'Ice cream parlor', 'Oceano': 'Ocean', 'Floresta': 'Forest', 'Terroso': 'Earthy', 'Retrô 70': 'Retro 70s', 'Noite urbana': 'City night', 'Brasil': 'Brazil' },
+		es: { 'TÍTULO': 'TÍTULO', 'círculo': 'círculo', 'faixa': 'franja', 'praia_entardecer.jpg': 'playa_atardecer.jpg', 'floresta_drone.mp4': 'bosque_dron.mp4', 'fundo': 'fondo',
+			'Abertura': 'Apertura', 'Verão': 'Verano', 'Jornal da noite': 'Noticiero nocturno', 'Esporte': 'Deportes', 'Monocromático': 'Monocromático', 'Pôr do sol': 'Atardecer',
+			'Sorveteria': 'Heladería', 'Oceano': 'Océano', 'Floresta': 'Bosque', 'Terroso': 'Terroso', 'Retrô 70': 'Retro 70', 'Noite urbana': 'Noche urbana', 'Brasil': 'Brasil', 'Neon': 'Neón' }
+	}[LANG];
+	if (NAMES) {
+		var tr = function (o) { if (NAMES[o.name]) o.name = NAMES[o.name]; };
+		Object.keys(projects).forEach(function (k) {
+			projects[k].layers.forEach(tr);
+			if (projects[k].palette && NAMES[projects[k].palette.preset]) projects[k].palette.preset = NAMES[projects[k].palette.preset];
+		});
+		Object.keys(folders).forEach(function (k) { folders[k].forEach(tr); });
+	}
+
+	// o texto do layer TÍTULO na composição de mentira
+	var TITLE = { pt: ['ABER', 'TURA'], en: ['OPEN', 'ING'], es: ['APER', 'TURA'] }[LANG];
+
 	var folderNames = Object.keys(folders);
 
 	var prefs = { showColorLabels: true, showColorInfo: true, labelType: '#HEX', defaultPreset: 'el-palletero', presetFolder: folderNames[0] };
@@ -1866,12 +1894,14 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 			g.beginPath(); g.rect(-10, h * 0.69, w * 0.68, h * 0.15); g.fill(); g.stroke();
 			g.fillStyle = by.circle.color; g.beginPath(); g.arc(w * 0.76, h * 0.38, h * 0.27, 0, 7); g.fill();
 			g.fillStyle = by.title.color; g.font = '800 ' + Math.round(h * 0.19) + 'px sans-serif';
-			g.fillText('ABER', w * 0.07, h * 0.43); g.fillText('TURA', w * 0.07, h * 0.62);
+			g.fillText(TITLE[0], w * 0.07, h * 0.43); g.fillText(TITLE[1], w * 0.07, h * 0.62);
 		}
 		return cv.toDataURL('image/png');
 	}
 
 	var AE = root.MockAE = {
+		lang: LANG,
+		title: TITLE,
 		get project() { return current; },
 		projects: Object.keys(projects),
 		layers: function () { return proj().layers; },
@@ -2197,8 +2227,10 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 	var I18N = root.PalI18n;
 	function T(k, v) { return I18N.t(k, v); }
 	function Tn(k, n, v) { return I18N.n(k, n, v); }
-	var VERSION = 'v1.5.4';
-	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
+	var VERSION = 'v1.5.5';
+	// documentação no idioma do painel (idioma sem README próprio: inglês)
+	var REPO = 'https://github.com/jmbillard/EL-PALETTERO';
+	function docsURL(lang) { return lang === 'pt' ? REPO + '#readme' : REPO + '/blob/main/README.' + (lang === 'es' ? 'es' : 'en') + '.md'; }
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
 	// Windows × Mac: no Mac o "Ctrl" do painel é ⌘ (Ctrl+clique lá é clique direito) e as teclas
@@ -3117,7 +3149,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 			else if (act === 'folder') chooseFolder(e);
 			else if (act === 'toggle-info') setPref('info', !S.prefs.info);
 			else if (act === 'toggle-names') setPref('names', !S.prefs.names);
-			else if (act === 'help') Host.openURL(DOCS);
+			else if (act === 'help') Host.openURL(docsURL(I18N.lang()));
 		});
 
 		// ------------------------------------------------------------------ ajustes
@@ -4853,7 +4885,15 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 	var list = document.getElementById('layers');
 	var sel = document.getElementById('proj');
 	var ws = document.querySelector('.ws');
-	var hintTxt = 'Ctrl ou Shift para selecionar vários.';
+	// textos da área de trabalho no idioma do mockup (os GIFs em inglês/espanhol mostram esta parte)
+	var WS_TXT = {
+		pt: { proj: 'projeto', strip: 'Faixa', column: 'Coluna', grid: 'Grade', hint: ['Ctrl ou Shift para selecionar vários.', '⌘ ou ⇧ para selecionar vários.'] },
+		en: { proj: 'project', strip: 'Strip', column: 'Column', grid: 'Grid', hint: ['Ctrl or Shift to select several.', '⌘ or ⇧ to select several.'] },
+		es: { proj: 'proyecto', strip: 'Franja', column: 'Columna', grid: 'Cuadrícula', hint: ['Ctrl o Shift para seleccionar varios.', '⌘ o ⇧ para seleccionar varios.'] }
+	}[AE.lang] || null;
+	var hintTxt = WS_TXT.hint[0];
+	document.querySelector('label.proj').firstChild.textContent = WS_TXT.proj + ' ';
+	['strip', 'column', 'grid'].forEach(function (k) { var b = document.querySelector('.layouts button[data-layout="' + k + '"]'); b.lastChild.textContent = WS_TXT[k]; });
 	var KIND = { text: 'T', shape: '★', solid: '■', image: '▣', video: '▶' };
 	var thumbs = {};
 
@@ -4869,7 +4909,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 		}).join('') + '<p class="hint">' + hintTxt + '</p>';
 
 		if (!comp.children.length) {
-			comp.innerHTML = '<div class="lyr l-bg" data-id="bg"></div><div class="lyr l-bar" data-id="bar"></div><div class="lyr l-circle" data-id="circle"></div><div class="lyr l-title" data-id="title">ABER<br>TURA</div>';
+			comp.innerHTML = '<div class="lyr l-bg" data-id="bg"></div><div class="lyr l-bar" data-id="bar"></div><div class="lyr l-circle" data-id="circle"></div><div class="lyr l-title" data-id="title">' + AE.title[0] + '<br>' + AE.title[1] + '</div>';
 		}
 		layers.forEach(function (l) {
 			var n = comp.querySelector('[data-id="' + l.id + '"]');
@@ -4907,7 +4947,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 		document.querySelectorAll('.tile kbd').forEach(function (k) { if (map[k.textContent]) k.textContent = map[k.textContent]; });
 		document.querySelectorAll('.tile p').forEach(function (p) { p.innerHTML = p.innerHTML.replace(/Ctrl\+Z/g, '⌘Z').replace(/\bShift\b/g, '⇧'); });
 	}
-	hintTxt = window.PalApp.isMac ? '⌘ ou ⇧ para selecionar vários.' : 'Ctrl ou Shift para selecionar vários.';
+	hintTxt = window.PalApp.isMac ? WS_TXT.hint[1] : WS_TXT.hint[0];
 
 	var pal = document.getElementById('pal');
 	draw();

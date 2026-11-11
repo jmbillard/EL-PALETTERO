@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ExtensionManifest Version="7.0" ExtensionBundleId="com.jmbillard.elpalletero" ExtensionBundleVersion="1.5.4" ExtensionBundleName="El PALLETERO"
+<ExtensionManifest Version="7.0" ExtensionBundleId="com.jmbillard.elpalletero" ExtensionBundleVersion="1.5.5" ExtensionBundleName="El PALLETERO"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<ExtensionList>
-		<Extension Id="com.jmbillard.elpalletero.panel" Version="1.5.4" />
+		<Extension Id="com.jmbillard.elpalletero.panel" Version="1.5.5" />
 	</ExtensionList>
 	<ExecutionEnvironment>
 		<HostList>

@@ -11,8 +11,10 @@
 	var I18N = root.PalI18n;
 	function T(k, v) { return I18N.t(k, v); }
 	function Tn(k, n, v) { return I18N.n(k, n, v); }
-	var VERSION = 'v1.5.4';
-	var DOCS = 'https://github.com/jmbillard/O-PALETTERO#readme';
+	var VERSION = 'v1.5.5';
+	// documentação no idioma do painel (idioma sem README próprio: inglês)
+	var REPO = 'https://github.com/jmbillard/EL-PALETTERO';
+	function docsURL(lang) { return lang === 'pt' ? REPO + '#readme' : REPO + '/blob/main/README.' + (lang === 'es' ? 'es' : 'en') + '.md'; }
 	var EASE = 'cubic-bezier(.2,.8,.2,1)';
 
 	// Windows × Mac: no Mac o "Ctrl" do painel é ⌘ (Ctrl+clique lá é clique direito) e as teclas
@@ -931,7 +933,7 @@
 			else if (act === 'folder') chooseFolder(e);
 			else if (act === 'toggle-info') setPref('info', !S.prefs.info);
 			else if (act === 'toggle-names') setPref('names', !S.prefs.names);
-			else if (act === 'help') Host.openURL(DOCS);
+			else if (act === 'help') Host.openURL(docsURL(I18N.lang()));
 		});
 
 		// ------------------------------------------------------------------ ajustes
