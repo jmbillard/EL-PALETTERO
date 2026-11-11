@@ -53,7 +53,7 @@
 			var req = root.cep_node ? root.cep_node.require : root.require;
 			if (cep && req) {
 				var cp = req('child_process');
-				// saída em UTF-8: o PowerShell usa a página de código do console (acentos viravam �), e o
+				// saída em UTF-8: o PowerShell usa a página de código do console (acentos viravam lixo), e o
 				// pbpaste aberto pelo After pode vir sem LANG
 				var cmd = IS_MAC ? 'pbpaste' : 'powershell -NoProfile -NonInteractive -Command "[Console]::OutputEncoding=[Text.Encoding]::UTF8; Get-Clipboard -Raw"';
 				var env = {}, k, proc = req('process');
