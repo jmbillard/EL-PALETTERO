@@ -308,7 +308,7 @@ o **⋯** (doca da direita) abre os ajustes no lugar das cores.
 - **HEX · RGB · HSB** → formato dos valores nas amostras e do que é copiado.
 - 👁 **valores sempre visíveis** → mostra os valores sem precisar passar o mouse (quando cabem).
 - 🏷 **mostrar nomes** → mostra o nome da cor nas amostras.
-- ⇅ **ordenar por matiz** → matiz → luminosidade → saturação, cinzas no fim.
+- ⇅ **ordenar por matiz** → segue o círculo de cores a partir dos vermelhos. cores de matiz parecido (até 18° de diferença) ficam juntas, do escuro ao claro. brancos, cinzas e pretos, inclusive os levemente tingidos, vão para o fim, também do escuro ao claro.
 - ⤓ **importar cores** · ⤒ **exportar .ase** → veja [colar, importar e exportar](#-colar-importar-e-exportar).
 - 🗑 **segure para limpar** → segure o botão até a barra encher para esvaziar a paleta (tem desfazer).
 - ⌨ **atalhos** → uma folha com todos os cliques e teclas (também com `?` no painel). `Esc` fecha.
