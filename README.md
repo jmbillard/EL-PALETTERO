@@ -1,4 +1,4 @@
-# <img src="docs/img/logo.svg" alt="" height="44"> El PALLETERO · v1.2 beta
+# <img src="docs/img/logo.svg" alt="" height="44"> El PALLETERO
 
 🗨️ **pt-BR** ⚡ a paleta de cores do projeto, como painel do After Effects ⚡
 
