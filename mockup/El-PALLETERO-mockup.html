@@ -363,6 +363,8 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 .empty-hint kbd { font: 600 9px/1 var(--mono); padding: 2px 4px; border-radius: 4px; background: var(--raise-2); color: var(--fg); }
 .pal[data-orient='row'] .empty-hint { flex-basis: auto; }
 .pal[data-thin='1'] .empty .lbl, .pal[data-thin='1'] .empty-hint { display: none; }
+.pal[data-cramped='1'] .empty-hint { display: none; }
+.empty { overflow: hidden; }
 
 /* ------------------------------------------------------------ atalhos */
 .keys { padding: 10px 12px; display: flex; }
@@ -380,6 +382,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 .k-keys i { font-style: normal; color: var(--mute); font-size: 10px; padding: 0 1px; }
 .k-keys kbd { font: 600 9.5px/1 var(--mono); padding: 3px 5px; border-radius: 4px; background: var(--raise-2); color: var(--fg); white-space: nowrap; }
 .k-what { color: var(--mute); }
+.pal[data-slim='1'] .k-row { grid-template-columns: minmax(0, 1fr); gap: 2px; padding: 3px 0; }
 .pal button:hover .i-arrow { animation: pal-nudge .5s var(--spring); }
 @keyframes pal-nudge { 50% { transform: translateY(1.5px); } }
 .pal button:hover .i-arrow.i-up { animation-name: pal-nudge-up; }
@@ -448,6 +451,8 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 .row-btn[aria-pressed='true'] { color: var(--fg); }
 .row-btn[aria-pressed='true'] .ic { color: var(--accent); }
 .pal[data-orient='row'] .settings .row-btn .lbl { display: none; }
+.settings .row-btn { max-width: 100%; }
+.settings .row-btn .lbl { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .pal[data-orient='row'] .settings .row-btn { width: 28px; padding: 0; justify-content: center; }
 .row-btn.danger:hover { color: var(--danger); }
 /* segurar para limpar */
@@ -468,7 +473,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 }
 .pal[data-shape='tall'] .editor {
 	grid-template-columns: minmax(0, 1fr);
-	grid-template-rows: 46px minmax(60px, 1fr) 12px auto;
+	grid-template-rows: minmax(26px, 46px) minmax(36px, 1fr) 12px auto; /* em painéis baixos a prévia e o quadrado encolhem antes de os botões saírem */
 	grid-template-areas: 'p' 'sv' 'h' 'c';
 }
 .ed-flood { position: absolute; inset: 0; background: var(--from); pointer-events: none; z-index: 3; }
@@ -530,6 +535,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 
 .ed-ctrl { grid-area: c; display: flex; flex-direction: column; justify-content: space-between; gap: 6px; min-width: 0; }
 .pal[data-shape='tall'] .ed-ctrl { flex-direction: row; align-items: center; }
+.pal[data-shape='tall'][data-slim='1'] .ed-ctrl { flex-direction: column; align-items: stretch; }
 .ed-field { display: flex; align-items: center; height: 26px; border-radius: 7px; background: var(--bg); overflow: hidden; box-shadow: inset 0 0 0 1px var(--line); transition: box-shadow .2s; }
 .ed-field:focus-within { box-shadow: inset 0 0 0 1.5px var(--accent); }
 .ed-field.bad { animation: pal-shake .35s; box-shadow: inset 0 0 0 1.5px var(--danger); }
@@ -556,15 +562,16 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
    roda (ou quadrado, se apertado) · brilho · cores geradas · regras e ações */
 .harmony {
 	display: grid; gap: 8px; padding: 8px;
-	grid-template-columns: minmax(90px, 1.4fr) 12px minmax(48px, 1fr) auto;
+	grid-template-columns: minmax(70px, 1.2fr) 12px minmax(60px, 1fr) minmax(170px, 1.4fr);
 	grid-template-rows: minmax(0, 1fr);
 	grid-template-areas: 'w b g c';
 }
 .pal[data-shape='tall'] .harmony {
 	grid-template-columns: minmax(0, 1fr);
-	grid-template-rows: minmax(28px, 46px) minmax(70px, 1fr) 12px auto;
+	grid-template-rows: minmax(20px, 56px) minmax(30px, 1fr) 12px auto;
 	grid-template-areas: 'g' 'w' 'b' 'c';
 }
+.harmony { overflow: hidden; }
 .harmony > :not(.ed-flood) { animation: pal-rise .4s var(--ease) backwards; }
 .harmony > .hm-bri { animation-delay: .05s; } .harmony > .hm-gen { animation-delay: .1s; } .harmony > .hm-ctrl { animation-delay: .15s; }
 
@@ -601,10 +608,8 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 .hm-bri:focus-visible, .hm-range:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
 /* cores geradas: uma fila por cor da regra, com os degraus lado a lado (de pé, colunas) */
-.hm-gen { grid-area: g; display: flex; flex-direction: column; gap: 3px; min-width: 0; min-height: 0; }
-.hm-col { flex: 1; display: flex; gap: 3px; min-width: 0; min-height: 0; animation: pal-rise .4s var(--spring) backwards; animation-delay: calc(var(--i) * 45ms); }
-.pal[data-shape='tall'] .hm-gen { flex-direction: row; }
-.pal[data-shape='tall'] .hm-col { flex-direction: column; }
+.hm-gen { grid-area: g; display: flex; gap: 3px; min-width: 0; min-height: 0; }
+.hm-col { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; min-height: 0; animation: pal-rise .4s var(--spring) backwards; animation-delay: calc(var(--i) * 45ms); }
 .hm-sw {
 	position: relative; flex: 1; min-width: 0; min-height: 6px; padding: 0; border: 0; border-radius: 5px;
 	display: grid; place-items: center;
@@ -619,8 +624,11 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 .hm-sw.base.off::after { display: none; }
 
 /* controles: regras, abertura, degraus e ações (empilhados; espalhados quando baixo ou de pé) */
-.hm-ctrl { grid-area: c; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'r r' 'o a'; align-content: center; align-items: center; gap: 6px 10px; min-width: 0; }
-.hm-rules { grid-area: r; display: grid; grid-template-columns: repeat(7, minmax(22px, 1fr)); gap: 2px; }
+/* controles: as regras numa linha; opções e ações embaixo, quebrando linha sozinhas quando não cabem lado a lado */
+.hm-ctrl { grid-area: c; display: flex; flex-wrap: wrap; align-items: center; align-content: center; gap: 6px 10px; min-width: 0; min-height: 0; max-width: 300px; justify-self: end; width: 100%; }
+.pal[data-shape='tall'] .hm-ctrl { max-width: none; }
+
+.hm-rules { flex: 1 0 100%; display: grid; grid-template-columns: repeat(7, minmax(18px, 1fr)); gap: 2px; }
 .hm-rule { padding: 0; height: 26px; border: 0; border-radius: 7px; background: transparent; color: var(--mute); display: grid; place-items: center; cursor: pointer; transition: background .15s, color .15s, transform .25s var(--spring); }
 .hm-rule:hover { background: var(--raise-2); color: var(--fg); }
 .hm-rule:active { transform: scale(.88); }
@@ -634,11 +642,11 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 .hm-rule[aria-pressed='true'] .hr-ring, .hm-rule[aria-pressed='true'] .hr-spoke { opacity: .75; }
 @keyframes pal-peek { 40% { transform: rotate(30deg); } }
 
-.hm-opts { grid-area: o; display: flex; align-items: center; gap: 10px; min-width: 0; }
+.hm-opts { flex: 1 1 auto; display: flex; align-items: center; gap: 10px; min-width: 0; }
 .hm-opts > * { animation: pal-rise .3s var(--ease) backwards; }
 .hm-opts > .gone { display: none; }
-.hm-open { flex: 1; max-width: 120px; display: flex; align-items: center; gap: 6px; height: 20px; color: var(--mute); }
-.harmony .ed-actions { grid-area: a; }
+.hm-open { flex: 1 1 56px; max-width: 120px; display: flex; align-items: center; gap: 6px; height: 20px; color: var(--mute); }
+.harmony .ed-actions { flex: none; margin-left: auto; }
 .hm-open .ic { width: 13px; height: 13px; }
 .hm-range { position: relative; flex: 1; min-width: 44px; height: 4px; border-radius: 2px; background: var(--raise-2); cursor: pointer; touch-action: none; }
 .hm-range::before { content: ''; position: absolute; left: 0; right: 0; top: -8px; bottom: -8px; } /* área de clique maior */
@@ -660,15 +668,11 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 }
 
 .pal[data-short='1'] .hm-rule { height: 22px; }
-.pal[data-short='1'] .harmony { gap: 6px; padding: 6px; }
-/* coluna estreita: regras em duas linhas, e cada grupo de controles na sua linha */
-.pal[data-shape='tall'][data-slim='1'] .hm-ctrl { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'r' 'o' 'a'; }
-.pal[data-shape='tall'][data-slim='1'] .hm-rules { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.pal[data-shape='tall'][data-slim='1'] .hm-open { max-width: none; }
-.pal[data-shape='tall'][data-slim='1'] .hm-opts { gap: 8px; min-width: 0; }
+.pal[data-short='1'] .harmony, .pal[data-low='1'] .harmony, .pal[data-low='1'] .editor { gap: 6px; padding: 6px; }
+.pal[data-low='1'] .hm-rule { height: 22px; }
+/* coluna estreita: degraus e abertura mais compactos */
 .pal[data-shape='tall'][data-slim='1'] .hm-steps button { min-width: 0; width: 20px; }
 .pal[data-shape='tall'][data-slim='1'] .hm-range { min-width: 24px; }
-.pal[data-shape='tall'][data-slim='1'] .harmony .ed-actions { justify-content: space-between; }
 
 /* registro de eventos (diagnóstico) */
 .dbg { position: absolute; right: 4px; top: 4px; z-index: 60; margin: 0; max-width: 62%; max-height: calc(100% - 8px); overflow: hidden; padding: 6px 8px; border-radius: 6px; background: rgba(0, 0, 0, .82); color: #9EF0C0; font: 9.5px/1.35 var(--mono); white-space: pre; pointer-events: none; }
@@ -772,7 +776,7 @@ button:focus-visible, select:focus-visible, .layer:focus-visible { outline: 2px 
 .pcard:hover .pc-bars { gap: 2px; }
 .pcard:hover .pc-bars i:hover { flex-grow: 2.4; }
 .pc-row { display: flex; align-items: center; gap: 6px; min-width: 0; flex: none; }
-.pc-row .pc-name { flex: 0 1 auto; min-width: 0; }
+.pc-row .pc-name { flex: 0 1 auto; min-width: 0; display: block; } /* bloco: reticências não funcionam em flex */
 /* alça de arrastar: a área vazia à direita do nome; os pontinhos aparecem no hover */
 .pc-grip {
 	flex: 1 1 auto; align-self: stretch; min-width: 24px;
@@ -2227,7 +2231,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 	var I18N = root.PalI18n;
 	function T(k, v) { return I18N.t(k, v); }
 	function Tn(k, n, v) { return I18N.n(k, n, v); }
-	var VERSION = 'v1.5.5';
+	var VERSION = 'v1.5.6';
 	// documentação no idioma do painel (idioma sem README próprio: inglês)
 	var REPO = 'https://github.com/jmbillard/EL-PALETTERO';
 	function docsURL(lang) { return lang === 'pt' ? REPO + '#readme' : REPO + '/blob/main/README.' + (lang === 'es' ? 'es' : 'en') + '.md'; }
@@ -2477,6 +2481,8 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 			el.dataset.thin = h < 70 ? '1' : '0';
 			el.dataset.narrow = w < 160 ? '1' : '0';
 			el.dataset.slim = w < 240 ? '1' : '0';
+			el.dataset.low = h < 240 ? '1' : '0'; // baixo: folhas com menos respiro
+			el.dataset.cramped = h < 110 && w < 760 ? '1' : '0'; // faixa baixa e curta: sem a dica de colar no estado vazio
 			el.dataset.short = h < 110 ? '1' : '0';
 			el.dataset.shape = (h < 220 && w > h) ? 'wide' : 'tall';
 			roomy();
@@ -2496,6 +2502,8 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 			el.dataset.tight = o === 'row' && strip.clientHeight < (S.prefs.names ? 60 : 46) ? '1' : '0';
 		}
 
+		// o painel nunca rola por inteiro: se o foco numa parte cortada o empurrar, volta para o lugar
+		el.addEventListener('scroll', function () { if (el.scrollTop || el.scrollLeft) { el.scrollTop = 0; el.scrollLeft = 0; } });
 		if (root.ResizeObserver) new ResizeObserver(measure).observe(el);
 		else root.addEventListener('resize', measure);
 
@@ -2739,7 +2747,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 			if (t.dataset.tip) {
 				// em layouts largos os rótulos estão escondidos: a dica assume o papel
 				var lbl = t.querySelector('.lbl');
-				if (lbl && lbl.offsetParent !== null) return '';
+				if (lbl && lbl.offsetParent !== null && lbl.scrollWidth <= lbl.clientWidth + 1) return ''; // visível e inteiro
 				return '<b>' + esc(t.dataset.tip) + '</b>' + (t.dataset.kbd ? ' <kbd>' + t.dataset.kbd + '</kbd>' : '');
 			}
 			return '';
@@ -2882,11 +2890,15 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 
 		function removeSwatch(sw) {
 			if (!sw || !find(sw.id)) return;
+			// excluir pelo teclado: o foco passa para a vizinha (senão se perde junto com a amostra)
+			var gone = nodes[sw.id], idx = S.swatches.indexOf(sw), hadFocus = gone && gone === document.activeElement;
+			var next = hadFocus ? (S.swatches[idx + 1] || S.swatches[idx - 1]) : null;
 			pushUndo();
 			S.swatches = S.swatches.filter(function (s) { return s !== sw; });
 			render();
 			save();
 			toast(T('toast.removed', { name: sw.label || sw.color }), { color: sw.color, undo: true });
+			if (hadFocus) (next && nodes[next.id] ? nodes[next.id] : el).focus({ preventScroll: true });
 		}
 
 		function copyText(text) {
@@ -3746,11 +3758,14 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 			else if (e.key === 'Delete') deletePreset(p, card);
 		});
 		// rolar com a roda do mouse na faixa horizontal
-		libList.addEventListener('wheel', function (e) {
-			if (el.dataset.orient !== 'row' || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-			libList.scrollLeft += e.deltaY;
-			e.preventDefault();
-		}, { passive: false });
+		[libList, settings].forEach(function (box) {
+			box.addEventListener('wheel', function (e) {
+				if (el.dataset.orient !== 'row' || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+				if (box.scrollWidth <= box.clientWidth) return;
+				box.scrollLeft += e.deltaY;
+				e.preventDefault();
+			}, { passive: false });
+		});
 
 		// ------------------------------------------------------------------ extrair cores de uma imagem
 		var XS = null;
@@ -4348,6 +4363,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 			var w = hmMap.clientWidth, h = hmMap.clientHeight, d = Math.min(w, h), wheel = d >= 116;
 			var g = wheel ? { x: (w - d) / 2, y: (h - d) / 2, w: d, h: d } : { x: 0, y: 0, w: w, h: h };
 			g.wheel = wheel;
+			g.mw = w; g.mh = h;
 			hmMap.dataset.geo = wheel ? 'wheel' : 'rect';
 			hmDisk.style.left = g.x + 'px';
 			hmDisk.style.top = g.y + 'px';
@@ -4406,6 +4422,7 @@ window.PAL_CSV = {"i18n/strings.csv":"# El PALLETERO · textos da interface. Uma
 
 		function updateHarmony() {
 			if (!H) return;
+			if (!H.geo || H.geo.mw !== hmMap.clientWidth || H.geo.mh !== hmMap.clientHeight) layoutHarmony();
 			var r = HM.rule(H.rule), cols = HM.grid(H), pts = HM.points(H), base = baseHex();
 			hm.style.setProperty('--new', base);
 			hm.style.setProperty('--new-ink', C.ink(base));

@@ -11,7 +11,7 @@
 	var I18N = root.PalI18n;
 	function T(k, v) { return I18N.t(k, v); }
 	function Tn(k, n, v) { return I18N.n(k, n, v); }
-	var VERSION = 'v1.5.5';
+	var VERSION = 'v1.5.6';
 	// documentação no idioma do painel (idioma sem README próprio: inglês)
 	var REPO = 'https://github.com/jmbillard/EL-PALETTERO';
 	function docsURL(lang) { return lang === 'pt' ? REPO + '#readme' : REPO + '/blob/main/README.' + (lang === 'es' ? 'es' : 'en') + '.md'; }
@@ -261,6 +261,8 @@
 			el.dataset.thin = h < 70 ? '1' : '0';
 			el.dataset.narrow = w < 160 ? '1' : '0';
 			el.dataset.slim = w < 240 ? '1' : '0';
+			el.dataset.low = h < 240 ? '1' : '0'; // baixo: folhas com menos respiro
+			el.dataset.cramped = h < 110 && w < 760 ? '1' : '0'; // faixa baixa e curta: sem a dica de colar no estado vazio
 			el.dataset.short = h < 110 ? '1' : '0';
 			el.dataset.shape = (h < 220 && w > h) ? 'wide' : 'tall';
 			roomy();
@@ -280,6 +282,8 @@
 			el.dataset.tight = o === 'row' && strip.clientHeight < (S.prefs.names ? 60 : 46) ? '1' : '0';
 		}
 
+		// o painel nunca rola por inteiro: se o foco numa parte cortada o empurrar, volta para o lugar
+		el.addEventListener('scroll', function () { if (el.scrollTop || el.scrollLeft) { el.scrollTop = 0; el.scrollLeft = 0; } });
 		if (root.ResizeObserver) new ResizeObserver(measure).observe(el);
 		else root.addEventListener('resize', measure);
 
@@ -523,7 +527,7 @@
 			if (t.dataset.tip) {
 				// em layouts largos os rótulos estão escondidos: a dica assume o papel
 				var lbl = t.querySelector('.lbl');
-				if (lbl && lbl.offsetParent !== null) return '';
+				if (lbl && lbl.offsetParent !== null && lbl.scrollWidth <= lbl.clientWidth + 1) return ''; // visível e inteiro
 				return '<b>' + esc(t.dataset.tip) + '</b>' + (t.dataset.kbd ? ' <kbd>' + t.dataset.kbd + '</kbd>' : '');
 			}
 			return '';
@@ -666,11 +670,15 @@
 
 		function removeSwatch(sw) {
 			if (!sw || !find(sw.id)) return;
+			// excluir pelo teclado: o foco passa para a vizinha (senão se perde junto com a amostra)
+			var gone = nodes[sw.id], idx = S.swatches.indexOf(sw), hadFocus = gone && gone === document.activeElement;
+			var next = hadFocus ? (S.swatches[idx + 1] || S.swatches[idx - 1]) : null;
 			pushUndo();
 			S.swatches = S.swatches.filter(function (s) { return s !== sw; });
 			render();
 			save();
 			toast(T('toast.removed', { name: sw.label || sw.color }), { color: sw.color, undo: true });
+			if (hadFocus) (next && nodes[next.id] ? nodes[next.id] : el).focus({ preventScroll: true });
 		}
 
 		function copyText(text) {
@@ -1530,11 +1538,14 @@
 			else if (e.key === 'Delete') deletePreset(p, card);
 		});
 		// rolar com a roda do mouse na faixa horizontal
-		libList.addEventListener('wheel', function (e) {
-			if (el.dataset.orient !== 'row' || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-			libList.scrollLeft += e.deltaY;
-			e.preventDefault();
-		}, { passive: false });
+		[libList, settings].forEach(function (box) {
+			box.addEventListener('wheel', function (e) {
+				if (el.dataset.orient !== 'row' || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+				if (box.scrollWidth <= box.clientWidth) return;
+				box.scrollLeft += e.deltaY;
+				e.preventDefault();
+			}, { passive: false });
+		});
 
 		// ------------------------------------------------------------------ extrair cores de uma imagem
 		var XS = null;
@@ -2132,6 +2143,7 @@
 			var w = hmMap.clientWidth, h = hmMap.clientHeight, d = Math.min(w, h), wheel = d >= 116;
 			var g = wheel ? { x: (w - d) / 2, y: (h - d) / 2, w: d, h: d } : { x: 0, y: 0, w: w, h: h };
 			g.wheel = wheel;
+			g.mw = w; g.mh = h;
 			hmMap.dataset.geo = wheel ? 'wheel' : 'rect';
 			hmDisk.style.left = g.x + 'px';
 			hmDisk.style.top = g.y + 'px';
@@ -2190,6 +2202,7 @@
 
 		function updateHarmony() {
 			if (!H) return;
+			if (!H.geo || H.geo.mw !== hmMap.clientWidth || H.geo.mh !== hmMap.clientHeight) layoutHarmony();
 			var r = HM.rule(H.rule), cols = HM.grid(H), pts = HM.points(H), base = baseHex();
 			hm.style.setProperty('--new', base);
 			hm.style.setProperty('--new-ink', C.ink(base));
