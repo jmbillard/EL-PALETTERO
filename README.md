@@ -1,4 +1,4 @@
-# <img src="docs/img/logo.svg" alt="" height="44"> El PALLETERO · v1.5
+# <img src="docs/img/logo.svg" alt="" height="44"> El PALLETERO
 
 🗨️ **português** · [English](README.en.md) · [español](README.es.md)
 
