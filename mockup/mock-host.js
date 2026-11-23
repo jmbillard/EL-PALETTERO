@@ -61,6 +61,34 @@
 	folders[OFFLINE] = [
 		{ id: 'promo', name: 'Promo 2026', swatches: sw(['#FF1493', '#7F00FF', '#00B7EB', '#FFE01B', '#111111']) }
 	];
+	// idioma do mockup (?lang=en na URL, a escolha nos ajustes ou o do navegador): nomes de layers e
+	// presets da cena de mentira acompanham, para os GIFs da documentação em inglês e espanhol
+	var LANG = (function () {
+		var m = /[?&]lang=([a-z]{2})/i.exec(root.location.search), l = '';
+		try { l = localStorage.getItem('mock.lang') || ''; } catch (e) {}
+		l = (l || (m && m[1]) || root.navigator.language || 'pt').slice(0, 2).toLowerCase();
+		return l === 'en' || l === 'es' ? l : 'pt';
+	})();
+	var NAMES = {
+		en: { 'TÍTULO': 'TITLE', 'círculo': 'circle', 'faixa': 'bar', 'praia_entardecer.jpg': 'beach_sunset.jpg', 'floresta_drone.mp4': 'forest_drone.mp4', 'fundo': 'background',
+			'Abertura': 'Opening', 'Verão': 'Summer', 'Jornal da noite': 'Evening news', 'Esporte': 'Sports', 'Monocromático': 'Monochrome', 'Pôr do sol': 'Sunset',
+			'Sorveteria': 'Ice cream parlor', 'Oceano': 'Ocean', 'Floresta': 'Forest', 'Terroso': 'Earthy', 'Retrô 70': 'Retro 70s', 'Noite urbana': 'City night', 'Brasil': 'Brazil' },
+		es: { 'TÍTULO': 'TÍTULO', 'círculo': 'círculo', 'faixa': 'franja', 'praia_entardecer.jpg': 'playa_atardecer.jpg', 'floresta_drone.mp4': 'bosque_dron.mp4', 'fundo': 'fondo',
+			'Abertura': 'Apertura', 'Verão': 'Verano', 'Jornal da noite': 'Noticiero nocturno', 'Esporte': 'Deportes', 'Monocromático': 'Monocromático', 'Pôr do sol': 'Atardecer',
+			'Sorveteria': 'Heladería', 'Oceano': 'Océano', 'Floresta': 'Bosque', 'Terroso': 'Terroso', 'Retrô 70': 'Retro 70', 'Noite urbana': 'Noche urbana', 'Brasil': 'Brasil', 'Neon': 'Neón' }
+	}[LANG];
+	if (NAMES) {
+		var tr = function (o) { if (NAMES[o.name]) o.name = NAMES[o.name]; };
+		Object.keys(projects).forEach(function (k) {
+			projects[k].layers.forEach(tr);
+			if (projects[k].palette && NAMES[projects[k].palette.preset]) projects[k].palette.preset = NAMES[projects[k].palette.preset];
+		});
+		Object.keys(folders).forEach(function (k) { folders[k].forEach(tr); });
+	}
+
+	// o texto do layer TÍTULO na composição de mentira
+	var TITLE = { pt: ['ABER', 'TURA'], en: ['OPEN', 'ING'], es: ['APER', 'TURA'] }[LANG];
+
 	var folderNames = Object.keys(folders);
 
 	var prefs = { showColorLabels: true, showColorInfo: true, labelType: '#HEX', defaultPreset: 'el-palletero', presetFolder: folderNames[0] };
@@ -113,12 +141,14 @@
 			g.beginPath(); g.rect(-10, h * 0.69, w * 0.68, h * 0.15); g.fill(); g.stroke();
 			g.fillStyle = by.circle.color; g.beginPath(); g.arc(w * 0.76, h * 0.38, h * 0.27, 0, 7); g.fill();
 			g.fillStyle = by.title.color; g.font = '800 ' + Math.round(h * 0.19) + 'px sans-serif';
-			g.fillText('ABER', w * 0.07, h * 0.43); g.fillText('TURA', w * 0.07, h * 0.62);
+			g.fillText(TITLE[0], w * 0.07, h * 0.43); g.fillText(TITLE[1], w * 0.07, h * 0.62);
 		}
 		return cv.toDataURL('image/png');
 	}
 
 	var AE = root.MockAE = {
+		lang: LANG,
+		title: TITLE,
 		get project() { return current; },
 		projects: Object.keys(projects),
 		layers: function () { return proj().layers; },

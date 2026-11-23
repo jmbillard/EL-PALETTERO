@@ -4,7 +4,9 @@
 const { chromium } = require('playwright');
 const fs = require('fs'), os = require('os'), path = require('path'), { execFileSync } = require('child_process');
 const ROOT = path.join(__dirname, '..', '..');
-const OUT = path.join(ROOT, 'docs', 'gifs');
+// --lang en|es grava em docs/gifs/<idioma>/ com o painel e a cena nesse idioma (padrão: pt, em docs/gifs/)
+const LANG = ((process.argv.find(a => /^--lang=/.test(a)) || '--lang=pt').split('=')[1]);
+const OUT = LANG === 'pt' ? path.join(ROOT, 'docs', 'gifs') : path.join(ROOT, 'docs', 'gifs', LANG);
 const D = fs.mkdtempSync(path.join(os.tmpdir(), 'elpalletero-gifs-'));
 fs.mkdirSync(OUT, { recursive: true });
 const src = fs.readFileSync(path.join(ROOT, 'mockup', 'El-PALLETERO-mockup.html'), 'utf8');
@@ -43,7 +45,7 @@ async function scene(name, opts, fn) {
   const ctx = await b.newContext({ viewport: { width: 1140, height: 820 }, deviceScaleFactor: dsf });
   const p = await ctx.newPage();
   await p.addInitScript(OVERLAY);
-  await p.goto('file://' + D + '/page.html');
+  await p.goto('file://' + D + '/page.html?lang=' + LANG);
   await p.addStyleTag({ content: 'body{padding-top:20px!important}.hero{display:none!important}' });
   await p.waitForTimeout(1400);
   await p.evaluate(() => { MockAE.selected = {}; MockAE.select('__none__'); delete MockAE.selected.__none__; MockAE.select('__none__', true); delete MockAE.selected.__none__; });
@@ -136,7 +138,7 @@ const clipEl = (sel, pad = 0, extra = {}) => async p => {
 const WS = clipEl('.ws', 0);
 const DOCK = clipEl('.dockslot', 0);
 
-module.exports = { scene, WS, DOCK, clipEl };
+module.exports = { LANG, scene, WS, DOCK, clipEl };
 
 // limpa os quadros temporários ao terminar
 process.on('exit', () => { try { fs.rmSync(D, { recursive: true, force: true }); } catch (e) {} });

@@ -1,6 +1,6 @@
 # 📚 presets e pastas de rede
 
-[← El PALLETERO](../README.md)
+[← El PALLETERO](../README.md) · 🗨️ **português** · [English](presets.en.md) · [español](presets.es.md)
 
 a **paleta do projeto** e os **presets** são coisas separadas:
 
@@ -25,7 +25,7 @@ o painel sempre mostra a paleta do projeto. os presets são uma biblioteca para 
 >
 > <img src="gifs/presets.gif" alt="biblioteca de presets" width="420">
 
-- **primeiro cartão** (borda colorida) → a paleta deste projeto, com o nome do `.aep`. passe o mouse para ver o que o clique faz:
+- **primeiro cartão** (borda colorida) → a paleta deste projeto, com o nome do `.aep` (ou *sem título*). passe o mouse para ver o que o clique faz:
   - **não salva** (não veio de um preset, ou mudou desde que veio) → um fio separa o cartão dos presets. `◖ clique` salva como um preset novo e já abre o nome para edição (`Enter` confirma, `Esc` mantém o nome sugerido).
   - **mudou desde o preset de origem** → `Shift` + `◖ clique` **atualiza** aquele preset com a paleta do projeto (tem desfazer). o pontinho do preset de origem fica vazado.
   - **salva** (igual ao preset de origem) → o hover só confirma onde ela está.
@@ -42,6 +42,7 @@ o painel sempre mostra a paleta do projeto. os presets são uma biblioteca para 
 - o pontinho colorido no canto do cartão marca o preset de onde a paleta do projeto veio.
 
 > 🚩 *obs:*\
+> • os presets de exemplo vêm no idioma do After Effects na primeira vez. exemplos que você apagou não voltam em versões novas.\
 > • tudo tem **desfazer**: o aviso que aparece embaixo tem o botão, e `Ctrl+Z` / `⌘Z` também funciona (inclusive para trazer de volta um preset excluído).\
 > • na faixa (painel baixo) a biblioteca rola na horizontal, com a roda do mouse.
 
@@ -80,7 +81,7 @@ a mesma pasta de rede tem caminhos diferentes em cada sistema, e até no mesmo M
    - no **Mac**, o volume é traduzido lendo o `mount` (`/Volumes/VFX-1/paletas` → `//servidor/VFX/paletas`).
 2. ao **abrir**, a forma neutra vira o caminho que existe agora:
    - no **Windows** → a letra de unidade, se houver uma mapeada para o share; senão, o caminho UNC.
-   - no **Mac** → o volume montado com aquele servidor e share. vale também para subpastas montadas como volume, nomes com espaço e o servidor com nome curto (`vfx-ml-sp`) ou completo (`vfx-ml-sp.servicos…`).
+   - no **Mac** → o volume montado com aquele servidor e share. vale também para subpastas montadas como volume, nomes com espaço e o servidor com nome curto (`vfx-ml-sp`) ou completo (`vfx-ml-sp.servicos…`). servidores por IP (`10.0.0.5`) precisam bater por inteiro.
 3. se o share foi montado de novo como `VFX-1` … `VFX-5`, o painel acha a variante certa.
 
 > 🚩 *obs:*\
@@ -114,10 +115,12 @@ a paleta do projeto fica no `.aep`, num grupo de metadados XMP próprio:
 | | |
 | --- | --- |
 | namespace | `https://github.com/jmbillard/El-PALLETERO/ns/1.0/` |
-| `palette` | a lista de cores (`color`, `label`, `auto`) |
+| `palette` | a lista de cores, num texto JSON (`color`, `label`, `auto`) |
 | `preset` | o nome do preset de onde a paleta veio (se houver) |
 | `version` · `updated` | versão do formato e data do último salvamento |
 
 > 🚩 *obs:*\
 > • projetos com paleta do antigo script O PALETTERO (`xmp:Label`) ou da extensão com o nome antigo (namespace `…/O-PALETTERO/ns/1.0/`) são lidos normalmente e migram para o grupo novo no primeiro salvamento.\
-> • nomes automáticos ficam marcados com `auto: true`: por isso continuam acompanhando a cor quando você a edita.
+> • nomes automáticos ficam marcados com `auto: true`: por isso continuam acompanhando a cor quando você a edita.\
+> • o painel **Metadata** do After Effects não mostra esse grupo (ele só lista os grupos que conhece), mas ele está no arquivo. o painel grava na hora no projeto aberto; o `.aep` em disco muda quando você salva o projeto.\
+> • a paleta é lida só como dados (JSON): um projeto recebido de outra pessoa não consegue rodar nada pelo painel.

@@ -1,8 +1,15 @@
 // Roteiro de cada GIF da documentação.
-// uso: node tools/gifs/record.js            → todos
-//      node tools/gifs/record.js editor     → só alguns
-const { scene, WS, DOCK, clipEl } = require('./rec');
-const only = process.argv.slice(2);
+// uso: node tools/gifs/record.js                  → todos, em português (docs/gifs/)
+//      node tools/gifs/record.js editor           → só alguns
+//      node tools/gifs/record.js --lang=en        → em inglês (docs/gifs/en/); --lang=es em espanhol
+const { scene, WS, DOCK, clipEl, LANG } = require('./rec');
+const only = process.argv.slice(2).filter(a => !/^--/.test(a));
+// textos digitados nas cenas
+const TYPED = {
+  pt: { brand: 'cor da marca', preset: 'Esporte noite' },
+  en: { brand: 'brand color', preset: 'Night sports' },
+  es: { brand: 'color de marca', preset: 'Deporte noche' }
+}[LANG];
 const S = {};
 
 // 1. aplicar cor (herói do README)
@@ -35,7 +42,7 @@ S.editor = () => scene('editor', { clip: DOCK, layout: 'grid', dsf: 2, width: 42
   await p.mouse.up(); await H.wait(500);
   await H.click('#pal-ed-name', { fx: .4 }); await H.wait(150);
   await p.keyboard.press('Control+a');
-  await p.keyboard.type('cor da marca', { delay: 55 }); await H.wait(400);
+  await p.keyboard.type(TYPED.brand, { delay: 55 }); await H.wait(400);
   await H.click('.editor .ed-btn.ok'); await H.wait(800);
 });
 
@@ -95,9 +102,26 @@ S.presets = () => scene('presets', { clip: DOCK, layout: 'grid', dsf: 2, width: 
   await H.click(null); await H.wait(400);
   await p.keyboard.up('Shift'); await H.wait(1200);
   await H.click('.tool[data-act="library"]'); await H.wait(700);
-  await H.click('.pcard.add'); await H.wait(500);
+  // o cartão do projeto mostra no hover que salva como preset
+  await H.to('.pcard.is-project', .5, .45, 700); await H.wait(900);
+  await H.click(null); await H.wait(500);
   await p.keyboard.press('Control+a');
-  await p.keyboard.type('Esporte noite', { delay: 70 }); await p.keyboard.press('Enter'); await H.wait(1000);
+  await p.keyboard.type(TYPED.preset, { delay: 70 }); await p.keyboard.press('Enter'); await H.wait(1000);
+});
+
+// 9. criar harmonia
+S.harmonia = () => scene('harmonia', { clip: DOCK, layout: 'grid', dsf: 2, width: 420, fps: 12, speed: 1.2 }, async (p, H) => {
+  await H.click('.tool[data-act="add"]'); await H.wait(700);
+  if (await p.locator('.editor').isVisible()) { await H.click('.editor .ed-btn.mode'); await H.wait(800); }
+  await H.click('.hm-rule[data-rule="tri"]'); await H.wait(700);
+  const mk = p.locator('.hm-mk:not(.base)').first(), b = await mk.boundingBox();
+  await H.glide(b.x + b.width / 2, b.y + b.height / 2, 500); await p.mouse.down();
+  await H.glide(b.x + b.width / 2 + 45, b.y + b.height / 2 + 30, 900);
+  await H.glide(b.x + b.width / 2 + 20, b.y + b.height / 2 + 55, 700); await p.mouse.up(); await H.wait(400);
+  await H.click('.hm-rule[data-rule="split"]'); await H.wait(900);
+  await H.click('.hm-steps button[data-steps="2"]'); await H.wait(900);
+  await H.click(p.locator('.hm-sw').nth(1)); await H.wait(700);
+  await H.click('.harmony .ed-btn.ok'); await H.wait(1500);
 });
 
 // 7. layouts
